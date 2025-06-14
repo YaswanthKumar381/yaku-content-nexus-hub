@@ -63,7 +63,7 @@ export const useCanvasNodes = () => {
         setNodes(prevNodes => 
           prevNodes.map(node => 
             node.id === newNode.id 
-              ? { ...node, data: { ...node.data, context: transcript } }
+              ? { ...node, data: { ...node.data, context: transcript } as VideoNodeData }
               : node
           )
         );
@@ -73,7 +73,7 @@ export const useCanvasNodes = () => {
         setNodes(prevNodes => 
           prevNodes.map(node => 
             node.id === newNode.id 
-              ? { ...node, data: { ...node.data, context: 'Transcript unavailable for this video' } }
+              ? { ...node, data: { ...node.data, context: 'Transcript unavailable for this video' } as VideoNodeData }
               : node
           )
         );
