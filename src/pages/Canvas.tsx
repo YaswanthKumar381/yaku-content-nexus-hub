@@ -1,5 +1,7 @@
+
 import React, { useState, useCallback } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   addEdge,
   useNodesState,
   useEdgesState,
@@ -10,14 +12,13 @@ import ReactFlow, {
   ControlButton,
   Handle,
   Position,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, X, Youtube, FileText } from "lucide-react";
-import { ContextMenu } from "@/components/ui/context-menu"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,7 +43,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Toast, ToastClose, ToastDescription, ToastProvider, ToastTitle, ToastViewport, useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useHotkeys } from 'react-hotkeys-hook';
 import { nanoid } from 'nanoid'
 import { YoutubeTranscript } from 'youtube-transcript';
@@ -79,6 +80,7 @@ interface TextNode extends BaseNode {
 interface VideoNode extends BaseNode {
   type: 'video';
   data: {
+    label: string;
     url: string;
     thumbnail: string;
     title: string;
@@ -87,6 +89,39 @@ interface VideoNode extends BaseNode {
 }
 
 type Node = TextNode | VideoNode;
+
+// Custom Context Menu Component
+const CustomContextMenu = ({ 
+  isOpen, 
+  onClose, 
+  position, 
+  children 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  position: { x: number; y: number }; 
+  children: React.ReactNode;
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div 
+        className="fixed inset-0 z-40" 
+        onClick={onClose}
+      />
+      <div 
+        className="fixed z-50 bg-white border rounded-md shadow-lg p-2 min-w-48"
+        style={{ 
+          left: position.x, 
+          top: position.y 
+        }}
+      >
+        {children}
+      </div>
+    </>
+  );
+};
 
 const Canvas = () => {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -164,6 +199,7 @@ const Canvas = () => {
         type: 'video',
         position: { x: 100, y: 100 },
         data: {
+          label: `Video: ${videoId}`,
           url,
           thumbnail: thumbnailUrl,
           title: `Video: ${videoId}`,
@@ -316,24 +352,28 @@ const Canvas = () => {
         <Background color="#444" variant="dots" />
       </ReactFlow>
 
-      <ContextMenu
+      <CustomContextMenu
         isOpen={isContextMenuOpen}
         onClose={closeContextMenu}
         position={contextMenuPosition}
       >
         {contextMenuTarget === null ? (
-          <>
-            <CommandItem onSelect={() => {
-              addTextNode();
-              closeContextMenu();
-            }}>
+          <div className="space-y-2">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start" 
+              onClick={() => {
+                addTextNode();
+                closeContextMenu();
+              }}
+            >
               Add Text Node
-            </CommandItem>
+            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <CommandItem>
+                <Button variant="ghost" className="w-full justify-start">
                   Add Video Node
-                </CommandItem>
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -359,21 +399,25 @@ const Canvas = () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </>
+          </div>
         ) : (
-          <CommandItem onSelect={() => {
-            deleteNode();
-            closeContextMenu();
-          }}>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start text-destructive"
+            onClick={() => {
+              deleteNode();
+              closeContextMenu();
+            }}
+          >
             Delete Node
-          </CommandItem>
+          </Button>
         )}
-      </ContextMenu>
+      </CustomContextMenu>
 
       {/* Text Node Creation Modal */}
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="outline">Add Text Node</Button>
+          <Button variant="outline" className="absolute top-4 left-4 z-10">Add Text Node</Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
