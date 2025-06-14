@@ -1,130 +1,675 @@
+import { useState, useRef, useCallback, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { 
+  Video, 
+  Home, 
+  ArrowLeft, 
+  ArrowRight, 
+  Moon,
+  User,
+  Settings,
+  History,
+  Archive,
+  Bell,
+  Text,
+  X
+} from "lucide-react";
 
-import React, { useState, useCallback } from 'react';
-import {
-  ReactFlow,
-  Controls,
-  Background,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import { CustomContextMenu } from '@/components/canvas/CustomContextMenu';
-import { ContextMenuContent } from '@/components/canvas/ContextMenuContent';
-import { TextNodeDialog } from '@/components/canvas/TextNodeDialog';
-import { TextNodeComponent } from '@/components/canvas/TextNodeComponent';
-import { VideoNodeComponent } from '@/components/canvas/VideoNodeComponent';
-import { useCanvasNodes } from '@/hooks/useCanvasNodes';
+interface VideoNode {
+  id: string;
+  x: number;
+  y: number;
+  url: string;
+  title: string;
+  context?: string; // Store transcript here
+}
 
 const Canvas = () => {
-  const {
-    nodes,
-    edges,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    addTextNode,
-    addVideoNode,
-    deleteNode
-  } = useCanvasNodes();
+  const [selectedTool, setSelectedTool] = useState<string>("select");
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 });
+  const [isDraggingVideo, setIsDraggingVideo] = useState(false);
+  const [videoNodes, setVideoNodes] = useState<Array<VideoNode>>([]);
+  const [showVideoInput, setShowVideoInput] = useState(false);
+  const [pendingVideoNode, setPendingVideoNode] = useState<{ x: number; y: number } | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
+  const [showTranscriptPopup, setShowTranscriptPopup] = useState(false);
+  const [currentTranscript, setCurrentTranscript] = useState("");
+  const [loadingTranscript, setLoadingTranscript] = useState(false);
+  const [transcriptError, setTranscriptError] = useState("");
+  const [isCreatingNode, setIsCreatingNode] = useState(false);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
-  const [newTextNodePosition, setNewTextNodePosition] = useState<{ x: number; y: number } | null>(null);
-  const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
-  const [contextMenuTarget, setContextMenuTarget] = useState<string | null>(null);
-  const [newTextNodeLabel, setNewTextNodeLabel] = useState("New Text");
-  const [newTextNodeContext, setNewTextNodeContext] = useState("");
-  const [newVideoNodeUrl, setNewVideoNodeUrl] = useState("");
+  const sidebarTools = [
+    { id: "video", icon: Video, label: "Video" },
+    { id: "filter", icon: Archive, label: "Filter" },
+    { id: "history", icon: History, label: "History" },
+    { id: "folder", icon: Archive, label: "Folder" },
+    { id: "rocket", icon: Bell, label: "Rocket" },
+    { id: "chat", icon: Bell, label: "Chat" },
+    { id: "help", icon: Bell, label: "Help" }
+  ];
 
-  const handleContextMenu = (event: React.MouseEvent, node?: any) => {
-    event.preventDefault();
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setIsContextMenuOpen(true);
-    setContextMenuTarget(node ? node.id : null);
-  };
+  const handleWheel = useCallback((e: WheelEvent) => {
+    e.preventDefault();
+    
+    if (e.ctrlKey || e.metaKey) {
+      // Zoom
+      const rect = canvasContainerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      
+      const zoomIntensity = 0.1;
+      const zoom = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
+      const newScale = Math.max(0.1, Math.min(5, transform.scale * zoom));
+      
+      const scaleChange = newScale / transform.scale;
+      const newX = mouseX - (mouseX - transform.x) * scaleChange;
+      const newY = mouseY - (mouseY - transform.y) * scaleChange;
+      
+      console.log('Zoom:', { deltaY: e.deltaY, zoom, newScale, currentScale: transform.scale });
+      
+      setTransform({
+        x: newX,
+        y: newY,
+        scale: newScale
+      });
+    } else {
+      // Pan
+      setTransform(prev => ({
+        ...prev,
+        x: prev.x - e.deltaX,
+        y: prev.y - e.deltaY
+      }));
+    }
+  }, [transform]);
 
-  const closeContextMenu = () => {
-    setIsContextMenuOpen(false);
-    setContextMenuTarget(null);
-  };
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Don't start canvas dragging if we're dragging a node
+    if (draggingNodeId) return;
+    
+    setIsDragging(true);
+    setLastPointer({ x: e.clientX, y: e.clientY });
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [draggingNodeId]);
 
-  const handleCanvasContextMenu = (event: React.MouseEvent) => {
-    event.preventDefault();
-    setContextMenuPosition({ x: event.clientX, y: event.clientY });
-    setIsContextMenuOpen(true);
-    setContextMenuTarget(null);
-    setNewTextNodePosition({ x: event.clientX, y: event.clientY });
-  };
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (draggingNodeId) {
+      // Handle node dragging
+      const deltaX = e.clientX - lastPointer.x;
+      const deltaY = e.clientY - lastPointer.y;
+      
+      setVideoNodes(prev => prev.map(node => 
+        node.id === draggingNodeId 
+          ? { 
+              ...node, 
+              x: node.x + deltaX / transform.scale, 
+              y: node.y + deltaY / transform.scale 
+            }
+          : node
+      ));
+      
+      setLastPointer({ x: e.clientX, y: e.clientY });
+    } else if (isDragging) {
+      // Handle canvas panning
+      const deltaX = e.clientX - lastPointer.x;
+      const deltaY = e.clientY - lastPointer.y;
+      
+      setTransform(prev => ({
+        ...prev,
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setLastPointer({ x: e.clientX, y: e.clientY });
+    }
+  }, [isDragging, lastPointer, draggingNodeId, transform.scale]);
 
-  const handleAddTextNode = () => {
-    if (newTextNodePosition) {
-      addTextNode(newTextNodeLabel, newTextNodeContext, newTextNodePosition);
-      setNewTextNodePosition(null);
-      closeContextMenu();
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    setIsDragging(false);
+    setDraggingNodeId(null);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  }, []);
+
+  // Node-specific drag handlers
+  const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
+    e.stopPropagation(); // Prevent canvas drag
+    setDraggingNodeId(nodeId);
+    setLastPointer({ x: e.clientX, y: e.clientY });
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      // Handle pinch zoom
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.sqrt(
+        Math.pow(touch2.clientX - touch1.clientX, 2) + 
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+      );
+      
+      // Store initial distance if not set
+      if (!canvasContainerRef.current?.dataset.initialDistance) {
+        canvasContainerRef.current!.dataset.initialDistance = distance.toString();
+        canvasContainerRef.current!.dataset.initialScale = transform.scale.toString();
+        return;
+      }
+      
+      const initialDistance = parseFloat(canvasContainerRef.current.dataset.initialDistance);
+      const initialScale = parseFloat(canvasContainerRef.current.dataset.initialScale);
+      const scaleFactor = distance / initialDistance;
+      const newScale = Math.max(0.1, Math.min(5, initialScale * scaleFactor));
+      
+      setTransform(prev => ({
+        ...prev,
+        scale: newScale
+      }));
+    }
+  }, [transform.scale]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (canvasContainerRef.current) {
+      delete canvasContainerRef.current.dataset.initialDistance;
+      delete canvasContainerRef.current.dataset.initialScale;
+    }
+  }, []);
+
+  const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
+    setIsDraggingVideo(true);
+    e.dataTransfer.setData("text/plain", "video");
+  }, []);
+
+  const handleCanvasDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isDraggingVideo) return;
+
+    const rect = canvasContainerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    // Calculate position relative to canvas transform
+    const x = (e.clientX - rect.left - transform.x) / transform.scale;
+    const y = (e.clientY - rect.top - transform.y) / transform.scale;
+
+    setPendingVideoNode({ x, y });
+    setShowVideoInput(true);
+    setIsDraggingVideo(false);
+  }, [isDraggingVideo, transform]);
+
+  const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const fetchTranscript = async (videoUrl: string): Promise<string> => {
+    console.log("🔍 Starting transcript fetch for:", videoUrl);
+    
+    try {
+      console.log("📡 Making API request to kome.ai...");
+      
+      // Try the original API first
+      const response = await fetch("https://kome.ai/api/transcript", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          video_id: videoUrl,
+          format: true
+        }),
+        mode: 'cors' // Explicitly set CORS mode
+      });
+
+      console.log("📥 Response status:", response.status);
+      console.log("📥 Response ok:", response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ API Error:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("📄 Response data:", data);
+      
+      if (data.transcript) {
+        console.log("✅ Transcript received, length:", data.transcript.length);
+        return data.transcript;
+      } else {
+        console.warn("⚠️ No transcript found in response");
+        throw new Error("No transcript found in response");
+      }
+    } catch (error) {
+      console.error("💥 Error fetching transcript:", error);
+      
+      // If it's a CORS or network error, provide a helpful message
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error("Unable to fetch transcript due to network restrictions. This is likely a CORS issue with the transcript service.");
+      }
+      
+      throw error;
     }
   };
 
-  const handleDeleteNode = () => {
-    if (contextMenuTarget) {
-      deleteNode(contextMenuTarget);
-      closeContextMenu();
+  const handleVideoUrlSubmit = useCallback(async () => {
+    if (!pendingVideoNode || !videoUrl.trim()) return;
+
+    setIsCreatingNode(true);
+    console.log("🎬 Creating video node with URL:", videoUrl);
+
+    // Always create the node first, then try to fetch transcript
+    const newNode: VideoNode = {
+      id: `video-${Date.now()}`,
+      x: pendingVideoNode.x,
+      y: pendingVideoNode.y,
+      url: videoUrl,
+      title: getVideoTitle(videoUrl),
+      context: undefined // Will be set after transcript fetch
+    };
+
+    // Add the node immediately
+    setVideoNodes(prev => [...prev, newNode]);
+    setShowVideoInput(false);
+    setPendingVideoNode(null);
+    setVideoUrl("");
+    setIsCreatingNode(false);
+
+    // Try to fetch transcript in the background
+    try {
+      console.log("🔄 Fetching transcript in background...");
+      const transcript = await fetchTranscript(videoUrl);
+      
+      // Update the node with the transcript
+      setVideoNodes(prev => prev.map(node => 
+        node.id === newNode.id 
+          ? { ...node, context: transcript }
+          : node
+      ));
+      
+      console.log("✅ Transcript added to node:", newNode.id);
+    } catch (error) {
+      console.log("⚠️ Failed to fetch transcript, but node created successfully:", error);
+      // Node is already created, just log the error
+      // The transcript can be fetched later when user clicks the icon
+    }
+  }, [pendingVideoNode, videoUrl]);
+
+  const getVideoTitle = (url: string) => {
+    // Extract title from URL or use default
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      return "YouTube Video";
+    } else if (url.includes('vimeo.com')) {
+      return "Vimeo Video";
+    }
+    return "Video";
+  };
+
+  const getVideoThumbnail = (url: string) => {
+    // Generate thumbnail URL for YouTube videos using direct YouTube thumbnail API
+    if (url.includes('youtube.com/watch?v=')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      }
+    } else if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      }
+    } else if (url.includes('youtube.com/embed/')) {
+      const videoId = url.split('embed/')[1]?.split('?')[0];
+      if (videoId) {
+        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+      }
+    }
+    
+    // Fallback for non-YouTube videos
+    return "/placeholder.svg";
+  };
+
+  const handleTranscriptClick = async (e: React.MouseEvent, node: VideoNode) => {
+    console.log("🎯 Transcript button clicked for:", node.url);
+    e.stopPropagation();
+    
+    if (node.context) {
+      // Transcript already available
+      console.log("📖 Showing existing transcript:", node.context.substring(0, 100) + "...");
+      setCurrentTranscript(node.context);
+      setShowTranscriptPopup(true);
+      setTranscriptError("");
+    } else {
+      // Try to fetch transcript now
+      console.log("🔄 Fetching transcript on demand...");
+      setLoadingTranscript(true);
+      setShowTranscriptPopup(true);
+      setCurrentTranscript("");
+      setTranscriptError("");
+      
+      try {
+        const transcript = await fetchTranscript(node.url);
+        
+        // Update the node with the transcript
+        setVideoNodes(prev => prev.map(n => 
+          n.id === node.id 
+            ? { ...n, context: transcript }
+            : n
+        ));
+        
+        setCurrentTranscript(transcript);
+        console.log("✅ Transcript fetched and displayed");
+      } catch (error) {
+        console.error("❌ Failed to fetch transcript:", error);
+        setTranscriptError(error instanceof Error ? error.message : "Failed to fetch transcript");
+      } finally {
+        setLoadingTranscript(false);
+      }
     }
   };
 
-  const handleTextNodeLabelChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNewTextNodeLabel(event.target.value);
-  };
+  useEffect(() => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
 
-  const handleTextNodeContextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNewTextNodeContext(event.target.value);
-  };
-
-  const handleVideoNodeUrlChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNewVideoNodeUrl(event.target.value);
-  };
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel]);
 
   return (
-    <div className="w-full h-screen bg-zinc-900">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onNodeContextMenu={handleContextMenu}
-        onPaneContextMenu={handleCanvasContextMenu}
-        onNodeDoubleClick={handleContextMenu}
-        nodeTypes={{
-          text: TextNodeComponent,
-          video: VideoNodeComponent,
+    <div className="min-h-screen bg-zinc-900 relative overflow-hidden">
+      {/* Canvas Container */}
+      <div 
+        ref={canvasContainerRef}
+        className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onDrop={handleCanvasDrop}
+        onDragOver={handleCanvasDragOver}
+        style={{ 
+          transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+          transformOrigin: '0 0'
         }}
-        fitView
-        className="bg-zinc-800"
       >
-        <Controls />
-        <Background color="#444" />
-      </ReactFlow>
-
-      <CustomContextMenu
-        isOpen={isContextMenuOpen}
-        onClose={closeContextMenu}
-        position={contextMenuPosition}
-      >
-        <ContextMenuContent
-          contextMenuTarget={contextMenuTarget}
-          onAddTextNode={handleAddTextNode}
-          onAddVideoNode={addVideoNode}
-          onDeleteNode={handleDeleteNode}
-          onClose={closeContextMenu}
-          newVideoNodeUrl={newVideoNodeUrl}
-          onVideoUrlChange={handleVideoNodeUrlChange}
+        {/* Infinite Dotted Grid Background */}
+        <div 
+          className="absolute opacity-20"
+          style={{
+            left: -10000,
+            top: -10000,
+            width: 20000,
+            height: 20000,
+            backgroundImage: `radial-gradient(circle, #6b7280 1px, transparent 1px)`,
+            backgroundSize: '20px 20px'
+          }}
         />
-      </CustomContextMenu>
+        
+        {/* Canvas Content - Centered placeholder */}
+        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div className="text-center text-zinc-500">
+            <div className="w-24 h-24 bg-zinc-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center mx-auto mb-4 border border-zinc-700/50">
+              <Video className="w-8 h-8 text-zinc-600" />
+            </div>
+            <p className="text-lg font-medium">Start creating</p>
+            <p className="text-sm text-zinc-600 mt-1">Drag video icon to add videos</p>
+          </div>
+        </div>
 
-      <TextNodeDialog
-        newTextNodeLabel={newTextNodeLabel}
-        newTextNodeContext={newTextNodeContext}
-        onLabelChange={handleTextNodeLabelChange}
-        onContextChange={handleTextNodeContextChange}
-        onAddTextNode={handleAddTextNode}
-      />
+        {/* Video Nodes */}
+        {videoNodes.map((node) => (
+          <div
+            key={node.id}
+            className="absolute cursor-move"
+            style={{
+              left: node.x,
+              top: node.y,
+              transform: 'translate(-50%, -50%)'
+            }}
+            onPointerDown={(e) => handleNodePointerDown(e, node.id)}
+          >
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden w-64 border border-gray-200 hover:shadow-xl transition-shadow">
+              <div className="relative">
+                <img
+                  src={getVideoThumbnail(node.url)}
+                  alt={node.title}
+                  className="w-full h-36 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-black/70 rounded-full flex items-center justify-center">
+                    <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
+                  </div>
+                </div>
+                {/* Transcript Icon */}
+                <button
+                  onClick={(e) => handleTranscriptClick(e, node)}
+                  className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10"
+                  title="View Transcript"
+                >
+                  <Text className="w-4 h-4 text-white" />
+                </button>
+              </div>
+              <div className="p-3">
+                <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
+                <p className="text-xs text-gray-500 truncate">{node.url}</p>
+                {node.context ? (
+                  <p className="text-xs text-green-600 mt-1">✓ Transcript available</p>
+                ) : (
+                  <p className="text-xs text-yellow-600 mt-1">⏳ Transcript pending</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Video URL Input Modal */}
+      {showVideoInput && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
+            <h3 className="text-lg font-semibold mb-4">Enter Video URL</h3>
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="Enter YouTube video URL..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleVideoUrlSubmit();
+                }
+              }}
+              autoFocus
+              disabled={isCreatingNode}
+            />
+            {isCreatingNode && (
+              <div className="flex items-center space-x-2 mb-4 text-sm text-gray-600">
+                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                <span>Creating video node...</span>
+              </div>
+            )}
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowVideoInput(false);
+                  setPendingVideoNode(null);
+                  setVideoUrl("");
+                }}
+                disabled={isCreatingNode}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleVideoUrlSubmit}
+                disabled={!videoUrl.trim() || isCreatingNode}
+              >
+                {isCreatingNode ? "Creating..." : "Add Video"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transcript Popup */}
+      {showTranscriptPopup && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b bg-gray-50 rounded-t-lg">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Video Transcript</h3>
+                <p className="text-sm text-gray-600 mt-1">AI-generated transcript from video content</p>
+              </div>
+              <button
+                onClick={() => {
+                  console.log("🔽 Closing transcript popup");
+                  setShowTranscriptPopup(false);
+                  setCurrentTranscript("");
+                  setTranscriptError("");
+                  setLoadingTranscript(false);
+                }}
+                className="w-10 h-10 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              {loadingTranscript ? (
+                <div className="text-center py-12">
+                  <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <div className="text-gray-600 font-medium mb-2">Fetching transcript...</div>
+                  <div className="text-gray-500 text-sm">This may take a moment</div>
+                </div>
+              ) : transcriptError ? (
+                <div className="text-center py-12">
+                  <div className="text-red-600 font-medium mb-2">❌ Error</div>
+                  <div className="text-red-500 text-sm mb-4 max-w-md mx-auto">{transcriptError}</div>
+                  <div className="text-xs text-gray-500 mb-4">
+                    This is likely due to CORS restrictions when accessing the transcript service from the browser.
+                  </div>
+                  <Button 
+                    onClick={() => {
+                      setTranscriptError("");
+                      setShowTranscriptPopup(false);
+                    }}
+                    variant="outline"
+                  >
+                    Close
+                  </Button>
+                </div>
+              ) : currentTranscript ? (
+                <div className="prose prose-gray max-w-none">
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p className="text-sm text-gray-600 m-0">
+                      📝 Transcript ({currentTranscript.length} characters)
+                    </p>
+                  </div>
+                  <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-base font-normal">
+                    {currentTranscript}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  No transcript available
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Left Sidebar */}
+      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-20">
+        <div className="w-16 bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50 rounded-full flex flex-col items-center py-6 shadow-2xl">
+          {/* Top Tools */}
+          <div className="flex flex-col space-y-3 mb-6">
+            {sidebarTools.map((tool) => (
+              <Button
+                key={tool.id}
+                variant={selectedTool === tool.id ? "default" : "ghost"}
+                size="icon"
+                className={`w-10 h-10 rounded-full ${
+                  selectedTool === tool.id 
+                    ? "bg-purple-600 hover:bg-purple-700 text-white" 
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-700"
+                }`}
+                onClick={() => setSelectedTool(tool.id)}
+                draggable={tool.id === "video"}
+                onDragStart={tool.id === "video" ? handleVideoIconDragStart : undefined}
+              >
+                <tool.icon className="w-5 h-5" />
+              </Button>
+            ))}
+          </div>
+
+          {/* Bottom User Avatar */}
+          <div className="mt-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="w-10 h-10 rounded-full bg-zinc-700 hover:bg-zinc-600"
+            >
+              <User className="w-5 h-5 text-zinc-300" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Top Navigation Bar */}
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20">
+        <div className="bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50 rounded-full px-8 py-4 shadow-2xl">
+          <div className="flex items-center justify-center">
+            <div className="flex items-center space-x-2 bg-zinc-700/50 rounded-full px-4 py-2">
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
+                <Home className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
+                <ArrowRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Right Corner - Moon and Green Bubble */}
+      <div className="fixed top-4 right-4 z-20">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="icon" className="w-10 h-10 text-zinc-400 hover:text-white rounded-full bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50">
+            <Moon className="w-5 h-5" />
+          </Button>
+          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-6 h-6 bg-green-400 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Zoom indicator */}
+      <div className="fixed bottom-4 right-4 z-20">
+        <div className="bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50 rounded-full px-4 py-2 text-zinc-300 text-sm">
+          {Math.round(transform.scale * 100)}%
+        </div>
+      </div>
     </div>
   );
 };
