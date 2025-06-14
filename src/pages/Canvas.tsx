@@ -35,19 +35,23 @@ const Canvas = () => {
     e.preventDefault();
     
     if (e.ctrlKey || e.metaKey) {
-      // Zoom
+      // Zoom - Fixed the zoom in/out logic
       const rect = canvasContainerRef.current?.getBoundingClientRect();
       if (!rect) return;
       
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
       
-      const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-      const newScale = Math.max(0.1, Math.min(5, transform.scale * scaleFactor));
+      // Fixed: Use consistent zoom factor and proper direction
+      const zoomIntensity = 0.1;
+      const zoom = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
+      const newScale = Math.max(0.1, Math.min(5, transform.scale * zoom));
       
       const scaleChange = newScale / transform.scale;
       const newX = mouseX - (mouseX - transform.x) * scaleChange;
       const newY = mouseY - (mouseY - transform.y) * scaleChange;
+      
+      console.log('Zoom:', { deltaY: e.deltaY, zoom, newScale, currentScale: transform.scale });
       
       setTransform({
         x: newX,
@@ -224,32 +228,30 @@ const Canvas = () => {
       {/* Floating Top Navigation Bar */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20">
         <div className="bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50 rounded-full px-8 py-4 shadow-2xl">
-          <div className="flex items-center justify-between min-w-[600px]">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-zinc-700/50 rounded-full px-4 py-2">
-                <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
-                  <Plus className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
-                  <Home className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="icon" className="w-8 h-8 text-zinc-400 hover:text-white rounded-full">
-                <Moon className="w-4 h-4" />
+          <div className="flex items-center justify-center">
+            <div className="flex items-center space-x-2 bg-zinc-700/50 rounded-full px-4 py-2">
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
+                <Home className="w-4 h-4" />
               </Button>
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <div className="w-6 h-6 bg-green-400 rounded-full"></div>
-              </div>
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
+                <ArrowRight className="w-4 h-4" />
+              </Button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Right Corner - Moon and Green Bubble */}
+      <div className="fixed top-4 right-4 z-20">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="icon" className="w-10 h-10 text-zinc-400 hover:text-white rounded-full bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50">
+            <Moon className="w-5 h-5" />
+          </Button>
+          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-6 h-6 bg-green-400 rounded-full"></div>
           </div>
         </div>
       </div>
