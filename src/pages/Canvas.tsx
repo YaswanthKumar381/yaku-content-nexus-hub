@@ -1,8 +1,7 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
-  Plus, 
+  Video, 
   Home, 
   ArrowLeft, 
   ArrowRight, 
@@ -19,10 +18,15 @@ const Canvas = () => {
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 });
+  const [isDraggingVideo, setIsDraggingVideo] = useState(false);
+  const [videoNodes, setVideoNodes] = useState<Array<{ id: string; x: number; y: number; url: string; title: string }>>([]);
+  const [showVideoInput, setShowVideoInput] = useState(false);
+  const [pendingVideoNode, setPendingVideoNode] = useState<{ x: number; y: number } | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const sidebarTools = [
-    { id: "add", icon: Plus, label: "Add" },
+    { id: "video", icon: Video, label: "Video" },
     { id: "filter", icon: Archive, label: "Filter" },
     { id: "history", icon: History, label: "History" },
     { id: "folder", icon: Archive, label: "Folder" },
@@ -137,6 +141,70 @@ const Canvas = () => {
     }
   }, []);
 
+  const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
+    setIsDraggingVideo(true);
+    e.dataTransfer.setData("text/plain", "video");
+  }, []);
+
+  const handleCanvasDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isDraggingVideo) return;
+
+    const rect = canvasContainerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    // Calculate position relative to canvas transform
+    const x = (e.clientX - rect.left - transform.x) / transform.scale;
+    const y = (e.clientY - rect.top - transform.y) / transform.scale;
+
+    setPendingVideoNode({ x, y });
+    setShowVideoInput(true);
+    setIsDraggingVideo(false);
+  }, [isDraggingVideo, transform]);
+
+  const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+  }, []);
+
+  const handleVideoUrlSubmit = useCallback(() => {
+    if (!pendingVideoNode || !videoUrl.trim()) return;
+
+    const newNode = {
+      id: `video-${Date.now()}`,
+      x: pendingVideoNode.x,
+      y: pendingVideoNode.y,
+      url: videoUrl,
+      title: getVideoTitle(videoUrl)
+    };
+
+    setVideoNodes(prev => [...prev, newNode]);
+    setShowVideoInput(false);
+    setPendingVideoNode(null);
+    setVideoUrl("");
+  }, [pendingVideoNode, videoUrl]);
+
+  const getVideoTitle = (url: string) => {
+    // Extract title from URL or use default
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      return "YouTube Video";
+    } else if (url.includes('vimeo.com')) {
+      return "Vimeo Video";
+    }
+    return "Video";
+  };
+
+  const getVideoThumbnail = (url: string) => {
+    // Generate thumbnail URL for different video platforms
+    if (url.includes('youtube.com/watch?v=')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    } else if (url.includes('youtu.be/')) {
+      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    }
+    return "/placeholder.svg";
+  };
+
   useEffect(() => {
     const container = canvasContainerRef.current;
     if (!container) return;
@@ -160,6 +228,8 @@ const Canvas = () => {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onDrop={handleCanvasDrop}
+        onDragOver={handleCanvasDragOver}
         style={{ 
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           transformOrigin: '0 0'
@@ -182,13 +252,88 @@ const Canvas = () => {
         <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
           <div className="text-center text-zinc-500">
             <div className="w-24 h-24 bg-zinc-800/50 backdrop-blur-sm rounded-lg flex items-center justify-center mx-auto mb-4 border border-zinc-700/50">
-              <Plus className="w-8 h-8 text-zinc-600" />
+              <Video className="w-8 h-8 text-zinc-600" />
             </div>
             <p className="text-lg font-medium">Start creating</p>
-            <p className="text-sm text-zinc-600 mt-1">Click on tools to begin designing</p>
+            <p className="text-sm text-zinc-600 mt-1">Drag video icon to add videos</p>
           </div>
         </div>
+
+        {/* Video Nodes */}
+        {videoNodes.map((node) => (
+          <div
+            key={node.id}
+            className="absolute"
+            style={{
+              left: node.x,
+              top: node.y,
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden w-64 border border-gray-200">
+              <div className="relative">
+                <img
+                  src={getVideoThumbnail(node.url)}
+                  alt={node.title}
+                  className="w-full h-36 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-12 h-12 bg-black/70 rounded-full flex items-center justify-center">
+                    <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="p-3">
+                <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
+                <p className="text-xs text-gray-500 truncate">{node.url}</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* Video URL Input Modal */}
+      {showVideoInput && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
+            <h3 className="text-lg font-semibold mb-4">Enter Video URL</h3>
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="Enter video URL..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleVideoUrlSubmit();
+                }
+              }}
+              autoFocus
+            />
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowVideoInput(false);
+                  setPendingVideoNode(null);
+                  setVideoUrl("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleVideoUrlSubmit}
+                disabled={!videoUrl.trim()}
+              >
+                Add Video
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating Left Sidebar */}
       <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-20">
@@ -206,6 +351,8 @@ const Canvas = () => {
                     : "text-zinc-400 hover:text-white hover:bg-zinc-700"
                 }`}
                 onClick={() => setSelectedTool(tool.id)}
+                draggable={tool.id === "video"}
+                onDragStart={tool.id === "video" ? handleVideoIconDragStart : undefined}
               >
                 <tool.icon className="w-5 h-5" />
               </Button>
