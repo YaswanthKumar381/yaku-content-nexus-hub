@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -10,7 +11,9 @@ import {
   Settings,
   History,
   Archive,
-  Bell
+  Bell,
+  Text,
+  X
 } from "lucide-react";
 
 const Canvas = () => {
@@ -25,6 +28,10 @@ const Canvas = () => {
   const [videoUrl, setVideoUrl] = useState("");
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
+  const [showTranscriptPopup, setShowTranscriptPopup] = useState(false);
+  const [currentTranscript, setCurrentTranscript] = useState("");
+  const [loadingTranscript, setLoadingTranscript] = useState(false);
+  const [transcriptError, setTranscriptError] = useState("");
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const sidebarTools = [
@@ -246,6 +253,47 @@ const Canvas = () => {
     return "/placeholder.svg";
   };
 
+  const fetchTranscript = async (videoUrl: string) => {
+    setLoadingTranscript(true);
+    setTranscriptError("");
+    
+    try {
+      const response = await fetch("https://kome.ai/api/transcript", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          video_id: videoUrl,
+          format: true
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.transcript) {
+        setCurrentTranscript(data.transcript);
+        setShowTranscriptPopup(true);
+      } else {
+        throw new Error("No transcript found in response");
+      }
+    } catch (error) {
+      console.error("Error fetching transcript:", error);
+      setTranscriptError("Failed to fetch transcript. Please try again.");
+    } finally {
+      setLoadingTranscript(false);
+    }
+  };
+
+  const handleTranscriptClick = (e: React.MouseEvent, videoUrl: string) => {
+    e.stopPropagation();
+    fetchTranscript(videoUrl);
+  };
+
   useEffect(() => {
     const container = canvasContainerRef.current;
     if (!container) return;
@@ -327,6 +375,15 @@ const Canvas = () => {
                     <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
                   </div>
                 </div>
+                {/* Transcript Icon */}
+                <button
+                  onClick={(e) => handleTranscriptClick(e, node.url)}
+                  disabled={loadingTranscript}
+                  className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors disabled:opacity-50"
+                  title="Get Transcript"
+                >
+                  <Text className="w-4 h-4 text-white" />
+                </button>
               </div>
               <div className="p-3">
                 <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
@@ -372,6 +429,44 @@ const Canvas = () => {
               >
                 Add Video
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Transcript Popup */}
+      {showTranscriptPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h3 className="text-lg font-semibold">Video Transcript</h3>
+              <button
+                onClick={() => {
+                  setShowTranscriptPopup(false);
+                  setCurrentTranscript("");
+                  setTranscriptError("");
+                }}
+                className="w-8 h-8 hover:bg-gray-100 rounded-full flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-6">
+              {loadingTranscript ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-gray-500">Loading transcript...</div>
+                </div>
+              ) : transcriptError ? (
+                <div className="text-red-500 text-center py-8">
+                  {transcriptError}
+                </div>
+              ) : (
+                <div className="prose max-w-none">
+                  <p className="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                    {currentTranscript}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
