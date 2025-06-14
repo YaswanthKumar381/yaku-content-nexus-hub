@@ -1,52 +1,49 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { 
-  Video, 
-  Home, 
-  ArrowLeft, 
-  ArrowRight, 
-  Moon,
-  User,
-  Settings,
-  History,
-  Archive,
-  Bell,
-  Text,
-  X,
-  ExternalLink,
-  AlertCircle
-} from "lucide-react";
 
-interface VideoNode {
-  id: string;
-  x: number;
-  y: number;
-  url: string;
-  title: string;
-  context?: string; // Store transcript here
-}
+import { useState, useCallback } from "react";
+import { Video, Archive, History, Bell } from "lucide-react";
+import { VideoNode, SidebarTool } from "@/types/canvas";
+import { useCanvasTransform } from "@/hooks/useCanvasTransform";
+import { useVideoNodes } from "@/hooks/useVideoNodes";
+import { VideoNodeComponent } from "@/components/canvas/VideoNodeComponent";
+import { VideoInputModal } from "@/components/canvas/VideoInputModal";
+import { TranscriptModal } from "@/components/canvas/TranscriptModal";
+import { CanvasSidebar } from "@/components/canvas/CanvasSidebar";
+import { CanvasNavigation } from "@/components/canvas/CanvasNavigation";
 
 const Canvas = () => {
   const [selectedTool, setSelectedTool] = useState<string>("select");
-  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 });
   const [isDraggingVideo, setIsDraggingVideo] = useState(false);
-  const [videoNodes, setVideoNodes] = useState<Array<VideoNode>>([]);
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [pendingVideoNode, setPendingVideoNode] = useState<{ x: number; y: number } | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
-  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
-  const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
   const [showTranscriptPopup, setShowTranscriptPopup] = useState(false);
   const [currentTranscript, setCurrentTranscript] = useState("");
-  const [loadingTranscript, setLoadingTranscript] = useState(false);
   const [transcriptError, setTranscriptError] = useState("");
   const [isCreatingNode, setIsCreatingNode] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState("");
-  const canvasContainerRef = useRef<HTMLDivElement>(null);
 
-  const sidebarTools = [
+  const {
+    transform,
+    canvasContainerRef,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd
+  } = useCanvasTransform();
+
+  const {
+    videoNodes,
+    draggingNodeId,
+    addVideoNode,
+    updateVideoNode,
+    moveVideoNode,
+    handleNodePointerDown,
+    handleNodePointerUp
+  } = useVideoNodes();
+
+  const sidebarTools: SidebarTool[] = [
     { id: "video", icon: Video, label: "Video" },
     { id: "filter", icon: Archive, label: "Filter" },
     { id: "history", icon: History, label: "History" },
@@ -55,140 +52,6 @@ const Canvas = () => {
     { id: "chat", icon: Bell, label: "Chat" },
     { id: "help", icon: Bell, label: "Help" }
   ];
-
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    
-    if (e.ctrlKey || e.metaKey) {
-      // Zoom
-      const rect = canvasContainerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
-      const zoomIntensity = 0.1;
-      const zoom = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
-      const newScale = Math.max(0.1, Math.min(5, transform.scale * zoom));
-      
-      const scaleChange = newScale / transform.scale;
-      const newX = mouseX - (mouseX - transform.x) * scaleChange;
-      const newY = mouseY - (mouseY - transform.y) * scaleChange;
-      
-      console.log('Zoom:', { deltaY: e.deltaY, zoom, newScale, currentScale: transform.scale });
-      
-      setTransform({
-        x: newX,
-        y: newY,
-        scale: newScale
-      });
-    } else {
-      // Pan
-      setTransform(prev => ({
-        ...prev,
-        x: prev.x - e.deltaX,
-        y: prev.y - e.deltaY
-      }));
-    }
-  }, [transform]);
-
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Don't start canvas dragging if we're dragging a node
-    if (draggingNodeId) return;
-    
-    setIsDragging(true);
-    setLastPointer({ x: e.clientX, y: e.clientY });
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [draggingNodeId]);
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (draggingNodeId) {
-      // Handle node dragging
-      const deltaX = e.clientX - lastPointer.x;
-      const deltaY = e.clientY - lastPointer.y;
-      
-      setVideoNodes(prev => prev.map(node => 
-        node.id === draggingNodeId 
-          ? { 
-              ...node, 
-              x: node.x + deltaX / transform.scale, 
-              y: node.y + deltaY / transform.scale 
-            }
-          : node
-      ));
-      
-      setLastPointer({ x: e.clientX, y: e.clientY });
-    } else if (isDragging) {
-      // Handle canvas panning
-      const deltaX = e.clientX - lastPointer.x;
-      const deltaY = e.clientY - lastPointer.y;
-      
-      setTransform(prev => ({
-        ...prev,
-        x: prev.x + deltaX,
-        y: prev.y + deltaY
-      }));
-      
-      setLastPointer({ x: e.clientX, y: e.clientY });
-    }
-  }, [isDragging, lastPointer, draggingNodeId, transform.scale]);
-
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    setIsDragging(false);
-    setDraggingNodeId(null);
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-  }, []);
-
-  // Node-specific drag handlers
-  const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
-    e.stopPropagation(); // Prevent canvas drag
-    setDraggingNodeId(nodeId);
-    setLastPointer({ x: e.clientX, y: e.clientY });
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, []);
-
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-    }
-  }, []);
-
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      // Handle pinch zoom
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const distance = Math.sqrt(
-        Math.pow(touch2.clientX - touch1.clientX, 2) + 
-        Math.pow(touch2.clientY - touch1.clientY, 2)
-      );
-      
-      // Store initial distance if not set
-      if (!canvasContainerRef.current?.dataset.initialDistance) {
-        canvasContainerRef.current!.dataset.initialDistance = distance.toString();
-        canvasContainerRef.current!.dataset.initialScale = transform.scale.toString();
-        return;
-      }
-      
-      const initialDistance = parseFloat(canvasContainerRef.current.dataset.initialDistance);
-      const initialScale = parseFloat(canvasContainerRef.current.dataset.initialScale);
-      const scaleFactor = distance / initialDistance;
-      const newScale = Math.max(0.1, Math.min(5, initialScale * scaleFactor));
-      
-      setTransform(prev => ({
-        ...prev,
-        scale: newScale
-      }));
-    }
-  }, [transform.scale]);
-
-  const handleTouchEnd = useCallback(() => {
-    if (canvasContainerRef.current) {
-      delete canvasContainerRef.current.dataset.initialDistance;
-      delete canvasContainerRef.current.dataset.initialScale;
-    }
-  }, []);
 
   const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
     setIsDraggingVideo(true);
@@ -202,7 +65,6 @@ const Canvas = () => {
     const rect = canvasContainerRef.current?.getBoundingClientRect();
     if (!rect) return;
 
-    // Calculate position relative to canvas transform
     const x = (e.clientX - rect.left - transform.x) / transform.scale;
     const y = (e.clientY - rect.top - transform.y) / transform.scale;
 
@@ -215,72 +77,20 @@ const Canvas = () => {
     e.preventDefault();
   }, []);
 
-  const fetchTranscript = async (videoUrl: string): Promise<string> => {
-    console.log("🔍 Starting transcript fetch for:", videoUrl);
-    
-    // Since client-side transcript fetching faces CORS restrictions,
-    // we'll provide helpful guidance to users instead
-    throw new Error("Transcript fetching is not available in browser environments due to CORS restrictions. Please manually copy and paste the transcript from YouTube or use browser extensions like 'YouTube Transcript' to extract transcript data.");
-  };
-
   const handleVideoUrlSubmit = useCallback(async () => {
     if (!pendingVideoNode || !videoUrl.trim()) return;
 
     setIsCreatingNode(true);
     console.log("🎬 Creating video node with URL:", videoUrl);
 
-    // Create the node immediately
-    const newNode: VideoNode = {
-      id: `video-${Date.now()}`,
-      x: pendingVideoNode.x,
-      y: pendingVideoNode.y,
-      url: videoUrl,
-      title: getVideoTitle(videoUrl),
-      context: undefined // Will remain undefined due to CORS limitations
-    };
-
-    // Add the node immediately
-    setVideoNodes(prev => [...prev, newNode]);
+    addVideoNode(pendingVideoNode.x, pendingVideoNode.y, videoUrl);
     setShowVideoInput(false);
     setPendingVideoNode(null);
     setVideoUrl("");
     setIsCreatingNode(false);
 
-    console.log("✅ Video node created successfully:", newNode.id);
-  }, [pendingVideoNode, videoUrl]);
-
-  const getVideoTitle = (url: string) => {
-    // Extract title from URL or use default
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      return "YouTube Video";
-    } else if (url.includes('vimeo.com')) {
-      return "Vimeo Video";
-    }
-    return "Video";
-  };
-
-  const getVideoThumbnail = (url: string) => {
-    // Generate thumbnail URL for YouTube videos using direct YouTube thumbnail API
-    if (url.includes('youtube.com/watch?v=')) {
-      const videoId = url.split('v=')[1]?.split('&')[0];
-      if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-      }
-    } else if (url.includes('youtu.be/')) {
-      const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-      if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-      }
-    } else if (url.includes('youtube.com/embed/')) {
-      const videoId = url.split('embed/')[1]?.split('?')[0];
-      if (videoId) {
-        return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-      }
-    }
-    
-    // Fallback for non-YouTube videos
-    return "/placeholder.svg";
-  };
+    console.log("✅ Video node created successfully");
+  }, [pendingVideoNode, videoUrl, addVideoNode]);
 
   const handleTranscriptClick = async (e: React.MouseEvent, node: VideoNode) => {
     console.log("🎯 Transcript button clicked for:", node.url);
@@ -290,30 +100,7 @@ const Canvas = () => {
     setShowTranscriptPopup(true);
     setCurrentTranscript("");
     setTranscriptError("Due to browser security restrictions (CORS), automatic transcript fetching is not supported. Please see the suggested alternatives below.");
-    setLoadingTranscript(false);
   };
-
-  const getYouTubeVideoId = (url: string): string => {
-    if (url.includes('youtube.com/watch?v=')) {
-      return url.split('v=')[1]?.split('&')[0] || '';
-    } else if (url.includes('youtu.be/')) {
-      return url.split('youtu.be/')[1]?.split('?')[0] || '';
-    } else if (url.includes('youtube.com/embed/')) {
-      return url.split('embed/')[1]?.split('?')[0] || '';
-    }
-    return '';
-  };
-
-  useEffect(() => {
-    const container = canvasContainerRef.current;
-    if (!container) return;
-
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-    };
-  }, [handleWheel]);
 
   return (
     <div className="min-h-screen bg-zinc-900 relative overflow-hidden">
@@ -321,8 +108,12 @@ const Canvas = () => {
       <div 
         ref={canvasContainerRef}
         className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
+        onPointerDown={(e) => handlePointerDown(e, draggingNodeId)}
+        onPointerMove={(e) => handlePointerMove(e, draggingNodeId, (deltaX, deltaY) => {
+          if (draggingNodeId) {
+            moveVideoNode(draggingNodeId, deltaX, deltaY, transform.scale);
+          }
+        })}
         onPointerUp={handlePointerUp}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -360,284 +151,64 @@ const Canvas = () => {
 
         {/* Video Nodes */}
         {videoNodes.map((node) => (
-          <div
+          <VideoNodeComponent
             key={node.id}
-            className="absolute cursor-move"
-            style={{
-              left: node.x,
-              top: node.y,
-              transform: 'translate(-50%, -50%)'
-            }}
-            onPointerDown={(e) => handleNodePointerDown(e, node.id)}
-          >
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden w-64 border border-gray-200 hover:shadow-xl transition-shadow">
-              <div className="relative">
-                <img
-                  src={getVideoThumbnail(node.url)}
-                  alt={node.title}
-                  className="w-full h-36 object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = "/placeholder.svg";
-                  }}
-                />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 bg-black/70 rounded-full flex items-center justify-center">
-                    <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
-                  </div>
-                </div>
-                {/* Transcript Icon */}
-                <button
-                  onClick={(e) => handleTranscriptClick(e, node)}
-                  className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10"
-                  title="Transcript Options"
-                >
-                  <Text className="w-4 h-4 text-white" />
-                </button>
-              </div>
-              <div className="p-3">
-                <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
-                <p className="text-xs text-gray-500 truncate">{node.url}</p>
-                <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" />
-                  Manual transcript needed
-                </p>
-              </div>
-            </div>
-          </div>
+            node={node}
+            onPointerDown={handleNodePointerDown}
+            onTranscriptClick={handleTranscriptClick}
+          />
         ))}
       </div>
 
       {/* Video URL Input Modal */}
-      {showVideoInput && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
-            <h3 className="text-lg font-semibold mb-4">Enter Video URL</h3>
-            <input
-              type="url"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="Enter YouTube video URL..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleVideoUrlSubmit();
-                }
-              }}
-              autoFocus
-              disabled={isCreatingNode}
-            />
-            {isCreatingNode && (
-              <div className="flex items-center space-x-2 mb-4 text-sm text-gray-600">
-                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                <span>Creating video node...</span>
-              </div>
-            )}
-            <div className="flex justify-end space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowVideoInput(false);
-                  setPendingVideoNode(null);
-                  setVideoUrl("");
-                }}
-                disabled={isCreatingNode}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleVideoUrlSubmit}
-                disabled={!videoUrl.trim() || isCreatingNode}
-              >
-                {isCreatingNode ? "Creating..." : "Add Video"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <VideoInputModal
+        isOpen={showVideoInput}
+        videoUrl={videoUrl}
+        isCreating={isCreatingNode}
+        onUrlChange={setVideoUrl}
+        onSubmit={handleVideoUrlSubmit}
+        onCancel={() => {
+          setShowVideoInput(false);
+          setPendingVideoNode(null);
+          setVideoUrl("");
+        }}
+      />
 
       {/* Transcript Options Popup */}
-      {showTranscriptPopup && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b bg-gray-50 rounded-t-lg">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Transcript Options</h3>
-                <p className="text-sm text-gray-600 mt-1">Manual transcript extraction required</p>
-              </div>
-              <button
-                onClick={() => {
-                  console.log("🔽 Closing transcript popup");
-                  setShowTranscriptPopup(false);
-                  setCurrentTranscript("");
-                  setTranscriptError("");
-                  setCurrentVideoUrl("");
-                }}
-                className="w-10 h-10 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-auto p-6">
-              <div className="space-y-6">
-                {/* Error Message */}
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-amber-800 font-medium mb-1">Automatic Transcript Unavailable</h4>
-                      <p className="text-amber-700 text-sm">{transcriptError}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Manual Options */}
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Alternative Methods:</h4>
-                  
-                  {/* YouTube Direct */}
-                  {currentVideoUrl && getYouTubeVideoId(currentVideoUrl) && (
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <h5 className="font-medium text-gray-800 mb-2">1. YouTube Transcript (Recommended)</h5>
-                      <p className="text-sm text-gray-600 mb-3">
-                        Access the official YouTube transcript directly from the video page.
-                      </p>
-                      <Button
-                        onClick={() => {
-                          const videoId = getYouTubeVideoId(currentVideoUrl);
-                          window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
-                        }}
-                        className="flex items-center space-x-2"
-                        size="sm"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        <span>Open YouTube Video</span>
-                      </Button>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Click "..." → "Show transcript" on YouTube, then copy and paste the text here.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Browser Extensions */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-800 mb-2">2. Browser Extensions</h5>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Install browser extensions that can extract YouTube transcripts:
-                    </p>
-                    <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-                      <li>"YouTube Transcript" extension</li>
-                      <li>"Video Transcript AI" extension</li>
-                      <li>"Transcript for YouTube" extension</li>
-                    </ul>
-                  </div>
-
-                  {/* Manual Copy Paste */}
-                  <div className="border border-gray-200 rounded-lg p-4">
-                    <h5 className="font-medium text-gray-800 mb-2">3. Manual Input</h5>
-                    <p className="text-sm text-gray-600 mb-3">
-                      If you have the transcript text, paste it below:
-                    </p>
-                    <textarea
-                      placeholder="Paste transcript text here..."
-                      className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                      value={currentTranscript}
-                      onChange={(e) => setCurrentTranscript(e.target.value)}
-                    />
-                    {currentTranscript && (
-                      <div className="mt-3 flex justify-end">
-                        <Button
-                          onClick={() => {
-                            // Update the video node with the manually entered transcript
-                            setVideoNodes(prev => prev.map(node => 
-                              node.url === currentVideoUrl 
-                                ? { ...node, context: currentTranscript }
-                                : node
-                            ));
-                            setShowTranscriptPopup(false);
-                            setCurrentTranscript("");
-                            setCurrentVideoUrl("");
-                          }}
-                          size="sm"
-                        >
-                          Save Transcript
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <TranscriptModal
+        isOpen={showTranscriptPopup}
+        videoUrl={currentVideoUrl}
+        transcript={currentTranscript}
+        error={transcriptError}
+        onClose={() => {
+          console.log("🔽 Closing transcript popup");
+          setShowTranscriptPopup(false);
+          setCurrentTranscript("");
+          setTranscriptError("");
+          setCurrentVideoUrl("");
+        }}
+        onTranscriptChange={setCurrentTranscript}
+        onSave={() => {
+          updateVideoNode(
+            videoNodes.find(node => node.url === currentVideoUrl)?.id || '',
+            { context: currentTranscript }
+          );
+          setShowTranscriptPopup(false);
+          setCurrentTranscript("");
+          setCurrentVideoUrl("");
+        }}
+      />
 
       {/* Floating Left Sidebar */}
-      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-20">
-        <div className="w-16 bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50 rounded-full flex flex-col items-center py-6 shadow-2xl">
-          {/* Top Tools */}
-          <div className="flex flex-col space-y-3 mb-6">
-            {sidebarTools.map((tool) => (
-              <Button
-                key={tool.id}
-                variant={selectedTool === tool.id ? "default" : "ghost"}
-                size="icon"
-                className={`w-10 h-10 rounded-full ${
-                  selectedTool === tool.id 
-                    ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-700"
-                }`}
-                onClick={() => setSelectedTool(tool.id)}
-                draggable={tool.id === "video"}
-                onDragStart={tool.id === "video" ? handleVideoIconDragStart : undefined}
-              >
-                <tool.icon className="w-5 h-5" />
-              </Button>
-            ))}
-          </div>
+      <CanvasSidebar
+        tools={sidebarTools}
+        selectedTool={selectedTool}
+        onToolSelect={setSelectedTool}
+        onVideoDragStart={handleVideoIconDragStart}
+      />
 
-          {/* Bottom User Avatar */}
-          <div className="mt-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-10 h-10 rounded-full bg-zinc-700 hover:bg-zinc-600"
-            >
-              <User className="w-5 h-5 text-zinc-300" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Floating Top Navigation Bar */}
-      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20">
-        <div className="bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50 rounded-full px-8 py-4 shadow-2xl">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-2 bg-zinc-700/50 rounded-full px-4 py-2">
-              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
-                <Home className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="w-6 h-6 text-zinc-400 hover:text-white rounded-full">
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Top Right Corner - Moon and Green Bubble */}
-      <div className="fixed top-4 right-4 z-20">
-        <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" className="w-10 h-10 text-zinc-400 hover:text-white rounded-full bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50">
-            <Moon className="w-5 h-5" />
-          </Button>
-          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-            <div className="w-6 h-6 bg-green-400 rounded-full"></div>
-          </div>
-        </div>
-      </div>
+      {/* Navigation */}
+      <CanvasNavigation />
 
       {/* Zoom indicator */}
       <div className="fixed bottom-4 right-4 z-20">
