@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -13,9 +12,10 @@ import {
   Archive,
   Bell,
   Text,
-  X
+  X,
+  ExternalLink,
+  AlertCircle
 } from "lucide-react";
-import { YoutubeTranscript } from 'youtube-transcript';
 
 interface VideoNode {
   id: string;
@@ -43,6 +43,7 @@ const Canvas = () => {
   const [loadingTranscript, setLoadingTranscript] = useState(false);
   const [transcriptError, setTranscriptError] = useState("");
   const [isCreatingNode, setIsCreatingNode] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState("");
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const sidebarTools = [
@@ -217,64 +218,9 @@ const Canvas = () => {
   const fetchTranscript = async (videoUrl: string): Promise<string> => {
     console.log("🔍 Starting transcript fetch for:", videoUrl);
     
-    try {
-      console.log("📡 Using youtube-transcript package (NPM)...");
-      
-      // Extract video ID from various YouTube URL formats
-      let videoId = '';
-      
-      if (videoUrl.includes('youtube.com/watch?v=')) {
-        videoId = videoUrl.split('v=')[1]?.split('&')[0] || '';
-      } else if (videoUrl.includes('youtu.be/')) {
-        videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0] || '';
-      } else if (videoUrl.includes('youtube.com/embed/')) {
-        videoId = videoUrl.split('embed/')[1]?.split('?')[0] || '';
-      }
-      
-      if (!videoId) {
-        console.error("❌ Could not extract video ID from URL:", videoUrl);
-        throw new Error("Could not extract video ID from the provided URL");
-      }
-      
-      console.log("📹 Extracted video ID:", videoId);
-      console.log("🚀 Calling YoutubeTranscript.fetchTranscript...");
-      
-      // Fetch transcript using youtube-transcript package
-      const transcriptArray = await YoutubeTranscript.fetchTranscript(videoId);
-      
-      console.log("📦 Received transcript array:", transcriptArray?.length || 0, "items");
-      
-      if (!transcriptArray || transcriptArray.length === 0) {
-        throw new Error("No transcript available for this video");
-      }
-      
-      // Convert transcript array to readable text
-      const transcript = transcriptArray
-        .map(item => item.text)
-        .join(' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-      
-      console.log("✅ Transcript processed successfully, length:", transcript.length);
-      return transcript;
-      
-    } catch (error) {
-      console.error("💥 Error fetching transcript:", error);
-      
-      if (error instanceof Error) {
-        // Handle specific youtube-transcript errors
-        if (error.message.includes('Could not retrieve video details')) {
-          throw new Error("Video not found or unavailable");
-        } else if (error.message.includes('Transcript is disabled')) {
-          throw new Error("Transcript is disabled for this video");
-        } else if (error.message.includes('No transcript available')) {
-          throw new Error("No transcript available for this video");
-        }
-        throw error;
-      }
-      
-      throw new Error("Failed to fetch transcript");
-    }
+    // Since client-side transcript fetching faces CORS restrictions,
+    // we'll provide helpful guidance to users instead
+    throw new Error("Transcript fetching is not available in browser environments due to CORS restrictions. Please manually copy and paste the transcript from YouTube or use browser extensions like 'YouTube Transcript' to extract transcript data.");
   };
 
   const handleVideoUrlSubmit = useCallback(async () => {
@@ -283,14 +229,14 @@ const Canvas = () => {
     setIsCreatingNode(true);
     console.log("🎬 Creating video node with URL:", videoUrl);
 
-    // Always create the node first, then try to fetch transcript
+    // Create the node immediately
     const newNode: VideoNode = {
       id: `video-${Date.now()}`,
       x: pendingVideoNode.x,
       y: pendingVideoNode.y,
       url: videoUrl,
       title: getVideoTitle(videoUrl),
-      context: undefined // Will be set after transcript fetch
+      context: undefined // Will remain undefined due to CORS limitations
     };
 
     // Add the node immediately
@@ -300,24 +246,7 @@ const Canvas = () => {
     setVideoUrl("");
     setIsCreatingNode(false);
 
-    // Try to fetch transcript in the background
-    try {
-      console.log("🔄 Fetching transcript in background...");
-      const transcript = await fetchTranscript(videoUrl);
-      
-      // Update the node with the transcript
-      setVideoNodes(prev => prev.map(node => 
-        node.id === newNode.id 
-          ? { ...node, context: transcript }
-          : node
-      ));
-      
-      console.log("✅ Transcript added to node:", newNode.id);
-    } catch (error) {
-      console.log("⚠️ Failed to fetch transcript, but node created successfully:", error);
-      // Node is already created, just log the error
-      // The transcript can be fetched later when user clicks the icon
-    }
+    console.log("✅ Video node created successfully:", newNode.id);
   }, [pendingVideoNode, videoUrl]);
 
   const getVideoTitle = (url: string) => {
@@ -357,39 +286,22 @@ const Canvas = () => {
     console.log("🎯 Transcript button clicked for:", node.url);
     e.stopPropagation();
     
-    if (node.context) {
-      // Transcript already available
-      console.log("📖 Showing existing transcript:", node.context.substring(0, 100) + "...");
-      setCurrentTranscript(node.context);
-      setShowTranscriptPopup(true);
-      setTranscriptError("");
-    } else {
-      // Try to fetch transcript now
-      console.log("🔄 Fetching transcript on demand...");
-      setLoadingTranscript(true);
-      setShowTranscriptPopup(true);
-      setCurrentTranscript("");
-      setTranscriptError("");
-      
-      try {
-        const transcript = await fetchTranscript(node.url);
-        
-        // Update the node with the transcript
-        setVideoNodes(prev => prev.map(n => 
-          n.id === node.id 
-            ? { ...n, context: transcript }
-            : n
-        ));
-        
-        setCurrentTranscript(transcript);
-        console.log("✅ Transcript fetched and displayed");
-      } catch (error) {
-        console.error("❌ Failed to fetch transcript:", error);
-        setTranscriptError(error instanceof Error ? error.message : "Failed to fetch transcript");
-      } finally {
-        setLoadingTranscript(false);
-      }
+    setCurrentVideoUrl(node.url);
+    setShowTranscriptPopup(true);
+    setCurrentTranscript("");
+    setTranscriptError("Due to browser security restrictions (CORS), automatic transcript fetching is not supported. Please see the suggested alternatives below.");
+    setLoadingTranscript(false);
+  };
+
+  const getYouTubeVideoId = (url: string): string => {
+    if (url.includes('youtube.com/watch?v=')) {
+      return url.split('v=')[1]?.split('&')[0] || '';
+    } else if (url.includes('youtu.be/')) {
+      return url.split('youtu.be/')[1]?.split('?')[0] || '';
+    } else if (url.includes('youtube.com/embed/')) {
+      return url.split('embed/')[1]?.split('?')[0] || '';
     }
+    return '';
   };
 
   useEffect(() => {
@@ -477,7 +389,7 @@ const Canvas = () => {
                 <button
                   onClick={(e) => handleTranscriptClick(e, node)}
                   className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10"
-                  title="View Transcript"
+                  title="Transcript Options"
                 >
                   <Text className="w-4 h-4 text-white" />
                 </button>
@@ -485,11 +397,10 @@ const Canvas = () => {
               <div className="p-3">
                 <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
                 <p className="text-xs text-gray-500 truncate">{node.url}</p>
-                {node.context ? (
-                  <p className="text-xs text-green-600 mt-1">✓ Transcript available</p>
-                ) : (
-                  <p className="text-xs text-yellow-600 mt-1">⏳ Transcript pending</p>
-                )}
+                <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" />
+                  Manual transcript needed
+                </p>
               </div>
             </div>
           </div>
@@ -544,14 +455,14 @@ const Canvas = () => {
         </div>
       )}
 
-      {/* Transcript Popup */}
+      {/* Transcript Options Popup */}
       {showTranscriptPopup && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-6 border-b bg-gray-50 rounded-t-lg">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Video Transcript</h3>
-                <p className="text-sm text-gray-600 mt-1">AI-generated transcript from video content</p>
+                <h3 className="text-lg font-semibold text-gray-900">Transcript Options</h3>
+                <p className="text-sm text-gray-600 mt-1">Manual transcript extraction required</p>
               </div>
               <button
                 onClick={() => {
@@ -559,7 +470,7 @@ const Canvas = () => {
                   setShowTranscriptPopup(false);
                   setCurrentTranscript("");
                   setTranscriptError("");
-                  setLoadingTranscript(false);
+                  setCurrentVideoUrl("");
                 }}
                 className="w-10 h-10 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
               >
@@ -567,42 +478,94 @@ const Canvas = () => {
               </button>
             </div>
             <div className="flex-1 overflow-auto p-6">
-              {loadingTranscript ? (
-                <div className="text-center py-12">
-                  <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <div className="text-gray-600 font-medium mb-2">Fetching transcript...</div>
-                  <div className="text-gray-500 text-sm">This may take a moment</div>
+              <div className="space-y-6">
+                {/* Error Message */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-amber-800 font-medium mb-1">Automatic Transcript Unavailable</h4>
+                      <p className="text-amber-700 text-sm">{transcriptError}</p>
+                    </div>
+                  </div>
                 </div>
-              ) : transcriptError ? (
-                <div className="text-center py-12">
-                  <div className="text-red-600 font-medium mb-2">❌ Error</div>
-                  <div className="text-red-500 text-sm mb-4 max-w-md mx-auto">{transcriptError}</div>
-                  <Button 
-                    onClick={() => {
-                      setTranscriptError("");
-                      setShowTranscriptPopup(false);
-                    }}
-                    variant="outline"
-                  >
-                    Close
-                  </Button>
-                </div>
-              ) : currentTranscript ? (
-                <div className="prose prose-gray max-w-none">
-                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <p className="text-sm text-gray-600 m-0">
-                      📝 Transcript ({currentTranscript.length} characters)
+
+                {/* Manual Options */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Alternative Methods:</h4>
+                  
+                  {/* YouTube Direct */}
+                  {currentVideoUrl && getYouTubeVideoId(currentVideoUrl) && (
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h5 className="font-medium text-gray-800 mb-2">1. YouTube Transcript (Recommended)</h5>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Access the official YouTube transcript directly from the video page.
+                      </p>
+                      <Button
+                        onClick={() => {
+                          const videoId = getYouTubeVideoId(currentVideoUrl);
+                          window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+                        }}
+                        className="flex items-center space-x-2"
+                        size="sm"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Open YouTube Video</span>
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Click "..." → "Show transcript" on YouTube, then copy and paste the text here.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Browser Extensions */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h5 className="font-medium text-gray-800 mb-2">2. Browser Extensions</h5>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Install browser extensions that can extract YouTube transcripts:
                     </p>
+                    <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
+                      <li>"YouTube Transcript" extension</li>
+                      <li>"Video Transcript AI" extension</li>
+                      <li>"Transcript for YouTube" extension</li>
+                    </ul>
                   </div>
-                  <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-base font-normal">
-                    {currentTranscript}
+
+                  {/* Manual Copy Paste */}
+                  <div className="border border-gray-200 rounded-lg p-4">
+                    <h5 className="font-medium text-gray-800 mb-2">3. Manual Input</h5>
+                    <p className="text-sm text-gray-600 mb-3">
+                      If you have the transcript text, paste it below:
+                    </p>
+                    <textarea
+                      placeholder="Paste transcript text here..."
+                      className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                      value={currentTranscript}
+                      onChange={(e) => setCurrentTranscript(e.target.value)}
+                    />
+                    {currentTranscript && (
+                      <div className="mt-3 flex justify-end">
+                        <Button
+                          onClick={() => {
+                            // Update the video node with the manually entered transcript
+                            setVideoNodes(prev => prev.map(node => 
+                              node.url === currentVideoUrl 
+                                ? { ...node, context: currentTranscript }
+                                : node
+                            ));
+                            setShowTranscriptPopup(false);
+                            setCurrentTranscript("");
+                            setCurrentVideoUrl("");
+                          }}
+                          size="sm"
+                        >
+                          Save Transcript
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  No transcript available
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
