@@ -3,11 +3,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus, Grid3X3, LayoutGrid, User, LogOut, Folder, Star, Clock, MoreHorizontal } from "lucide-react";
+import { Search, Plus, LayoutGrid, User, LogOut, Archive, Bell, MoreHorizontal } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("Popular");
+  const navigate = useNavigate();
 
   const tabs = ["Popular", "Concepting", "Design", "Marketing", "Moving Image", "Experimental"];
 
@@ -38,6 +40,10 @@ const Dashboard = () => {
     }
   ];
 
+  const handleNewProject = () => {
+    navigate('/canvas');
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Sidebar */}
@@ -61,13 +67,14 @@ const Dashboard = () => {
             <Button 
               variant="ghost" 
               className="w-full justify-start text-left bg-zinc-800 text-white hover:bg-zinc-700"
+              onClick={handleNewProject}
             >
               <Plus className="w-4 h-4 mr-3" />
               New Project
             </Button>
             
             <Button variant="ghost" className="w-full justify-start text-left text-zinc-300 hover:text-white hover:bg-zinc-800">
-              <Grid3X3 className="w-4 h-4 mr-3" />
+              <LayoutGrid className="w-4 h-4 mr-3" />
               Projects
             </Button>
             
@@ -82,12 +89,12 @@ const Dashboard = () => {
         <div className="p-4 border-t border-zinc-800">
           <nav className="space-y-2">
             <Button variant="ghost" className="w-full justify-start text-left text-zinc-300 hover:text-white hover:bg-zinc-800">
-              <Folder className="w-4 h-4 mr-3" />
+              <Archive className="w-4 h-4 mr-3" />
               Trash
             </Button>
             
             <Button variant="ghost" className="w-full justify-start text-left text-zinc-300 hover:text-white hover:bg-zinc-800">
-              <Star className="w-4 h-4 mr-3" />
+              <Bell className="w-4 h-4 mr-3" />
               Help
             </Button>
           </nav>
@@ -124,7 +131,10 @@ const Dashboard = () => {
                 <LayoutGrid className="w-5 h-5" />
               </Button>
               
-              <Button className="bg-white text-black hover:bg-zinc-200">
+              <Button 
+                className="bg-white text-black hover:bg-zinc-200"
+                onClick={handleNewProject}
+              >
                 Create new project
               </Button>
             </div>
@@ -186,7 +196,11 @@ const Dashboard = () => {
           {/* Empty Project Slots */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
             {[1, 2].map((item) => (
-              <Card key={item} className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer">
+              <Card 
+                key={item} 
+                className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer"
+                onClick={handleNewProject}
+              >
                 <CardContent className="p-8 text-center">
                   <Plus className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
                   <p className="text-zinc-400">Create new project</p>
