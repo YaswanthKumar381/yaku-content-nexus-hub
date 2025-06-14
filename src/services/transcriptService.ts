@@ -44,19 +44,14 @@ export const fetchYouTubeTranscript = async (videoId: string): Promise<Transcrip
   const url = `https://notegpt.io/api/v2/video-transcript?platform=youtube&video_id=${videoId}`;
   console.log("📡 Fetching from URL:", url);
   
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    },
-  });
+  const response = await fetch(url);
+  const data = await response.json();
+  
+  console.log("API Response:", data);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch transcript: ${response.status} ${response.statusText}`);
   }
-  
-  const data = await response.json();
   
   if (data.code !== 100000) {
     throw new Error(data.message || 'Failed to fetch transcript');

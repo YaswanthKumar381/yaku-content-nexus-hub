@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { Video, Archive, History, Bell } from "lucide-react";
 import { VideoNode, SidebarTool } from "@/types/canvas";
@@ -101,9 +100,22 @@ const Canvas = () => {
     e.stopPropagation();
     e.preventDefault();
     
-    // Reset any dragging state when opening transcript modal
+    // Immediately reset any dragging state when opening transcript modal
     if (draggingNodeId) {
-      handleNodePointerUp(e as any);
+      const canvasContainer = canvasContainerRef.current;
+      if (canvasContainer) {
+        // Release any active pointer captures
+        try {
+          canvasContainer.releasePointerCapture(0);
+        } catch (e) {
+          // Ignore capture release errors
+        }
+      }
+      // Force reset dragging state
+      handleNodePointerUp({ 
+        target: { releasePointerCapture: () => {} },
+        pointerId: 0
+      } as any);
     }
     
     setCurrentVideoUrl(node.url);
@@ -119,13 +131,25 @@ const Canvas = () => {
     setTranscriptError("");
     setCurrentVideoUrl("");
     
-    // Ensure dragging state is reset when modal closes
+    // Force complete reset of dragging state
     if (draggingNodeId) {
-      const fakeEvent = {
+      const canvasContainer = canvasContainerRef.current;
+      if (canvasContainer) {
+        // Release all possible pointer captures
+        for (let i = 0; i < 10; i++) {
+          try {
+            canvasContainer.releasePointerCapture(i);
+          } catch (e) {
+            // Ignore capture release errors
+          }
+        }
+      }
+      
+      // Force reset using the hook
+      handleNodePointerUp({ 
         target: { releasePointerCapture: () => {} },
         pointerId: 0
-      } as any;
-      handleNodePointerUp(fakeEvent);
+      } as any);
     }
   }, [draggingNodeId, handleNodePointerUp]);
 
