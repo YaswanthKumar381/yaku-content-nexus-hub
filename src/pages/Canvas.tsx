@@ -217,6 +217,8 @@ const Canvas = () => {
     
     try {
       console.log("📡 Making API request to kome.ai...");
+      
+      // Try the original API first
       const response = await fetch("https://kome.ai/api/transcript", {
         method: "POST",
         headers: {
@@ -225,7 +227,8 @@ const Canvas = () => {
         body: JSON.stringify({
           video_id: videoUrl,
           format: true
-        })
+        }),
+        mode: 'cors' // Explicitly set CORS mode
       });
 
       console.log("📥 Response status:", response.status);
@@ -249,6 +252,12 @@ const Canvas = () => {
       }
     } catch (error) {
       console.error("💥 Error fetching transcript:", error);
+      
+      // If it's a CORS or network error, provide a helpful message
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error("Unable to fetch transcript due to network restrictions. This is likely a CORS issue with the transcript service.");
+      }
+      
       throw error;
     }
   };
@@ -259,43 +268,40 @@ const Canvas = () => {
     setIsCreatingNode(true);
     console.log("🎬 Creating video node with URL:", videoUrl);
 
+    // Always create the node first, then try to fetch transcript
+    const newNode: VideoNode = {
+      id: `video-${Date.now()}`,
+      x: pendingVideoNode.x,
+      y: pendingVideoNode.y,
+      url: videoUrl,
+      title: getVideoTitle(videoUrl),
+      context: undefined // Will be set after transcript fetch
+    };
+
+    // Add the node immediately
+    setVideoNodes(prev => [...prev, newNode]);
+    setShowVideoInput(false);
+    setPendingVideoNode(null);
+    setVideoUrl("");
+    setIsCreatingNode(false);
+
+    // Try to fetch transcript in the background
     try {
-      // Fetch transcript while creating the node
+      console.log("🔄 Fetching transcript in background...");
       const transcript = await fetchTranscript(videoUrl);
-
-      const newNode: VideoNode = {
-        id: `video-${Date.now()}`,
-        x: pendingVideoNode.x,
-        y: pendingVideoNode.y,
-        url: videoUrl,
-        title: getVideoTitle(videoUrl),
-        context: transcript // Store transcript in context
-      };
-
-      console.log("✅ Video node created with transcript:", { nodeId: newNode.id, transcriptLength: transcript.length });
-
-      setVideoNodes(prev => [...prev, newNode]);
-      setShowVideoInput(false);
-      setPendingVideoNode(null);
-      setVideoUrl("");
+      
+      // Update the node with the transcript
+      setVideoNodes(prev => prev.map(node => 
+        node.id === newNode.id 
+          ? { ...node, context: transcript }
+          : node
+      ));
+      
+      console.log("✅ Transcript added to node:", newNode.id);
     } catch (error) {
-      console.error("❌ Failed to create video node with transcript:", error);
-      // Create node without transcript if fetch fails
-      const newNode: VideoNode = {
-        id: `video-${Date.now()}`,
-        x: pendingVideoNode.x,
-        y: pendingVideoNode.y,
-        url: videoUrl,
-        title: getVideoTitle(videoUrl),
-        context: `Failed to fetch transcript: ${error instanceof Error ? error.message : 'Unknown error'}`
-      };
-
-      setVideoNodes(prev => [...prev, newNode]);
-      setShowVideoInput(false);
-      setPendingVideoNode(null);
-      setVideoUrl("");
-    } finally {
-      setIsCreatingNode(false);
+      console.log("⚠️ Failed to fetch transcript, but node created successfully:", error);
+      // Node is already created, just log the error
+      // The transcript can be fetched later when user clicks the icon
     }
   }, [pendingVideoNode, videoUrl]);
 
@@ -332,19 +338,42 @@ const Canvas = () => {
     return "/placeholder.svg";
   };
 
-  const handleTranscriptClick = (e: React.MouseEvent, node: VideoNode) => {
+  const handleTranscriptClick = async (e: React.MouseEvent, node: VideoNode) => {
     console.log("🎯 Transcript button clicked for:", node.url);
     e.stopPropagation();
     
     if (node.context) {
-      console.log("📖 Showing transcript from context:", node.context.substring(0, 100) + "...");
+      // Transcript already available
+      console.log("📖 Showing existing transcript:", node.context.substring(0, 100) + "...");
       setCurrentTranscript(node.context);
       setShowTranscriptPopup(true);
       setTranscriptError("");
     } else {
-      console.log("❌ No transcript found in node context");
-      setTranscriptError("No transcript available for this video");
+      // Try to fetch transcript now
+      console.log("🔄 Fetching transcript on demand...");
+      setLoadingTranscript(true);
       setShowTranscriptPopup(true);
+      setCurrentTranscript("");
+      setTranscriptError("");
+      
+      try {
+        const transcript = await fetchTranscript(node.url);
+        
+        // Update the node with the transcript
+        setVideoNodes(prev => prev.map(n => 
+          n.id === node.id 
+            ? { ...n, context: transcript }
+            : n
+        ));
+        
+        setCurrentTranscript(transcript);
+        console.log("✅ Transcript fetched and displayed");
+      } catch (error) {
+        console.error("❌ Failed to fetch transcript:", error);
+        setTranscriptError(error instanceof Error ? error.message : "Failed to fetch transcript");
+      } finally {
+        setLoadingTranscript(false);
+      }
     }
   };
 
@@ -441,8 +470,10 @@ const Canvas = () => {
               <div className="p-3">
                 <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
                 <p className="text-xs text-gray-500 truncate">{node.url}</p>
-                {node.context && (
+                {node.context ? (
                   <p className="text-xs text-green-600 mt-1">✓ Transcript available</p>
+                ) : (
+                  <p className="text-xs text-yellow-600 mt-1">⏳ Transcript pending</p>
                 )}
               </div>
             </div>
@@ -472,7 +503,7 @@ const Canvas = () => {
             {isCreatingNode && (
               <div className="flex items-center space-x-2 mb-4 text-sm text-gray-600">
                 <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                <span>Fetching transcript and creating video node...</span>
+                <span>Creating video node...</span>
               </div>
             )}
             <div className="flex justify-end space-x-2">
@@ -513,6 +544,7 @@ const Canvas = () => {
                   setShowTranscriptPopup(false);
                   setCurrentTranscript("");
                   setTranscriptError("");
+                  setLoadingTranscript(false);
                 }}
                 className="w-10 h-10 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
               >
@@ -520,10 +552,19 @@ const Canvas = () => {
               </button>
             </div>
             <div className="flex-1 overflow-auto p-6">
-              {transcriptError ? (
+              {loadingTranscript ? (
+                <div className="text-center py-12">
+                  <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <div className="text-gray-600 font-medium mb-2">Fetching transcript...</div>
+                  <div className="text-gray-500 text-sm">This may take a moment</div>
+                </div>
+              ) : transcriptError ? (
                 <div className="text-center py-12">
                   <div className="text-red-600 font-medium mb-2">❌ Error</div>
-                  <div className="text-red-500 text-sm mb-4">{transcriptError}</div>
+                  <div className="text-red-500 text-sm mb-4 max-w-md mx-auto">{transcriptError}</div>
+                  <div className="text-xs text-gray-500 mb-4">
+                    This is likely due to CORS restrictions when accessing the transcript service from the browser.
+                  </div>
                   <Button 
                     onClick={() => {
                       setTranscriptError("");
