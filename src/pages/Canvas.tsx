@@ -15,13 +15,22 @@ import {
   X
 } from "lucide-react";
 
+interface VideoNode {
+  id: string;
+  x: number;
+  y: number;
+  url: string;
+  title: string;
+  context?: string; // Store transcript here
+}
+
 const Canvas = () => {
   const [selectedTool, setSelectedTool] = useState<string>("select");
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 });
   const [isDraggingVideo, setIsDraggingVideo] = useState(false);
-  const [videoNodes, setVideoNodes] = useState<Array<{ id: string; x: number; y: number; url: string; title: string }>>([]);
+  const [videoNodes, setVideoNodes] = useState<Array<VideoNode>>([]);
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [pendingVideoNode, setPendingVideoNode] = useState<{ x: number; y: number } | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
@@ -31,6 +40,7 @@ const Canvas = () => {
   const [currentTranscript, setCurrentTranscript] = useState("");
   const [loadingTranscript, setLoadingTranscript] = useState(false);
   const [transcriptError, setTranscriptError] = useState("");
+  const [isCreatingNode, setIsCreatingNode] = useState(false);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const sidebarTools = [
@@ -202,21 +212,91 @@ const Canvas = () => {
     e.preventDefault();
   }, []);
 
-  const handleVideoUrlSubmit = useCallback(() => {
+  const fetchTranscript = async (videoUrl: string): Promise<string> => {
+    console.log("🔍 Starting transcript fetch for:", videoUrl);
+    
+    try {
+      console.log("📡 Making API request to kome.ai...");
+      const response = await fetch("https://kome.ai/api/transcript", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          video_id: videoUrl,
+          format: true
+        })
+      });
+
+      console.log("📥 Response status:", response.status);
+      console.log("📥 Response ok:", response.ok);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ API Error:", errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("📄 Response data:", data);
+      
+      if (data.transcript) {
+        console.log("✅ Transcript received, length:", data.transcript.length);
+        return data.transcript;
+      } else {
+        console.warn("⚠️ No transcript found in response");
+        throw new Error("No transcript found in response");
+      }
+    } catch (error) {
+      console.error("💥 Error fetching transcript:", error);
+      throw error;
+    }
+  };
+
+  const handleVideoUrlSubmit = useCallback(async () => {
     if (!pendingVideoNode || !videoUrl.trim()) return;
 
-    const newNode = {
-      id: `video-${Date.now()}`,
-      x: pendingVideoNode.x,
-      y: pendingVideoNode.y,
-      url: videoUrl,
-      title: getVideoTitle(videoUrl)
-    };
+    setIsCreatingNode(true);
+    console.log("🎬 Creating video node with URL:", videoUrl);
 
-    setVideoNodes(prev => [...prev, newNode]);
-    setShowVideoInput(false);
-    setPendingVideoNode(null);
-    setVideoUrl("");
+    try {
+      // Fetch transcript while creating the node
+      const transcript = await fetchTranscript(videoUrl);
+
+      const newNode: VideoNode = {
+        id: `video-${Date.now()}`,
+        x: pendingVideoNode.x,
+        y: pendingVideoNode.y,
+        url: videoUrl,
+        title: getVideoTitle(videoUrl),
+        context: transcript // Store transcript in context
+      };
+
+      console.log("✅ Video node created with transcript:", { nodeId: newNode.id, transcriptLength: transcript.length });
+
+      setVideoNodes(prev => [...prev, newNode]);
+      setShowVideoInput(false);
+      setPendingVideoNode(null);
+      setVideoUrl("");
+    } catch (error) {
+      console.error("❌ Failed to create video node with transcript:", error);
+      // Create node without transcript if fetch fails
+      const newNode: VideoNode = {
+        id: `video-${Date.now()}`,
+        x: pendingVideoNode.x,
+        y: pendingVideoNode.y,
+        url: videoUrl,
+        title: getVideoTitle(videoUrl),
+        context: `Failed to fetch transcript: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+
+      setVideoNodes(prev => [...prev, newNode]);
+      setShowVideoInput(false);
+      setPendingVideoNode(null);
+      setVideoUrl("");
+    } finally {
+      setIsCreatingNode(false);
+    }
   }, [pendingVideoNode, videoUrl]);
 
   const getVideoTitle = (url: string) => {
@@ -252,57 +332,20 @@ const Canvas = () => {
     return "/placeholder.svg";
   };
 
-  const fetchTranscript = async (videoUrl: string) => {
-    console.log("🔍 Starting transcript fetch for:", videoUrl);
-    setLoadingTranscript(true);
-    setTranscriptError("");
-    
-    try {
-      console.log("📡 Making API request to kome.ai...");
-      const response = await fetch("https://kome.ai/api/transcript", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          video_id: videoUrl,
-          format: true
-        })
-      });
-
-      console.log("📥 Response status:", response.status);
-      console.log("📥 Response ok:", response.ok);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ API Error:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log("📄 Response data:", data);
-      
-      if (data.transcript) {
-        console.log("✅ Transcript received, length:", data.transcript.length);
-        setCurrentTranscript(data.transcript);
-        setShowTranscriptPopup(true);
-      } else {
-        console.warn("⚠️ No transcript found in response");
-        throw new Error("No transcript found in response");
-      }
-    } catch (error) {
-      console.error("💥 Error fetching transcript:", error);
-      setTranscriptError(`Failed to fetch transcript: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setLoadingTranscript(false);
-      console.log("🏁 Transcript fetch completed");
-    }
-  };
-
-  const handleTranscriptClick = (e: React.MouseEvent, videoUrl: string) => {
-    console.log("🎯 Transcript button clicked for:", videoUrl);
+  const handleTranscriptClick = (e: React.MouseEvent, node: VideoNode) => {
+    console.log("🎯 Transcript button clicked for:", node.url);
     e.stopPropagation();
-    fetchTranscript(videoUrl);
+    
+    if (node.context) {
+      console.log("📖 Showing transcript from context:", node.context.substring(0, 100) + "...");
+      setCurrentTranscript(node.context);
+      setShowTranscriptPopup(true);
+      setTranscriptError("");
+    } else {
+      console.log("❌ No transcript found in node context");
+      setTranscriptError("No transcript available for this video");
+      setShowTranscriptPopup(true);
+    }
   };
 
   useEffect(() => {
@@ -388,21 +431,19 @@ const Canvas = () => {
                 </div>
                 {/* Transcript Icon */}
                 <button
-                  onClick={(e) => handleTranscriptClick(e, node.url)}
-                  disabled={loadingTranscript}
-                  className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 z-10"
-                  title="Get Transcript"
+                  onClick={(e) => handleTranscriptClick(e, node)}
+                  className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10"
+                  title="View Transcript"
                 >
-                  {loadingTranscript ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Text className="w-4 h-4 text-white" />
-                  )}
+                  <Text className="w-4 h-4 text-white" />
                 </button>
               </div>
               <div className="p-3">
                 <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
                 <p className="text-xs text-gray-500 truncate">{node.url}</p>
+                {node.context && (
+                  <p className="text-xs text-green-600 mt-1">✓ Transcript available</p>
+                )}
               </div>
             </div>
           </div>
@@ -418,7 +459,7 @@ const Canvas = () => {
               type="url"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="Enter video URL..."
+              placeholder="Enter YouTube video URL..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
@@ -426,7 +467,14 @@ const Canvas = () => {
                 }
               }}
               autoFocus
+              disabled={isCreatingNode}
             />
+            {isCreatingNode && (
+              <div className="flex items-center space-x-2 mb-4 text-sm text-gray-600">
+                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                <span>Fetching transcript and creating video node...</span>
+              </div>
+            )}
             <div className="flex justify-end space-x-2">
               <Button
                 variant="outline"
@@ -435,14 +483,15 @@ const Canvas = () => {
                   setPendingVideoNode(null);
                   setVideoUrl("");
                 }}
+                disabled={isCreatingNode}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleVideoUrlSubmit}
-                disabled={!videoUrl.trim()}
+                disabled={!videoUrl.trim() || isCreatingNode}
               >
-                Add Video
+                {isCreatingNode ? "Creating..." : "Add Video"}
               </Button>
             </div>
           </div>
@@ -471,14 +520,7 @@ const Canvas = () => {
               </button>
             </div>
             <div className="flex-1 overflow-auto p-6">
-              {loadingTranscript ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                    <div className="text-gray-600 font-medium">Loading transcript...</div>
-                  </div>
-                </div>
-              ) : transcriptError ? (
+              {transcriptError ? (
                 <div className="text-center py-12">
                   <div className="text-red-600 font-medium mb-2">❌ Error</div>
                   <div className="text-red-500 text-sm mb-4">{transcriptError}</div>
