@@ -23,6 +23,8 @@ const Canvas = () => {
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [pendingVideoNode, setPendingVideoNode] = useState<{ x: number; y: number } | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  const [nodeDragStart, setNodeDragStart] = useState({ x: 0, y: 0 });
   const canvasContainerRef = useRef<HTMLDivElement>(null);
 
   const sidebarTools = [
@@ -39,14 +41,13 @@ const Canvas = () => {
     e.preventDefault();
     
     if (e.ctrlKey || e.metaKey) {
-      // Zoom - Fixed the zoom in/out logic
+      // Zoom
       const rect = canvasContainerRef.current?.getBoundingClientRect();
       if (!rect) return;
       
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
       
-      // Fixed: Use consistent zoom factor and proper direction
       const zoomIntensity = 0.1;
       const zoom = e.deltaY < 0 ? 1 + zoomIntensity : 1 - zoomIntensity;
       const newScale = Math.max(0.1, Math.min(5, transform.scale * zoom));
@@ -73,29 +74,58 @@ const Canvas = () => {
   }, [transform]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Don't start canvas dragging if we're dragging a node
+    if (draggingNodeId) return;
+    
     setIsDragging(true);
     setLastPointer({ x: e.clientX, y: e.clientY });
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, []);
+  }, [draggingNodeId]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging) return;
-    
-    const deltaX = e.clientX - lastPointer.x;
-    const deltaY = e.clientY - lastPointer.y;
-    
-    setTransform(prev => ({
-      ...prev,
-      x: prev.x + deltaX,
-      y: prev.y + deltaY
-    }));
-    
-    setLastPointer({ x: e.clientX, y: e.clientY });
-  }, [isDragging, lastPointer]);
+    if (draggingNodeId) {
+      // Handle node dragging
+      const deltaX = e.clientX - lastPointer.x;
+      const deltaY = e.clientY - lastPointer.y;
+      
+      setVideoNodes(prev => prev.map(node => 
+        node.id === draggingNodeId 
+          ? { 
+              ...node, 
+              x: node.x + deltaX / transform.scale, 
+              y: node.y + deltaY / transform.scale 
+            }
+          : node
+      ));
+      
+      setLastPointer({ x: e.clientX, y: e.clientY });
+    } else if (isDragging) {
+      // Handle canvas panning
+      const deltaX = e.clientX - lastPointer.x;
+      const deltaY = e.clientY - lastPointer.y;
+      
+      setTransform(prev => ({
+        ...prev,
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setLastPointer({ x: e.clientX, y: e.clientY });
+    }
+  }, [isDragging, lastPointer, draggingNodeId, transform.scale]);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     setIsDragging(false);
+    setDraggingNodeId(null);
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  }, []);
+
+  // Node-specific drag handlers
+  const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
+    e.stopPropagation(); // Prevent canvas drag
+    setDraggingNodeId(nodeId);
+    setLastPointer({ x: e.clientX, y: e.clientY });
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }, []);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -263,14 +293,15 @@ const Canvas = () => {
         {videoNodes.map((node) => (
           <div
             key={node.id}
-            className="absolute"
+            className="absolute cursor-move"
             style={{
               left: node.x,
               top: node.y,
               transform: 'translate(-50%, -50%)'
             }}
+            onPointerDown={(e) => handleNodePointerDown(e, node.id)}
           >
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden w-64 border border-gray-200">
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden w-64 border border-gray-200 hover:shadow-xl transition-shadow">
               <div className="relative">
                 <img
                   src={getVideoThumbnail(node.url)}
