@@ -4,34 +4,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Authentication logic will be implemented later
-    console.log("Sign in:", { email, password });
+    // For testing purposes, allow any credentials
+    if (email && password) {
+      console.log("Sign in successful:", { email, password });
+      // Store auth state in localStorage for testing
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("userEmail", email);
+      // Redirect to dashboard
+      navigate("/dashboard");
+    } else {
+      alert("Please enter both email and password");
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-black flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-white">
               Yaku.do
             </h1>
           </Link>
-          <p className="text-gray-300 mt-2">Welcome back to your content hub</p>
+          <p className="text-zinc-400 mt-2">Welcome back to your content hub</p>
         </div>
 
         {/* Sign In Form */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+        <div className="bg-zinc-900 rounded-2xl p-8 shadow-2xl border border-zinc-800">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Sign In</h2>
           
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -42,7 +52,7 @@ const SignIn = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-white/20 border-white/30 text-white placeholder:text-gray-300"
+                className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 focus:ring-zinc-600"
                 placeholder="Enter your email"
                 required
               />
@@ -56,14 +66,14 @@ const SignIn = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-white/20 border-white/30 text-white placeholder:text-gray-300 pr-10"
+                  className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 pr-10 focus:ring-zinc-600"
                   placeholder="Enter your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -72,7 +82,7 @@ const SignIn = () => {
 
             <Button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white py-3 rounded-full font-semibold transition-all duration-300 transform hover:scale-105"
+              className="w-full bg-white text-black hover:bg-zinc-200 py-3 rounded-lg font-semibold transition-all duration-300"
             >
               Sign In
               <ArrowRight className="ml-2 h-4 w-4" />
@@ -80,9 +90,9 @@ const SignIn = () => {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-300">
+            <p className="text-zinc-400">
               Don't have an account?{" "}
-              <Link to="/signup" className="text-purple-400 hover:text-purple-300 font-semibold">
+              <Link to="/signup" className="text-white hover:text-zinc-300 font-semibold">
                 Sign up
               </Link>
             </p>
