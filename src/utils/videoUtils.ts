@@ -1,8 +1,19 @@
 
-export const getVideoTitle = (url: string): string => {
-  if (url.includes('youtube.com') || url.includes('youtu.be')) {
-    return "YouTube Video";
-  } else if (url.includes('vimeo.com')) {
+import { fetchYouTubeTranscript } from "@/services/transcriptService";
+
+export const getVideoTitle = async (url: string): Promise<string> => {
+  const videoId = getYouTubeVideoId(url);
+  if (videoId) {
+    try {
+      const transcriptData = await fetchYouTubeTranscript(videoId);
+      return transcriptData.data.videoInfo.name || "YouTube Video";
+    } catch (error) {
+      console.error("Failed to fetch video title:", error);
+      return "YouTube Video";
+    }
+  }
+  
+  if (url.includes('vimeo.com')) {
     return "Vimeo Video";
   }
   return "Video";

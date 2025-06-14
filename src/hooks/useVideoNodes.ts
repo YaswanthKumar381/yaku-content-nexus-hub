@@ -7,17 +7,31 @@ export const useVideoNodes = () => {
   const [videoNodes, setVideoNodes] = useState<Array<VideoNode>>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
 
-  const addVideoNode = useCallback((x: number, y: number, url: string) => {
+  const addVideoNode = useCallback(async (x: number, y: number, url: string) => {
     const newNode: VideoNode = {
       id: `video-${Date.now()}`,
       x,
       y,
       url,
-      title: getVideoTitle(url),
+      title: "Loading...",
       context: undefined
     };
 
     setVideoNodes(prev => [...prev, newNode]);
+    
+    // Fetch the actual title asynchronously
+    try {
+      const title = await getVideoTitle(url);
+      setVideoNodes(prev => prev.map(node => 
+        node.id === newNode.id ? { ...node, title } : node
+      ));
+    } catch (error) {
+      console.error("Failed to update video title:", error);
+      setVideoNodes(prev => prev.map(node => 
+        node.id === newNode.id ? { ...node, title: "YouTube Video" } : node
+      ));
+    }
+    
     return newNode;
   }, []);
 

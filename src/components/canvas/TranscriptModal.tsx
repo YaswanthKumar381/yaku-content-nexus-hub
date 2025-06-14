@@ -1,8 +1,9 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { X, AlertCircle, ExternalLink } from "lucide-react";
+import { X, Loader2, CheckCircle } from "lucide-react";
 import { getYouTubeVideoId } from "@/utils/videoUtils";
+import { fetchYouTubeTranscript, formatTranscriptText } from "@/services/transcriptService";
 
 interface TranscriptModalProps {
   isOpen: boolean;
@@ -23,6 +24,54 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
   onTranscriptChange,
   onSave
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [fetchedTranscript, setFetchedTranscript] = useState("");
+  const [videoTitle, setVideoTitle] = useState("");
+
+  useEffect(() => {
+    if (isOpen && videoUrl) {
+      fetchTranscript();
+    }
+  }, [isOpen, videoUrl]);
+
+  const fetchTranscript = async () => {
+    const videoId = getYouTubeVideoId(videoUrl);
+    if (!videoId) return;
+
+    setIsLoading(true);
+    try {
+      console.log("🔍 Fetching transcript for video ID:", videoId);
+      const response = await fetchYouTubeTranscript(videoId);
+      
+      if (response.code === 100000) {
+        setVideoTitle(response.data.videoInfo.name);
+        
+        // Try to get the best available transcript
+        const transcripts = response.data.transcripts;
+        let bestTranscript = "";
+        
+        if (transcripts.en_auto?.custom?.length > 0) {
+          bestTranscript = formatTranscriptText(transcripts.en_auto.custom);
+        } else if (transcripts.en_auto?.default?.length > 0) {
+          bestTranscript = formatTranscriptText(transcripts.en_auto.default);
+        } else if (transcripts.en_auto?.auto?.length > 0) {
+          bestTranscript = formatTranscriptText(transcripts.en_auto.auto);
+        }
+        
+        setFetchedTranscript(bestTranscript);
+        onTranscriptChange(bestTranscript);
+        console.log("✅ Transcript fetched successfully");
+      } else {
+        throw new Error(response.message || "Failed to fetch transcript");
+      }
+    } catch (error) {
+      console.error("❌ Error fetching transcript:", error);
+      setFetchedTranscript("");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -30,8 +79,10 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
       <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col animate-in fade-in-0 zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b bg-gray-50 rounded-t-lg">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Transcript Options</h3>
-            <p className="text-sm text-gray-600 mt-1">Manual transcript extraction required</p>
+            <h3 className="text-lg font-semibold text-gray-900">Video Transcript</h3>
+            {videoTitle && (
+              <p className="text-sm text-gray-600 mt-1">{videoTitle}</p>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -40,82 +91,47 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
             <X className="w-5 h-5 text-gray-600" />
           </button>
         </div>
+        
         <div className="flex-1 overflow-auto p-6">
-          <div className="space-y-6">
-            {/* Error Message */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-amber-800 font-medium mb-1">Automatic Transcript Unavailable</h4>
-                  <p className="text-amber-700 text-sm">{error}</p>
-                </div>
-              </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
+              <span className="ml-2 text-gray-600">Fetching transcript...</span>
             </div>
-
-            {/* Manual Options */}
+          ) : fetchedTranscript ? (
             <div className="space-y-4">
-              <h4 className="font-medium text-gray-900">Alternative Methods:</h4>
+              <div className="flex items-center space-x-2 text-green-600 mb-4">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-medium">Transcript loaded successfully!</span>
+              </div>
               
-              {/* YouTube Direct */}
-              {videoUrl && getYouTubeVideoId(videoUrl) && (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h5 className="font-medium text-gray-800 mb-2">1. YouTube Transcript (Recommended)</h5>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Access the official YouTube transcript directly from the video page.
-                  </p>
-                  <Button
-                    onClick={() => {
-                      const videoId = getYouTubeVideoId(videoUrl);
-                      window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
-                    }}
-                    className="flex items-center space-x-2"
-                    size="sm"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Open YouTube Video</span>
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Click "..." → "Show transcript" on YouTube, then copy and paste the text here.
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">Transcript:</h4>
+                <div className="bg-white border rounded p-3 max-h-64 overflow-y-auto">
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {fetchedTranscript}
                   </p>
                 </div>
-              )}
-
-              {/* Browser Extensions */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h5 className="font-medium text-gray-800 mb-2">2. Browser Extensions</h5>
-                <p className="text-sm text-gray-600 mb-3">
-                  Install browser extensions that can extract YouTube transcripts:
-                </p>
-                <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-                  <li>"YouTube Transcript" extension</li>
-                  <li>"Video Transcript AI" extension</li>
-                  <li>"Transcript for YouTube" extension</li>
-                </ul>
               </div>
-
-              {/* Manual Copy Paste */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h5 className="font-medium text-gray-800 mb-2">3. Manual Input</h5>
-                <p className="text-sm text-gray-600 mb-3">
-                  If you have the transcript text, paste it below:
-                </p>
-                <textarea
-                  placeholder="Paste transcript text here..."
-                  className="w-full h-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                  value={transcript}
-                  onChange={(e) => onTranscriptChange(e.target.value)}
-                />
-                {transcript && (
-                  <div className="mt-3 flex justify-end">
-                    <Button onClick={onSave} size="sm">
-                      Save Transcript
-                    </Button>
-                  </div>
-                )}
+              
+              <div className="flex justify-end">
+                <Button onClick={onSave} className="bg-purple-600 hover:bg-purple-700">
+                  Save Transcript
+                </Button>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No transcript available for this video.</p>
+              <Button 
+                onClick={fetchTranscript}
+                variant="outline"
+                className="mt-4"
+              >
+                Try Again
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>

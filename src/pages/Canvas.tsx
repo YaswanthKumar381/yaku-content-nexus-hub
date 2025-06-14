@@ -83,13 +83,17 @@ const Canvas = () => {
     setIsCreatingNode(true);
     console.log("🎬 Creating video node with URL:", videoUrl);
 
-    addVideoNode(pendingVideoNode.x, pendingVideoNode.y, videoUrl);
-    setShowVideoInput(false);
-    setPendingVideoNode(null);
-    setVideoUrl("");
-    setIsCreatingNode(false);
-
-    console.log("✅ Video node created successfully");
+    try {
+      await addVideoNode(pendingVideoNode.x, pendingVideoNode.y, videoUrl);
+      setShowVideoInput(false);
+      setPendingVideoNode(null);
+      setVideoUrl("");
+      console.log("✅ Video node created successfully");
+    } catch (error) {
+      console.error("❌ Error creating video node:", error);
+    } finally {
+      setIsCreatingNode(false);
+    }
   }, [pendingVideoNode, videoUrl, addVideoNode]);
 
   const handleTranscriptClick = async (e: React.MouseEvent, node: VideoNode) => {
@@ -99,7 +103,7 @@ const Canvas = () => {
     setCurrentVideoUrl(node.url);
     setShowTranscriptPopup(true);
     setCurrentTranscript("");
-    setTranscriptError("Due to browser security restrictions (CORS), automatic transcript fetching is not supported. Please see the suggested alternatives below.");
+    setTranscriptError("");
   };
 
   return (
