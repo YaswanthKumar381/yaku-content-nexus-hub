@@ -15,6 +15,20 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   onPointerDown,
   onTranscriptClick
 }) => {
+  const handleTranscriptClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onTranscriptClick(e, node);
+  };
+
+  const handleNodePointerDown = (e: React.PointerEvent) => {
+    // Only allow dragging if not clicking on the transcript button
+    if ((e.target as HTMLElement).closest('[data-transcript-button]')) {
+      return;
+    }
+    onPointerDown(e, node.id);
+  };
+
   return (
     <div
       className="absolute cursor-move"
@@ -23,7 +37,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
         top: node.y,
         transform: 'translate(-50%, -50%)'
       }}
-      onPointerDown={(e) => onPointerDown(e, node.id)}
+      onPointerDown={handleNodePointerDown}
     >
       <div className="bg-white rounded-lg shadow-lg overflow-hidden w-64 border border-gray-200 hover:shadow-xl transition-shadow">
         <div className="relative">
@@ -41,8 +55,9 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
             </div>
           </div>
           <button
-            onClick={(e) => onTranscriptClick(e, node)}
-            className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10"
+            data-transcript-button
+            onClick={handleTranscriptClick}
+            className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10 cursor-pointer"
             title="Transcript Options"
           >
             <Text className="w-4 h-4 text-white" />
@@ -51,10 +66,18 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
         <div className="p-3">
           <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
           <p className="text-xs text-gray-500 truncate">{node.url}</p>
-          <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            Manual transcript needed
-          </p>
+          {!node.context && (
+            <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              Transcript not loaded
+            </p>
+          )}
+          {node.context && (
+            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+              <Text className="w-3 h-3" />
+              Transcript available
+            </p>
+          )}
         </div>
       </div>
     </div>

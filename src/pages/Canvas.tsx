@@ -99,12 +99,35 @@ const Canvas = () => {
   const handleTranscriptClick = async (e: React.MouseEvent, node: VideoNode) => {
     console.log("🎯 Transcript button clicked for:", node.url);
     e.stopPropagation();
+    e.preventDefault();
+    
+    // Reset any dragging state when opening transcript modal
+    if (draggingNodeId) {
+      handleNodePointerUp(e as any);
+    }
     
     setCurrentVideoUrl(node.url);
     setShowTranscriptPopup(true);
     setCurrentTranscript("");
     setTranscriptError("");
   };
+
+  const handleTranscriptModalClose = useCallback(() => {
+    console.log("🔽 Closing transcript popup");
+    setShowTranscriptPopup(false);
+    setCurrentTranscript("");
+    setTranscriptError("");
+    setCurrentVideoUrl("");
+    
+    // Ensure dragging state is reset when modal closes
+    if (draggingNodeId) {
+      const fakeEvent = {
+        target: { releasePointerCapture: () => {} },
+        pointerId: 0
+      } as any;
+      handleNodePointerUp(fakeEvent);
+    }
+  }, [draggingNodeId, handleNodePointerUp]);
 
   return (
     <div className="min-h-screen bg-zinc-900 relative overflow-hidden">
@@ -184,22 +207,14 @@ const Canvas = () => {
         videoUrl={currentVideoUrl}
         transcript={currentTranscript}
         error={transcriptError}
-        onClose={() => {
-          console.log("🔽 Closing transcript popup");
-          setShowTranscriptPopup(false);
-          setCurrentTranscript("");
-          setTranscriptError("");
-          setCurrentVideoUrl("");
-        }}
+        onClose={handleTranscriptModalClose}
         onTranscriptChange={setCurrentTranscript}
         onSave={() => {
           updateVideoNode(
             videoNodes.find(node => node.url === currentVideoUrl)?.id || '',
             { context: currentTranscript }
           );
-          setShowTranscriptPopup(false);
-          setCurrentTranscript("");
-          setCurrentVideoUrl("");
+          handleTranscriptModalClose();
         }}
       />
 
