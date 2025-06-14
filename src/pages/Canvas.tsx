@@ -1,3 +1,4 @@
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -217,7 +218,7 @@ const Canvas = () => {
     console.log("🔍 Starting transcript fetch for:", videoUrl);
     
     try {
-      console.log("📡 Using youtube-transcript package...");
+      console.log("📡 Using youtube-transcript package (NPM)...");
       
       // Extract video ID from various YouTube URL formats
       let videoId = '';
@@ -231,13 +232,17 @@ const Canvas = () => {
       }
       
       if (!videoId) {
+        console.error("❌ Could not extract video ID from URL:", videoUrl);
         throw new Error("Could not extract video ID from the provided URL");
       }
       
       console.log("📹 Extracted video ID:", videoId);
+      console.log("🚀 Calling YoutubeTranscript.fetchTranscript...");
       
       // Fetch transcript using youtube-transcript package
       const transcriptArray = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      console.log("📦 Received transcript array:", transcriptArray?.length || 0, "items");
       
       if (!transcriptArray || transcriptArray.length === 0) {
         throw new Error("No transcript available for this video");
@@ -250,7 +255,7 @@ const Canvas = () => {
         .replace(/\s+/g, ' ')
         .trim();
       
-      console.log("✅ Transcript received, length:", transcript.length);
+      console.log("✅ Transcript processed successfully, length:", transcript.length);
       return transcript;
       
     } catch (error) {
