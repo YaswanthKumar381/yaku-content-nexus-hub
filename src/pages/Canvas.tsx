@@ -14,6 +14,7 @@ import {
   Text,
   X
 } from "lucide-react";
+import { YoutubeTranscript } from 'youtube-transcript';
 
 interface VideoNode {
   id: string;
@@ -216,49 +217,58 @@ const Canvas = () => {
     console.log("🔍 Starting transcript fetch for:", videoUrl);
     
     try {
-      console.log("📡 Making API request to kome.ai...");
+      console.log("📡 Using youtube-transcript package...");
       
-      // Try the original API first
-      const response = await fetch("https://kome.ai/api/transcript", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          video_id: videoUrl,
-          format: true
-        }),
-        mode: 'cors' // Explicitly set CORS mode
-      });
-
-      console.log("📥 Response status:", response.status);
-      console.log("📥 Response ok:", response.ok);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("❌ API Error:", errorText);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log("📄 Response data:", data);
+      // Extract video ID from various YouTube URL formats
+      let videoId = '';
       
-      if (data.transcript) {
-        console.log("✅ Transcript received, length:", data.transcript.length);
-        return data.transcript;
-      } else {
-        console.warn("⚠️ No transcript found in response");
-        throw new Error("No transcript found in response");
+      if (videoUrl.includes('youtube.com/watch?v=')) {
+        videoId = videoUrl.split('v=')[1]?.split('&')[0] || '';
+      } else if (videoUrl.includes('youtu.be/')) {
+        videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0] || '';
+      } else if (videoUrl.includes('youtube.com/embed/')) {
+        videoId = videoUrl.split('embed/')[1]?.split('?')[0] || '';
       }
+      
+      if (!videoId) {
+        throw new Error("Could not extract video ID from the provided URL");
+      }
+      
+      console.log("📹 Extracted video ID:", videoId);
+      
+      // Fetch transcript using youtube-transcript package
+      const transcriptArray = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      if (!transcriptArray || transcriptArray.length === 0) {
+        throw new Error("No transcript available for this video");
+      }
+      
+      // Convert transcript array to readable text
+      const transcript = transcriptArray
+        .map(item => item.text)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      console.log("✅ Transcript received, length:", transcript.length);
+      return transcript;
+      
     } catch (error) {
       console.error("💥 Error fetching transcript:", error);
       
-      // If it's a CORS or network error, provide a helpful message
-      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        throw new Error("Unable to fetch transcript due to network restrictions. This is likely a CORS issue with the transcript service.");
+      if (error instanceof Error) {
+        // Handle specific youtube-transcript errors
+        if (error.message.includes('Could not retrieve video details')) {
+          throw new Error("Video not found or unavailable");
+        } else if (error.message.includes('Transcript is disabled')) {
+          throw new Error("Transcript is disabled for this video");
+        } else if (error.message.includes('No transcript available')) {
+          throw new Error("No transcript available for this video");
+        }
+        throw error;
       }
       
-      throw error;
+      throw new Error("Failed to fetch transcript");
     }
   };
 
@@ -562,9 +572,6 @@ const Canvas = () => {
                 <div className="text-center py-12">
                   <div className="text-red-600 font-medium mb-2">❌ Error</div>
                   <div className="text-red-500 text-sm mb-4 max-w-md mx-auto">{transcriptError}</div>
-                  <div className="text-xs text-gray-500 mb-4">
-                    This is likely due to CORS restrictions when accessing the transcript service from the browser.
-                  </div>
                   <Button 
                     onClick={() => {
                       setTranscriptError("");
