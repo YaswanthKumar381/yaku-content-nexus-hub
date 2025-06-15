@@ -1,8 +1,12 @@
 
-import React, { useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TextNode } from '@/types/canvas';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Text as TextIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 interface TextNodeComponentProps {
   node: TextNode;
@@ -22,76 +26,107 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
   isConnected,
 }) => {
   const { isDarkMode } = useTheme();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [title, setTitle] = useState(node.title || '');
+  const [content, setContent] = useState(node.content);
+  
+  const isNewNode = node.content === "Click to edit this note...";
 
-  const handlePointerDown = (e: React.PointerEvent) => {
-    const target = e.target as HTMLElement;
-    // Prevent textarea drag/resize from moving the node
-    if (textareaRef.current?.contains(target)) {
-      if (
-        e.clientX > textareaRef.current.getBoundingClientRect().right - 16 &&
-        e.clientY > textareaRef.current.getBoundingClientRect().bottom - 16
-      ) {
-        return;
-      }
+  useEffect(() => {
+    if (isNewNode) {
+      setTimeout(() => setIsPopoverOpen(true), 100);
     }
-    onPointerDown(e, node.id);
-  };
+  }, [isNewNode]);
   
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    onUpdate(node.id, { content: e.target.value });
-  };
-  
-  const handleResizeEnd = () => {
-    if (textareaRef.current) {
-      onUpdate(node.id, { width: textareaRef.current.offsetWidth, height: node.height });
+  useEffect(() => {
+    if (isPopoverOpen) {
+        setTitle(node.title || '');
+        setContent(isNewNode ? '' : node.content);
     }
+  }, [isPopoverOpen, node.title, node.content, isNewNode]);
+
+  const handleSave = () => {
+    onUpdate(node.id, { title, content });
+    setIsPopoverOpen(false);
   };
 
   return (
-    <div
-      data-node-id={node.id}
-      className={`absolute rounded-lg shadow-lg group flex flex-col
-        bg-orange-200/80 border-2 border-orange-400/90 backdrop-blur-sm cursor-grab
-      `}
-      style={{
-        transform: `translate(${node.x}px, ${node.y}px)`,
-        width: node.width,
-        height: node.height,
-      }}
-      onPointerDown={handlePointerDown}
-    >
-        <div className="flex-grow p-2 pt-1 flex flex-col">
-            <textarea
-                ref={textareaRef}
-                className="w-full flex-grow bg-transparent border-none outline-none text-gray-800 placeholder-gray-600 resize"
-                style={{ fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.5' }}
-                value={node.content}
-                onChange={handleContentChange}
-                onMouseUp={handleResizeEnd} 
-                placeholder="Type something..."
-                onPointerDown={(e) => e.stopPropagation()} // Prevent node drag when interacting with textarea
-            />
-        </div>
-        
-        <button
-            className="absolute -top-2.5 -right-2.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
-            onClick={(e) => {
-                e.stopPropagation();
-                onDelete(node.id);
-            }}
-        >
-            <Trash2 size={12} />
-        </button>
-
+    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+      <PopoverTrigger asChild>
         <div
-            className={`absolute -right-[7px] top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full cursor-pointer
-            ${isConnected ? 'bg-green-500' : 'bg-blue-500 hover:bg-blue-600'} border-2 ${isDarkMode ? 'border-zinc-900' : 'border-orange-200/80'} z-10`}
-            onPointerDown={(e) => {
-                e.stopPropagation();
-                onStartConnection(node.id);
-            }}
-        />
-    </div>
+          data-node-id={node.id}
+          className="absolute rounded-lg shadow-lg group flex flex-col bg-white border-2 border-gray-200 cursor-grab"
+          style={{
+            transform: `translate(${node.x}px, ${node.y}px)`,
+            width: node.width,
+            height: node.height,
+          }}
+          onPointerDown={(e) => onPointerDown(e, node.id)}
+        >
+          <div className="flex items-center gap-2 px-3 py-1 bg-orange-100/90 rounded-t-md border-b-2 border-orange-200/90">
+            <TextIcon size={14} className="text-orange-600" />
+            <span className="text-sm font-semibold text-orange-800">Text</span>
+          </div>
+          <div className="p-3 flex-grow overflow-hidden">
+            {node.title && <h3 className="font-bold text-sm text-gray-800 mb-1 truncate">{node.title}</h3>}
+            <p className="text-xs text-gray-700 overflow-hidden text-ellipsis" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              {isNewNode ? "Click to add text..." : node.content}
+            </p>
+          </div>
+
+          <button
+              className="absolute -top-2.5 -right-2.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(node.id);
+              }}
+          >
+              <Trash2 size={12} />
+          </button>
+
+          <div
+              className={`absolute -right-[7px] top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full cursor-pointer
+              ${isConnected ? 'bg-green-500' : 'bg-orange-400/80 hover:bg-orange-500/80'} border-2 ${isDarkMode ? 'border-zinc-900' : 'border-white'} z-10`}
+              onPointerDown={(e) => {
+                  e.stopPropagation();
+                  onStartConnection(node.id);
+              }}
+          />
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 z-50" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <h4 className="font-medium leading-none">Text Note</h4>
+            <p className="text-sm text-muted-foreground">
+              Edit the title and content.
+            </p>
+          </div>
+          <div className="grid gap-2">
+            <div className="grid grid-cols-3 items-center gap-4">
+               <label htmlFor="title" className="text-sm text-right">Title</label>
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="col-span-2 h-8"
+                placeholder="Note title (optional)"
+              />
+            </div>
+            <div className="grid grid-cols-3 items-center gap-4">
+              <label htmlFor="content" className="text-sm text-right">Content</label>
+              <Textarea
+                id="content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                className="col-span-2 min-h-[120px]"
+                placeholder="Type your note here."
+              />
+            </div>
+          </div>
+          <Button onClick={handleSave}>Save</Button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };

@@ -26,6 +26,7 @@ export interface TextNode {
   x: number;
   y: number;
   type: 'text';
+  title?: string;
   content: string;
   width: number;
   height: number;

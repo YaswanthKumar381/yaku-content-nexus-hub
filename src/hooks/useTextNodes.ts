@@ -14,9 +14,10 @@ export const useTextNodes = () => {
       x,
       y,
       type: "text",
-      content: "Type something...",
+      title: "New Note",
+      content: "Click to edit this note...",
       width: 250,
-      height: 150,
+      height: 120,
     };
     setTextNodes((prevNodes) => [...prevNodes, newNode]);
     return newNode;
