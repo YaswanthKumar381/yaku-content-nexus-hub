@@ -14,9 +14,6 @@ export const useWebsiteNodes = () => {
       const webhookUrl = `https://n8n-anrqdske.ap-southeast-1.clawcloudrun.com/webhook/website?url=${encodeURIComponent(url)}`;
       const response = await fetch(webhookUrl, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
       
       if (!response.ok) {
@@ -26,6 +23,16 @@ export const useWebsiteNodes = () => {
       const htmlContent = await response.text();
       console.log(`✅ Successfully fetched content for: ${url}. Length: ${htmlContent.length}`);
       
+      if (htmlContent.length === 0) {
+        console.warn(`⚠️ Received empty content for ${url}. Response status: ${response.status}`);
+        return {
+          url,
+          title: new URL(url).hostname || url,
+          content: `Failed to fetch content from ${url}. Received empty response from server.`,
+          fetchedAt: new Date().toISOString(),
+        };
+      }
+
       const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
       const title = titleMatch ? titleMatch[1].trim() : new URL(url).hostname;
       
