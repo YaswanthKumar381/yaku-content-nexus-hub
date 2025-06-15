@@ -1,4 +1,3 @@
-
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
@@ -20,6 +19,7 @@ export const useCanvasOrchestration = () => {
     websiteNodesResult,
     audioNodesResult,
     imageNodesResult,
+    groupNodesResult,
     connectionsResult,
     contextUsage,
     allNodesMap,
@@ -54,6 +54,7 @@ export const useCanvasOrchestration = () => {
     websiteNodesResult,
     audioNodesResult,
     imageNodesResult,
+    groupNodesResult,
     transformResult,
   });
   
@@ -122,6 +123,7 @@ export const useCanvasOrchestration = () => {
     websiteNodesResult,
     audioNodesResult,
     imageNodesResult,
+    groupNodesResult,
     connectionsResult,
     contextUsage,
     interactionResult,

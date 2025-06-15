@@ -20,7 +20,8 @@ const sourceColorMap: Record<CanvasNode['type'], string> = {
     chat: '#A855F7', // purple-500
     website: '#10B981', // emerald-500
     audio: '#F59E0B', // amber-500
-    image: '#8B5CF6' // violet-500
+    image: '#8B5CF6', // violet-500
+    group: '#6B7280', // gray-500
 };
 
 const targetColor = '#8B5CF6'; // violet-500
