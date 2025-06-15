@@ -30,6 +30,12 @@ export interface ChatNode {
 
 export type CanvasNode = VideoNode | DocumentNode | ChatNode;
 
+export interface Connection {
+  id: string;
+  sourceId: string;
+  targetId: string;
+}
+
 export interface Transform {
   x: number;
   y: number;

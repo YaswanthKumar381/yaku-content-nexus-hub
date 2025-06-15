@@ -1,7 +1,6 @@
-
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Archive, History, Bell } from "lucide-react";
-import { SidebarTool } from "@/types/canvas";
+import { SidebarTool, VideoNode, DocumentNode, ChatNode } from "@/types/canvas";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useVideoNodes } from "@/hooks/useVideoNodes";
 import { useCanvasState } from "@/hooks/useCanvasState";
@@ -21,6 +20,8 @@ import { DocumentNodeComponent } from "@/components/canvas/DocumentNodeComponent
 import { DocumentUploadModal } from "@/components/canvas/DocumentUploadModal";
 import { useChatNodes } from "@/hooks/useChatNodes";
 import { ChatNodeComponent } from "@/components/canvas/ChatNodeComponent";
+import { useConnections } from "@/hooks/useConnections";
+import { ConnectionLine } from "@/components/canvas/ConnectionLine";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
@@ -103,7 +104,18 @@ const CanvasContent = () => {
     forceResetDragState: forceResetChatDragState,
   } = useChatNodes();
 
+  const { connections, addConnection } = useConnections();
+  const [connectingInfo, setConnectingInfo] = useState<{
+    startNodeId: string;
+    startX: number;
+    startY: number;
+  } | null>(null);
+  const [liveEndPoint, setLiveEndPoint] = useState<{ x: number, y: number } | null>(null);
+
   const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId;
+  
+  const allNodes = [...videoNodes, ...documentNodes, ...chatNodes];
+  const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
   const {
     handleVideoIconDragStart,
@@ -148,16 +160,35 @@ const CanvasContent = () => {
     addChatNode,
   });
 
-  const sidebarTools: SidebarTool[] = [
-    { id: "video", icon: YoutubeIcon, label: "Video" },
-    { id: "filter", icon: Archive, label: "Filter" },
-    { id: "history", icon: History, label: "History" },
-    { id: "file-text", icon: FileTextIcon, label: "File" },
-    { id: "folder", icon: Archive, label: "Folder" },
-    { id: "rocket", icon: Bell, label: "Rocket" },
-    { id: "chat", icon: Bell, label: "Chat" },
-    { id: "help", icon: Bell, label: "Help" }
-  ];
+  const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode) => {
+    if (node.type === 'chat') {
+      return { x: node.x - 258, y: node.y };
+    } else if (node.type === 'video') {
+      return { x: node.x + 160, y: node.y };
+    } else if (node.type === 'document') {
+      return { x: node.x + 128, y: node.y };
+    }
+    return { x: node.x, y: node.y };
+  };
+
+  const handleStartConnection = (nodeId: string) => {
+    if (connectingInfo) return;
+    const node = allNodesMap.get(nodeId);
+    if (!node) return;
+    const startPos = getHandlePosition(node);
+    setConnectingInfo({ startNodeId: nodeId, startX: startPos.x, startY: startPos.y });
+  };
+
+  const handleEndConnection = (nodeId: string) => {
+    if (!connectingInfo) return;
+    const startNode = allNodesMap.get(connectingInfo.startNodeId);
+    const endNode = allNodesMap.get(nodeId);
+    if (startNode && endNode && (startNode.type === 'video' || startNode.type === 'document') && endNode.type === 'chat') {
+      addConnection(connectingInfo.startNodeId, nodeId);
+    }
+    setConnectingInfo(null);
+    setLiveEndPoint(null);
+  };
 
   const handleTranscriptModalClose = useCallback(() => {
     console.log("🔽 Closing transcript modal");
@@ -170,7 +201,15 @@ const CanvasContent = () => {
   }, [resetTranscriptModal, forceResetVideoDragState, forceResetDocumentDragState, forceResetChatDragState]);
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
-    if (draggingVideoNodeId) {
+    if (connectingInfo) {
+      const rect = canvasContainerRef.current?.getBoundingClientRect();
+      if (rect) {
+        setLiveEndPoint({
+          x: (e.clientX - rect.left) / transform.scale,
+          y: (e.clientY - rect.top) / transform.scale,
+        });
+      }
+    } else if (draggingVideoNodeId) {
       moveVideoNode(draggingVideoNodeId, e.clientX, e.clientY, transform);
     } else if (draggingDocumentNodeId) {
       moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
@@ -179,7 +218,7 @@ const CanvasContent = () => {
     } else {
       handlePointerMove(e, draggingNodeId, () => {});
     }
-  }, [handlePointerMove, draggingVideoNodeId, moveVideoNode, draggingDocumentNodeId, moveDocumentNode, transform, draggingChatNodeId, moveChatNode]);
+  }, [handlePointerMove, draggingVideoNodeId, moveVideoNode, draggingDocumentNodeId, moveDocumentNode, transform, draggingChatNodeId, moveChatNode, connectingInfo]);
 
   const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => {
     if (draggingVideoNodeId) {
@@ -190,7 +229,23 @@ const CanvasContent = () => {
       handleChatNodePointerUp(e);
     }
     handlePointerUp(e);
-  }, [draggingVideoNodeId, handleVideoNodePointerUp, handleDocumentNodePointerUp, draggingDocumentNodeId, handleChatNodePointerUp, draggingChatNodeId, handlePointerUp]);
+
+    if (connectingInfo) {
+      setConnectingInfo(null);
+      setLiveEndPoint(null);
+    }
+  }, [draggingVideoNodeId, handleVideoNodePointerUp, handleDocumentNodePointerUp, draggingDocumentNodeId, handleChatNodePointerUp, draggingChatNodeId, handlePointerUp, connectingInfo]);
+
+  const sidebarTools: SidebarTool[] = [
+    { id: "video", icon: YoutubeIcon, label: "Video" },
+    { id: "filter", icon: Archive, label: "Filter" },
+    { id: "history", icon: History, label: "History" },
+    { id: "file-text", icon: FileTextIcon, label: "File" },
+    { id: "folder", icon: Archive, label: "Folder" },
+    { id: "rocket", icon: Bell, label: "Rocket" },
+    { id: "chat", icon: Bell, label: "Chat" },
+    { id: "help", icon: Bell, label: "Help" }
+  ];
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
@@ -213,6 +268,38 @@ const CanvasContent = () => {
       >
         <CanvasBackground transform={transform} />
 
+        {/* Connection Lines */}
+        {connections.map(conn => {
+          const sourceNode = allNodesMap.get(conn.sourceId);
+          const targetNode = allNodesMap.get(conn.targetId);
+          if (!sourceNode || !targetNode) return null;
+          
+          const sourcePos = getHandlePosition(sourceNode);
+          const targetPos = getHandlePosition(targetNode);
+          
+          return (
+            <ConnectionLine
+              key={conn.id}
+              sourceX={sourcePos.x}
+              sourceY={sourcePos.y}
+              targetX={targetPos.x}
+              targetY={targetPos.y}
+              isDarkMode={isDarkMode}
+            />
+          );
+        })}
+
+        {/* Live connection line */}
+        {connectingInfo && liveEndPoint && (
+          <ConnectionLine
+            sourceX={connectingInfo.startX}
+            sourceY={connectingInfo.startY}
+            targetX={liveEndPoint.x}
+            targetY={liveEndPoint.y}
+            isDarkMode={isDarkMode}
+          />
+        )}
+
         {/* Video Nodes */}
         {videoNodes.map((node) => (
           <VideoNodeComponent
@@ -220,6 +307,7 @@ const CanvasContent = () => {
             node={node}
             onPointerDown={handleVideoNodePointerDown}
             onTranscriptClick={handleTranscriptClick}
+            onStartConnection={handleStartConnection}
           />
         ))}
 
@@ -229,6 +317,7 @@ const CanvasContent = () => {
             key={node.id}
             node={node}
             onPointerDown={handleDocumentNodePointerDown}
+            onStartConnection={handleStartConnection}
           />
         ))}
 
@@ -238,6 +327,7 @@ const CanvasContent = () => {
             key={node.id}
             node={node}
             onPointerDown={handleChatNodePointerDown}
+            onEndConnection={handleEndConnection}
           />
         ))}
       </div>

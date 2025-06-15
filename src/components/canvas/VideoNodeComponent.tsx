@@ -8,12 +8,14 @@ interface VideoNodeProps {
   node: VideoNode;
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
+  onStartConnection: (nodeId: string) => void;
 }
 
 export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   node,
   onPointerDown,
-  onTranscriptClick
+  onTranscriptClick,
+  onStartConnection,
 }) => {
   const embedUrl = getYouTubeEmbedUrl(node.url);
 
@@ -52,7 +54,13 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
       onPointerDown={handleNodePointerDown}
     >
       <div className="relative bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-lg w-80 border border-red-200 hover:shadow-xl transition-shadow">
-        <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-red-500 z-20" />
+        <div 
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            onStartConnection(node.id);
+          }}
+          className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-red-500 z-20 cursor-pointer"
+        />
         <div className="relative">
           {embedUrl ? (
             <div className="relative w-full h-48 rounded-t-lg overflow-hidden">

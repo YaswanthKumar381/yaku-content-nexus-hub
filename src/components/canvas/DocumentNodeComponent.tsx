@@ -7,9 +7,10 @@ import { formatBytes } from '@/utils/documentUtils';
 interface DocumentNodeProps {
   node: DocumentNode;
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
+  onStartConnection: (nodeId: string) => void;
 }
 
-export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown }) => {
+export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection }) => {
   
   const handleNodePointerDown = (e: React.PointerEvent) => {
     onPointerDown(e, node.id);
@@ -23,7 +24,13 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
       onPointerDown={handleNodePointerDown}
     >
       <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-64 border border-blue-200 hover:shadow-xl transition-shadow">
-        <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-blue-500 z-10" />
+        <div 
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            onStartConnection(node.id);
+          }}
+          className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-blue-500 z-10 cursor-pointer"
+        />
         <div className="p-4">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
