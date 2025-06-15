@@ -140,6 +140,7 @@ const CanvasContent = () => {
           connectingInfo={connectionsResult.connectingInfo}
           liveEndPoint={connectionsResult.liveEndPoint}
           isDarkMode={isDarkMode}
+          onDeleteConnection={connectionsResult.removeConnection}
         />
         
         <NodeLayer

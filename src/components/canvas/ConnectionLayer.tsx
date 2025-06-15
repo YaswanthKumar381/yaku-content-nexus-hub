@@ -10,6 +10,7 @@ interface ConnectionLayerProps {
   connectingInfo: { startNodeId: string; startX: number; startY: number; } | null;
   liveEndPoint: { x: number; y: number; } | null;
   isDarkMode: boolean;
+  onDeleteConnection: (connectionId: string) => void;
 }
 
 export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
@@ -17,7 +18,8 @@ export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
   allNodesMap,
   connectingInfo,
   liveEndPoint,
-  isDarkMode
+  isDarkMode,
+  onDeleteConnection,
 }) => {
   return (
     <>
@@ -33,11 +35,13 @@ export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
         return (
           <ConnectionLine
             key={conn.id}
+            id={conn.id}
             sourceX={sourcePos.x}
             sourceY={sourcePos.y}
             targetX={targetPos.x}
             targetY={targetPos.y}
             isDarkMode={isDarkMode}
+            onDelete={onDeleteConnection}
           />
         );
       })}
@@ -50,6 +54,9 @@ export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
           targetX={liveEndPoint.x}
           targetY={liveEndPoint.y}
           isDarkMode={isDarkMode}
+          // These are temporary and can't be deleted
+          id="live-connection"
+          onDelete={() => {}}
         />
       )}
     </>

@@ -26,6 +26,10 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
     setConnections((prev) => [...prev, newConnection]);
   }, [connections]);
   
+  const removeConnection = useCallback((connectionId: string) => {
+    setConnections(prev => prev.filter(c => c.id !== connectionId));
+  }, []);
+
   const removeConnectionsForNode = useCallback((nodeId: string) => {
     setConnections(prev => prev.filter(c => c.sourceId !== nodeId && c.targetId !== nodeId));
   }, []);
@@ -54,5 +58,5 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
     setLiveEndPoint(null);
   }, []);
 
-  return { connections, connectingInfo, liveEndPoint, setLiveEndPoint, startConnection, endConnection, clearConnectionState, removeConnectionsForNode };
+  return { connections, connectingInfo, liveEndPoint, setLiveEndPoint, startConnection, endConnection, clearConnectionState, removeConnectionsForNode, removeConnection };
 };
