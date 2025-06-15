@@ -73,31 +73,31 @@ export const fetchYouTubeTranscript = async (videoId: string): Promise<Transcrip
   });
   
   const data: KomeTranscriptResponse = await response.json();
-  console.log("API Response:", data);
+  console.log("📋 Transcript API Response:", data);
   
   if (!response.ok) {
-    throw new Error(`Failed to fetch transcript: ${response.status} ${response.statusText}`);
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
   
   if (!data.success) {
     throw new Error(data.error || data.message || 'Failed to fetch transcript');
   }
   
-  // Convert kome.ai response format to our expected format
+  // Convert segments from kome.ai format
   const segments: TranscriptSegment[] = data.segments?.map(segment => ({
     start: segment.start.toString(),
     end: segment.end.toString(),
     text: segment.text
   })) || [];
   
-  // Create a mock response structure that matches our existing interface
-  const mockResponse: TranscriptResponse = {
+  // Create response matching our interface
+  const transcriptResponse: TranscriptResponse = {
     code: 100000,
     message: 'Success',
     data: {
       videoId: videoId,
       videoInfo: {
-        name: "YouTube Video", // We'll need to get this separately if needed
+        name: "YouTube Video",
         thumbnailUrl: {
           hqdefault: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
           maxresdefault: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
@@ -123,7 +123,7 @@ export const fetchYouTubeTranscript = async (videoId: string): Promise<Transcrip
     }
   };
   
-  return mockResponse;
+  return transcriptResponse;
 };
 
 export const formatTranscriptText = (segments: TranscriptSegment[]): string => {
