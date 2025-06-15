@@ -64,14 +64,14 @@ export const useCanvasInteraction = ({
     }
     handlePointerUp(e);
 
-    if (connectingInfo) {
+    if (connectingInfo && e.target === canvasContainerRef.current) {
       clearConnectionState();
     }
   }, [
       draggingVideoNodeId, handleVideoNodePointerUp,
       draggingDocumentNodeId, handleDocumentNodePointerUp,
       draggingChatNodeId, handleChatNodePointerUp,
-      handlePointerUp, connectingInfo, clearConnectionState
+      handlePointerUp, connectingInfo, clearConnectionState, canvasContainerRef
   ]);
 
   return { handleCanvasPointerMove, handleCanvasPointerUp, draggingNodeId };
