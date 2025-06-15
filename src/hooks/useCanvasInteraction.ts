@@ -1,9 +1,12 @@
+
 import { useCallback } from 'react';
 import type { useConnections } from '@/hooks/useConnections';
 import type { useVideoNodes } from '@/hooks/useVideoNodes';
 import type { useDocumentNodes } from '@/hooks/useDocumentNodes';
 import type { useChatNodes } from '@/hooks/useChatNodes';
 import type { useTextNodes } from '@/hooks/useTextNodes';
+import type { useWebsiteNodes } from '@/hooks/useWebsiteNodes';
+import type { useAudioNodes } from '@/hooks/useAudioNodes';
 import type { useCanvasTransform } from '@/hooks/useCanvasTransform';
 
 interface UseCanvasInteractionProps {
@@ -12,6 +15,8 @@ interface UseCanvasInteractionProps {
   documentNodesResult: ReturnType<typeof useDocumentNodes>;
   chatNodesResult: ReturnType<typeof useChatNodes>;
   textNodesResult: ReturnType<typeof useTextNodes>;
+  websiteNodesResult: ReturnType<typeof useWebsiteNodes>;
+  audioNodesResult: ReturnType<typeof useAudioNodes>;
   transformResult: ReturnType<typeof useCanvasTransform>;
 }
 
@@ -21,6 +26,8 @@ export const useCanvasInteraction = ({
   documentNodesResult,
   chatNodesResult,
   textNodesResult,
+  websiteNodesResult,
+  audioNodesResult,
   transformResult,
 }: UseCanvasInteractionProps) => {
   const { connectingInfo, setLiveEndPoint, clearConnectionState } = connectionsResult;
@@ -28,9 +35,11 @@ export const useCanvasInteraction = ({
   const { draggingNodeId: draggingDocumentNodeId, moveDocumentNode, handleNodePointerUp: handleDocumentNodePointerUp } = documentNodesResult;
   const { draggingNodeId: draggingChatNodeId, moveChatNode, handleNodePointerUp: handleChatNodePointerUp } = chatNodesResult;
   const { draggingNodeId: draggingTextNodeId, moveTextNode, handleNodePointerUp: handleTextNodePointerUp } = textNodesResult;
+  const { draggingNodeId: draggingWebsiteNodeId, moveWebsiteNode, handleNodePointerUp: handleWebsiteNodePointerUp } = websiteNodesResult;
+  const { draggingNodeId: draggingAudioNodeId, moveAudioNode, handleNodePointerUp: handleAudioNodePointerUp } = audioNodesResult;
   const { transform, canvasContainerRef, handlePointerMove, handlePointerUp } = transformResult;
 
-  const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId || draggingTextNodeId;
+  const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId || draggingTextNodeId || draggingWebsiteNodeId || draggingAudioNodeId;
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
     if (connectingInfo) {
@@ -49,6 +58,10 @@ export const useCanvasInteraction = ({
       moveChatNode(draggingChatNodeId, e.clientX, e.clientY, transform);
     } else if (draggingTextNodeId) {
       moveTextNode(draggingTextNodeId, e.clientX, e.clientY, transform);
+    } else if (draggingWebsiteNodeId) {
+      moveWebsiteNode(draggingWebsiteNodeId, e.clientX, e.clientY, transform);
+    } else if (draggingAudioNodeId) {
+      moveAudioNode(draggingAudioNodeId, e.clientX, e.clientY, transform);
     } else {
       handlePointerMove(e, draggingNodeId, () => {});
     }
@@ -58,6 +71,8 @@ export const useCanvasInteraction = ({
       draggingDocumentNodeId, moveDocumentNode,
       draggingChatNodeId, moveChatNode,
       draggingTextNodeId, moveTextNode,
+      draggingWebsiteNodeId, moveWebsiteNode,
+      draggingAudioNodeId, moveAudioNode,
       handlePointerMove, draggingNodeId
   ]);
 
@@ -70,6 +85,10 @@ export const useCanvasInteraction = ({
       handleChatNodePointerUp(e);
     } else if (draggingTextNodeId) {
       handleTextNodePointerUp(e);
+    } else if (draggingWebsiteNodeId) {
+      handleWebsiteNodePointerUp(e);
+    } else if (draggingAudioNodeId) {
+      handleAudioNodePointerUp(e);
     }
     handlePointerUp(e);
 
@@ -86,6 +105,8 @@ export const useCanvasInteraction = ({
       draggingDocumentNodeId, handleDocumentNodePointerUp,
       draggingChatNodeId, handleChatNodePointerUp,
       draggingTextNodeId, handleTextNodePointerUp,
+      draggingWebsiteNodeId, handleWebsiteNodePointerUp,
+      draggingAudioNodeId, handleAudioNodePointerUp,
       handlePointerUp, connectingInfo, clearConnectionState
   ]);
 

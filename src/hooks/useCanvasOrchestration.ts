@@ -38,6 +38,8 @@ export const useCanvasOrchestration = () => {
     documentNodesResult,
     chatNodesResult,
     textNodesResult,
+    websiteNodesResult,
+    audioNodesResult,
     transformResult,
   });
   
