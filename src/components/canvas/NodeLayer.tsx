@@ -1,20 +1,23 @@
 
 import React from 'react';
-import { VideoNode, DocumentNode, ChatNode, Connection, TextNode } from '@/types/canvas';
+import { VideoNode, DocumentNode, ChatNode, Connection, TextNode, WebsiteNode } from '@/types/canvas';
 import { VideoNodeComponent } from './VideoNodeComponent';
 import { DocumentNodeComponent } from './DocumentNodeComponent';
 import { ChatNodeComponent } from './ChatNodeComponent';
 import { TextNodeComponent } from './TextNodeComponent';
+import { WebsiteNodeComponent } from './WebsiteNodeComponent';
 
 interface NodeLayerProps {
   videoNodes: VideoNode[];
   documentNodes: DocumentNode[];
   chatNodes: ChatNode[];
   textNodes: TextNode[];
+  websiteNodes: WebsiteNode[];
   onVideoNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onDocumentNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onTextNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
+  onWebsiteNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodeResize: (nodeId: string, height: number) => void;
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
@@ -24,6 +27,7 @@ interface NodeLayerProps {
   onDeleteDocumentFile: (nodeId: string, fileId: string) => void;
   onDocumentNodeUploadClick: (nodeId: string) => void;
   onDeleteTextNode: (nodeId: string) => void;
+  onDeleteWebsiteNode: (nodeId: string) => void;
   onUpdateTextNode: (nodeId: string, data: Partial<Omit<TextNode, 'id'|'type'>>) => void;
   onSendMessage: (nodeId: string, message: string) => void;
   isSendingMessageNodeId: string | null;
@@ -35,10 +39,12 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   documentNodes,
   chatNodes,
   textNodes,
+  websiteNodes,
   onVideoNodePointerDown,
   onDocumentNodePointerDown,
   onChatNodePointerDown,
   onTextNodePointerDown,
+  onWebsiteNodePointerDown,
   onChatNodeResize,
   onTranscriptClick,
   onStartConnection,
@@ -48,6 +54,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onDeleteDocumentFile,
   onDocumentNodeUploadClick,
   onDeleteTextNode,
+  onDeleteWebsiteNode,
   onUpdateTextNode,
   onSendMessage,
   isSendingMessageNodeId,
@@ -116,6 +123,21 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onStartConnection={onStartConnection}
             onDelete={onDeleteTextNode}
             onUpdate={onUpdateTextNode}
+            isConnected={isConnected}
+          />
+        );
+      })}
+
+      {/* Website Nodes */}
+      {websiteNodes.map((node) => {
+        const isConnected = connections.some(c => c.sourceId === node.id);
+        return (
+          <WebsiteNodeComponent
+            key={node.id}
+            node={node}
+            onPointerDown={onWebsiteNodePointerDown}
+            onStartConnection={onStartConnection}
+            onDelete={onDeleteWebsiteNode}
             isConnected={isConnected}
           />
         );
