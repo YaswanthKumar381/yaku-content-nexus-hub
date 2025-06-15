@@ -1,4 +1,3 @@
-
 import type { Variants } from 'framer-motion';
 import { motion, useAnimation } from 'framer-motion';
 import type { HTMLAttributes } from 'react';
@@ -15,10 +14,9 @@ interface ArrowLeftIconProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const pathVariants: Variants = {
-  normal: { d: 'm12 19-7-7 7-7', translateX: 0 },
+  normal: { x: 0 },
   animate: {
-    d: 'm12 19-7-7 7-7',
-    translateX: [0, 3, 0],
+    x: [0, 3, 0],
     transition: {
       duration: 0.4,
     },
