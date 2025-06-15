@@ -6,11 +6,12 @@ import { useVideoNodes } from "@/hooks/useVideoNodes";
 import { useDocumentNodes } from "@/hooks/useDocumentNodes";
 import { useChatNodes } from "@/hooks/useChatNodes";
 import { useTextNodes } from "@/hooks/useTextNodes";
+import { useWebsiteNodes } from "@/hooks/useWebsiteNodes";
 import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { useContextUsage } from "@/hooks/useContextUsage";
-import { VideoNode, DocumentNode, TextNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, TextNode, WebsiteNode } from "@/types/canvas";
 
 export const useCanvasOrchestration = () => {
   const canvasState = useCanvasState();
@@ -19,10 +20,11 @@ export const useCanvasOrchestration = () => {
   const documentNodesResult = useDocumentNodes();
   const chatNodesResult = useChatNodes();
   const textNodesResult = useTextNodes();
+  const websiteNodesResult = useWebsiteNodes();
 
   const [uploadTargetNodeId, setUploadTargetNodeId] = useState<string | null>(null);
 
-  const allNodes = [...videoNodesResult.videoNodes, ...documentNodesResult.documentNodes, ...chatNodesResult.chatNodes, ...textNodesResult.textNodes];
+  const allNodes = [...videoNodesResult.videoNodes, ...documentNodesResult.documentNodes, ...chatNodesResult.chatNodes, ...textNodesResult.textNodes, ...websiteNodesResult.websiteNodes];
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
   const connectionsResult = useConnections(allNodesMap);
@@ -42,7 +44,8 @@ export const useCanvasOrchestration = () => {
     documentNodesResult.forceResetDragState();
     chatNodesResult.forceResetDragState();
     textNodesResult.forceResetDragState();
-  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult]);
+    websiteNodesResult.forceResetDragState();
+  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult]);
 
   const handleDeleteVideoNode = useCallback((nodeId: string) => {
     videoNodesResult.deleteVideoNode(nodeId);
@@ -66,6 +69,11 @@ export const useCanvasOrchestration = () => {
     textNodesResult.deleteTextNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
   }, [textNodesResult, connectionsResult]);
+
+  const handleDeleteWebsiteNode = useCallback((nodeId: string) => {
+    websiteNodesResult.deleteWebsiteNode(nodeId);
+    connectionsResult.removeConnectionsForNode(nodeId);
+  }, [websiteNodesResult, connectionsResult]);
 
   const handleDocumentNodeUploadClick = useCallback((nodeId: string) => {
     setUploadTargetNodeId(nodeId);
@@ -108,6 +116,14 @@ export const useCanvasOrchestration = () => {
     isDraggingText: canvasState.isDraggingText,
     setIsDraggingText: canvasState.setIsDraggingText,
     addTextNode: textNodesResult.addTextNode,
+    isDraggingWebsite: canvasState.isDraggingWebsite,
+    setIsDraggingWebsite: canvasState.setIsDraggingWebsite,
+    addWebsiteNode: websiteNodesResult.addWebsiteNode,
+    setPendingWebsiteNode: canvasState.setPendingWebsiteNode,
+    setShowWebsiteInput: canvasState.setShowWebsiteInput,
+    pendingWebsiteNode: canvasState.pendingWebsiteNode,
+    setIsScrapingWebsites: canvasState.setIsScrapingWebsites,
+    resetWebsiteInput: canvasState.resetWebsiteInput,
     canvasContainerRef: transformResult.canvasContainerRef,
     transform: transformResult.transform,
     addVideoNode: videoNodesResult.addVideoNode,
@@ -118,7 +134,7 @@ export const useCanvasOrchestration = () => {
     const connectedNodes = connectionsResult.connections
         .filter(conn => conn.targetId === nodeId)
         .map(conn => allNodesMap.get(conn.sourceId))
-        .filter((node): node is VideoNode | DocumentNode | TextNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text'));
+        .filter((node): node is VideoNode | DocumentNode | TextNode | WebsiteNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website'));
     
     const context = connectedNodes.map(node => {
         if(node.type === 'video') return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
@@ -127,6 +143,10 @@ export const useCanvasOrchestration = () => {
           return `Document Node Content:\n${docContent}`;
         }
         if(node.type === 'text') return `Text Note:\n${node.content || 'Not available'}`;
+        if(node.type === 'website') {
+          const websiteContent = node.websites.map(w => `Website: ${w.title}\nURL: ${w.url}\nContent: ${w.content || 'Content not available'}`).join('\n\n');
+          return `Website Node Content:\n${websiteContent}`;
+        }
         return '';
     }).join('\n\n---\n\n');
 
@@ -145,6 +165,7 @@ export const useCanvasOrchestration = () => {
     documentNodesResult,
     chatNodesResult,
     textNodesResult,
+    websiteNodesResult,
     connectionsResult,
     contextUsage,
     interactionResult,
@@ -155,6 +176,7 @@ export const useCanvasOrchestration = () => {
     onDeleteDocumentNode: handleDeleteDocumentNode,
     onDeleteDocumentFile: handleDeleteDocumentFile,
     onDeleteTextNode: handleDeleteTextNode,
+    onDeleteWebsiteNode: handleDeleteWebsiteNode,
     onDocumentNodeUploadClick: handleDocumentNodeUploadClick,
     onDocumentModalClose: handleDocumentModalClose,
     onSendMessage: handleSendMessage,
