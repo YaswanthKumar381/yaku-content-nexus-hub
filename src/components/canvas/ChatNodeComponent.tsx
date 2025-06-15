@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ChatNode } from '@/types/canvas';
 import { PromptInputBox } from './PromptInputBox';
@@ -69,13 +70,14 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
         width: '600px',
       }}
       onPointerDown={handlePointerDown}
-      onPointerUp={() => {
-        onEndConnection(node.id);
-      }}
     >
       {/* Left handle */}
       <div 
-        className={`absolute top-1/2 left-[-16px] transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 ${isDarkMode ? 'border-purple-400' : 'border-purple-600'} z-20 pointer-events-none`}
+        onPointerUp={(e) => {
+          e.stopPropagation();
+          onEndConnection(node.id);
+        }}
+        className={`absolute top-1/2 left-[-16px] transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 ${isDarkMode ? 'border-purple-400' : 'border-purple-600'} z-20 cursor-pointer`}
       />
       
       <div className="flex flex-col bg-zinc-800/80 backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-700/50 shadow-2xl shadow-black/30">

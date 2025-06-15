@@ -1,4 +1,3 @@
-
 import React from "react";
 import { VideoNode } from "@/types/canvas";
 import { getVideoThumbnail, getYouTubeEmbedUrl } from "@/utils/videoUtils";
@@ -27,15 +26,12 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   };
 
   const handleNodePointerDown = (e: React.PointerEvent) => {
-    // Check if the click is on the transcript button or its children
     const target = e.target as HTMLElement;
-    const transcriptButton = target.closest('[data-transcript-button]');
-    
-    if (transcriptButton) {
-      console.log("🚫 Preventing drag - clicked on transcript button");
-      e.stopPropagation();
-      e.preventDefault();
-      return;
+
+    // Do not start drag if clicking on the connection handle or transcript button.
+    // They have their own onPointerDown handlers.
+    if (target.closest('[data-connection-handle]') || target.closest('[data-transcript-button]')) {
+        return;
     }
     
     console.log("✅ Starting node drag for:", node.id);
@@ -55,6 +51,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
     >
       <div className="relative bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-lg w-80 border border-red-200 hover:shadow-xl transition-shadow">
         <div 
+          data-connection-handle
           onPointerDown={(e) => {
             e.stopPropagation();
             onStartConnection(node.id);
@@ -96,8 +93,6 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
             onClick={handleTranscriptClick}
             onPointerDown={(e) => {
               e.stopPropagation();
-              e.preventDefault();
-              console.log("🚫 Transcript button pointer down prevented");
             }}
             className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10 cursor-pointer"
             title="Transcript Options"
