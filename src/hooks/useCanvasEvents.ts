@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode, AudioNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode, AudioNode, ImageNode } from "@/types/canvas";
 
 interface UseCanvasEventsProps {
   isDraggingVideo: boolean;
@@ -46,6 +46,15 @@ interface UseCanvasEventsProps {
   isDraggingAudio: boolean;
   setIsDraggingAudio: (value: boolean) => void;
   addAudioNode: (x: number, y: number) => AudioNode;
+  isDraggingImage: boolean;
+  setIsDraggingImage: (value: boolean) => void;
+  addImageNode: (x: number, y: number, files: File[]) => Promise<ImageNode>;
+  setPendingImageNode: (value: { x: number; y: number } | null) => void;
+  setShowImageUpload: (value: boolean) => void;
+  pendingImageNode: { x: number; y: number } | null;
+  setIsUploadingImages: (value: boolean) => void;
+  resetImageUpload: () => void;
+  addImagesToNode: (nodeId: string, files: File[]) => Promise<void>;
 }
 
 export const useCanvasEvents = ({
@@ -93,6 +102,15 @@ export const useCanvasEvents = ({
   isDraggingAudio,
   setIsDraggingAudio,
   addAudioNode,
+  isDraggingImage,
+  setIsDraggingImage,
+  addImageNode,
+  setPendingImageNode,
+  setShowImageUpload,
+  pendingImageNode,
+  setIsUploadingImages,
+  resetImageUpload,
+  addImagesToNode,
 }: UseCanvasEventsProps) => {
   const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
     setIsDraggingVideo(true);
@@ -124,6 +142,11 @@ export const useCanvasEvents = ({
     e.dataTransfer.setData("text/plain", "audio");
   }, [setIsDraggingAudio]);
 
+  const handleImageDragStart = useCallback((e: React.DragEvent) => {
+    setIsDraggingImage(true);
+    e.dataTransfer.setData("text/plain", "image");
+  }, [setIsDraggingImage]);
+
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
 
@@ -153,11 +176,15 @@ export const useCanvasEvents = ({
       setPendingWebsiteNode({ x, y });
       setShowWebsiteInput(true);
       setIsDraggingWebsite(false);
+    } else if (dragType === 'image' && isDraggingImage) {
+      setPendingImageNode({ x, y });
+      setShowImageUpload(true);
+      setIsDraggingImage(false);
     } else if (dragType === 'audio' && isDraggingAudio) {
       addAudioNode(x, y);
       setIsDraggingAudio(false);
     }
-  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, isDraggingText, isDraggingWebsite, isDraggingAudio, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat, addTextNode, setIsDraggingText, setPendingWebsiteNode, setShowWebsiteInput, setIsDraggingWebsite, addAudioNode, setIsDraggingAudio]);
+  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, isDraggingText, isDraggingWebsite, isDraggingImage, isDraggingAudio, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat, addTextNode, setIsDraggingText, setPendingWebsiteNode, setShowWebsiteInput, setIsDraggingWebsite, setPendingImageNode, setShowImageUpload, setIsDraggingImage, addAudioNode, setIsDraggingAudio]);
 
   const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -196,6 +223,23 @@ export const useCanvasEvents = ({
       setIsUploading(false);
     }
   }, [pendingDocumentNode, addDocumentNode, resetDocumentUpload, setIsUploading, uploadTargetNodeId, addDocumentsToNode]);
+
+  const handleImageUploadSubmit = useCallback(async (files: File[]) => {
+    if (files.length === 0) return;
+    setIsUploadingImages(true);
+    try {
+      if (uploadTargetNodeId) {
+        await addImagesToNode(uploadTargetNodeId, files);
+      } else if (pendingImageNode) {
+        await addImageNode(pendingImageNode.x, pendingImageNode.y, files);
+      }
+      resetImageUpload();
+    } catch (error) {
+      console.error("❌ Error creating/updating image node:", error);
+    } finally {
+      setIsUploadingImages(false);
+    }
+  }, [pendingImageNode, addImageNode, resetImageUpload, setIsUploadingImages, uploadTargetNodeId, addImagesToNode]);
 
   const handleWebsiteUrlSubmit = useCallback(async (urls: string[]) => {
     if (!pendingWebsiteNode || urls.length === 0) return;
@@ -242,5 +286,7 @@ export const useCanvasEvents = ({
     handleWebsiteDragStart,
     handleWebsiteUrlSubmit,
     handleAudioDragStart,
+    handleImageDragStart,
+    handleImageUploadSubmit,
   };
 };

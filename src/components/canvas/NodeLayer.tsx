@@ -1,12 +1,12 @@
-
 import React from 'react';
-import { VideoNode, DocumentNode, ChatNode, Connection, TextNode, WebsiteNode, AudioNode } from '@/types/canvas';
+import { VideoNode, DocumentNode, ChatNode, Connection, TextNode, WebsiteNode, AudioNode, ImageNode } from '@/types/canvas';
 import { VideoNodeComponent } from './VideoNodeComponent';
 import { DocumentNodeComponent } from './DocumentNodeComponent';
 import { ChatNodeComponent } from './ChatNodeComponent';
 import { TextNodeComponent } from './TextNodeComponent';
 import { WebsiteNodeComponent } from './WebsiteNodeComponent';
 import { AudioNodeComponent } from './AudioNodeComponent';
+import { ImageNodeComponent } from './ImageNodeComponent';
 
 interface NodeLayerProps {
   videoNodes: VideoNode[];
@@ -15,12 +15,14 @@ interface NodeLayerProps {
   textNodes: TextNode[];
   websiteNodes: WebsiteNode[];
   audioNodes: AudioNode[];
+  imageNodes: ImageNode[];
   onVideoNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onDocumentNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onTextNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onWebsiteNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onAudioNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
+  onImageNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodeResize: (nodeId: string, height: number) => void;
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
@@ -32,6 +34,10 @@ interface NodeLayerProps {
   onDeleteTextNode: (nodeId: string) => void;
   onDeleteWebsiteNode: (nodeId: string) => void;
   onDeleteAudioNode: (nodeId: string) => void;
+  onDeleteImageNode: (nodeId: string) => void;
+  onDeleteImageFile: (nodeId: string, imageId: string) => void;
+  onImageNodeUploadClick: (nodeId: string) => void;
+  onAnalyzeImage: (nodeId: string, imageId: string, prompt?: string) => Promise<void>;
   onUpdateTextNode: (nodeId: string, data: Partial<Omit<TextNode, 'id'|'type'>>) => void;
   onSendMessage: (nodeId: string, message: string) => void;
   isSendingMessageNodeId: string | null;
@@ -47,12 +53,14 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   textNodes,
   websiteNodes,
   audioNodes,
+  imageNodes,
   onVideoNodePointerDown,
   onDocumentNodePointerDown,
   onChatNodePointerDown,
   onTextNodePointerDown,
   onWebsiteNodePointerDown,
   onAudioNodePointerDown,
+  onImageNodePointerDown,
   onChatNodeResize,
   onTranscriptClick,
   onStartConnection,
@@ -64,6 +72,10 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onDeleteTextNode,
   onDeleteWebsiteNode,
   onDeleteAudioNode,
+  onDeleteImageNode,
+  onDeleteImageFile,
+  onImageNodeUploadClick,
+  onAnalyzeImage,
   onUpdateTextNode,
   onSendMessage,
   isSendingMessageNodeId,
@@ -166,6 +178,24 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onDelete={onDeleteAudioNode}
             onAddRecording={onAddRecordingToNode}
             onDeleteRecording={onDeleteRecording}
+            isConnected={isConnected}
+          />
+        );
+      })}
+
+      {/* Image Nodes */}
+      {imageNodes.map((node) => {
+        const isConnected = connections.some(c => c.sourceId === node.id);
+        return (
+          <ImageNodeComponent
+            key={node.id}
+            node={node}
+            onPointerDown={onImageNodePointerDown}
+            onStartConnection={onStartConnection}
+            onDelete={onDeleteImageNode}
+            onDeleteImage={onDeleteImageFile}
+            onUploadClick={onImageNodeUploadClick}
+            onAnalyzeImage={onAnalyzeImage}
             isConnected={isConnected}
           />
         );

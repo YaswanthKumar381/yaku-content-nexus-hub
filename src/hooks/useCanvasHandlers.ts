@@ -1,6 +1,5 @@
-
 import { useCallback } from "react";
-import { VideoNode, DocumentNode, TextNode, WebsiteNode, AudioNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, TextNode, WebsiteNode, AudioNode, ImageNode } from "@/types/canvas";
 import type { useCanvasNodes } from "@/hooks/useCanvasNodes";
 import type { useCanvasState } from "@/hooks/useCanvasState";
 
@@ -17,6 +16,7 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     textNodesResult,
     websiteNodesResult,
     audioNodesResult,
+    imageNodesResult,
     connectionsResult,
     allNodesMap,
     setUploadTargetNodeId,
@@ -29,7 +29,8 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     textNodesResult.forceResetDragState();
     websiteNodesResult.forceResetDragState();
     audioNodesResult.forceResetDragState();
-  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult, audioNodesResult]);
+    imageNodesResult.forceResetDragState();
+  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult, audioNodesResult, imageNodesResult]);
 
   const handleDeleteVideoNode = useCallback((nodeId: string) => {
     videoNodesResult.deleteVideoNode(nodeId);
@@ -64,9 +65,32 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     connectionsResult.removeConnectionsForNode(nodeId);
   }, [audioNodesResult, connectionsResult]);
 
+  const handleDeleteImageNode = useCallback((nodeId: string) => {
+    imageNodesResult.deleteImageNode(nodeId);
+    connectionsResult.removeConnectionsForNode(nodeId);
+  }, [imageNodesResult, connectionsResult]);
+
+  const handleDeleteImageFile = useCallback((nodeId: string, imageId: string) => {
+    const node = imageNodesResult.imageNodes.find(n => n.id === nodeId);
+    if (node && node.images.length === 1 && node.images[0].id === imageId) {
+        connectionsResult.removeConnectionsForNode(nodeId);
+    }
+    imageNodesResult.deleteImageFromNode(nodeId, imageId);
+  }, [imageNodesResult, connectionsResult]);
+
   const handleDocumentNodeUploadClick = useCallback((nodeId: string) => {
     setUploadTargetNodeId(nodeId);
     canvasState.setShowDocumentUpload(true);
+  }, [canvasState, setUploadTargetNodeId]);
+
+  const handleImageNodeUploadClick = useCallback((nodeId: string) => {
+    setUploadTargetNodeId(nodeId);
+    canvasState.setShowImageUpload(true);
+  }, [canvasState, setUploadTargetNodeId]);
+
+  const handleImageModalClose = useCallback(() => {
+    canvasState.resetImageUpload();
+    setUploadTargetNodeId(null);
   }, [canvasState, setUploadTargetNodeId]);
 
   const handleDocumentModalClose = useCallback(() => {
@@ -74,12 +98,24 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     setUploadTargetNodeId(null);
   }, [canvasState, setUploadTargetNodeId]);
 
+  const handleAnalyzeImage = useCallback(async (nodeId: string, imageId: string, prompt?: string) => {
+    // This will need to be implemented with API key management
+    // For now, we'll store the API key in localStorage as a temporary solution
+    const apiKey = localStorage.getItem('groq_api_key');
+    if (!apiKey) {
+      alert('Please set your Groq API key in the settings');
+      return;
+    }
+    
+    await imageNodesResult.analyzeImage(nodeId, imageId, apiKey, prompt);
+  }, [imageNodesResult]);
+
   const handleSendMessage = useCallback((nodeId: string, message: string) => {
     const connectedNodes = connectionsResult.connections
         .filter(conn => conn.targetId === nodeId)
         .map(conn => allNodesMap.get(conn.sourceId))
-        .filter((node): node is VideoNode | DocumentNode | TextNode | WebsiteNode | AudioNode => 
-          !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website' || node.type === 'audio'));
+        .filter((node): node is VideoNode | DocumentNode | TextNode | WebsiteNode | AudioNode | ImageNode => 
+          !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website' || node.type === 'audio' || node.type === 'image'));
     
     const context = connectedNodes.map(node => {
         if(node.type === 'video') return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
@@ -95,6 +131,10 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
         if(node.type === 'audio') {
           const audioContent = node.recordings.map(r => `Audio Recording:\nTranscript: ${r.transcript || 'Transcript not available'}`).join('\n\n');
           return `Audio Node Content:\n${audioContent}`;
+        }
+        if(node.type === 'image') {
+          const imageContent = node.images.map(img => `Image: ${img.fileName}\nAnalysis: ${img.analysis || 'Image analysis not available'}`).join('\n\n');
+          return `Image Node Content:\n${imageContent}`;
         }
         return '';
     }).join('\n\n---\n\n');
@@ -115,8 +155,13 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     handleDeleteTextNode,
     handleDeleteWebsiteNode,
     handleDeleteAudioNode,
+    handleDeleteImageNode,
+    handleDeleteImageFile,
     handleDocumentNodeUploadClick,
+    handleImageNodeUploadClick,
+    handleImageModalClose,
     handleDocumentModalClose,
+    handleAnalyzeImage,
     handleSendMessage,
     handleTranscriptModalClose,
   };

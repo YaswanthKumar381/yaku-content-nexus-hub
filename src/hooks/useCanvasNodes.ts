@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useVideoNodes } from "@/hooks/useVideoNodes";
 import { useDocumentNodes } from "@/hooks/useDocumentNodes";
@@ -8,6 +7,7 @@ import { useWebsiteNodes } from "@/hooks/useWebsiteNodes";
 import { useAudioNodes } from "@/hooks/useAudioNodes";
 import { useConnections } from "@/hooks/useConnections";
 import { useContextUsage } from "@/hooks/useContextUsage";
+import { useImageNodes } from "@/hooks/useImageNodes";
 
 export const useCanvasNodes = () => {
   const videoNodesResult = useVideoNodes();
@@ -16,6 +16,7 @@ export const useCanvasNodes = () => {
   const textNodesResult = useTextNodes();
   const websiteNodesResult = useWebsiteNodes();
   const audioNodesResult = useAudioNodes();
+  const imageNodesResult = useImageNodes();
 
   const [uploadTargetNodeId, setUploadTargetNodeId] = useState<string | null>(null);
 
@@ -25,7 +26,8 @@ export const useCanvasNodes = () => {
     ...chatNodesResult.chatNodes,
     ...textNodesResult.textNodes,
     ...websiteNodesResult.websiteNodes,
-    ...audioNodesResult.audioNodes
+    ...audioNodesResult.audioNodes,
+    ...imageNodesResult.imageNodes
   ];
   
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
@@ -40,6 +42,7 @@ export const useCanvasNodes = () => {
     textNodesResult,
     websiteNodesResult,
     audioNodesResult,
+    imageNodesResult,
     connectionsResult,
     contextUsage,
     allNodesMap,

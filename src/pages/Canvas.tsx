@@ -1,4 +1,3 @@
-
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasOrchestration } from "@/hooks/useCanvasOrchestration";
 import { sidebarTools } from "@/config/sidebar";
@@ -21,6 +20,7 @@ const CanvasContent = () => {
     textNodesResult,
     websiteNodesResult,
     audioNodesResult,
+    imageNodesResult,
     connectionsResult,
     contextUsage,
     interactionResult,
@@ -33,8 +33,13 @@ const CanvasContent = () => {
     onDeleteTextNode,
     onDeleteWebsiteNode,
     onDeleteAudioNode,
+    onDeleteImageNode,
+    onDeleteImageFile,
     onDocumentNodeUploadClick,
     onDocumentModalClose,
+    onImageNodeUploadClick,
+    onImageModalClose,
+    onAnalyzeImage,
     onSendMessage,
     onTranscriptModalClose,
   } = useCanvasOrchestration();
@@ -52,6 +57,7 @@ const CanvasContent = () => {
         textNodesResult={textNodesResult}
         websiteNodesResult={websiteNodesResult}
         audioNodesResult={audioNodesResult}
+        imageNodesResult={imageNodesResult}
         allNodesMap={allNodesMap}
         onDeleteVideoNode={onDeleteVideoNode}
         onDeleteDocumentNode={onDeleteDocumentNode}
@@ -60,6 +66,9 @@ const CanvasContent = () => {
         onDeleteTextNode={onDeleteTextNode}
         onDeleteWebsiteNode={onDeleteWebsiteNode}
         onDeleteAudioNode={onDeleteAudioNode}
+        onDeleteImageNode={onDeleteImageNode}
+        onDeleteImageFile={onDeleteImageFile}
+        onAnalyzeImage={onAnalyzeImage}
         onSendMessage={onSendMessage}
       />
 
@@ -69,9 +78,11 @@ const CanvasContent = () => {
         videoNodesResult={videoNodesResult}
         documentNodesResult={documentNodesResult}
         websiteNodesResult={websiteNodesResult}
+        imageNodesResult={imageNodesResult}
         uploadTargetNodeId={uploadTargetNodeId}
         onDocumentModalClose={onDocumentModalClose}
         onTranscriptModalClose={onTranscriptModalClose}
+        onImageModalClose={onImageModalClose}
       />
 
       <CanvasSidebar
@@ -84,6 +95,7 @@ const CanvasContent = () => {
         onTextDragStart={eventsResult.handleTextIconDragStart}
         onWebsiteDragStart={eventsResult.handleWebsiteDragStart}
         onAudioDragStart={eventsResult.handleAudioDragStart}
+        onImageDragStart={eventsResult.handleImageDragStart}
       />
 
       <CanvasNavigation contextUsage={contextUsage} />

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { VideoNode } from "@/types/canvas";
 
@@ -30,6 +29,11 @@ export const useCanvasState = () => {
 
   const [isDraggingAudio, setIsDraggingAudio] = useState(false);
 
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [pendingImageNode, setPendingImageNode] = useState<{ x: number; y: number } | null>(null);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+
   const resetVideoInput = useCallback(() => {
     setShowVideoInput(false);
     setPendingVideoNode(null);
@@ -54,6 +58,12 @@ export const useCanvasState = () => {
     setShowWebsiteInput(false);
     setPendingWebsiteNode(null);
     setIsScrapingWebsites(false);
+  }, []);
+
+  const resetImageUpload = useCallback(() => {
+    setShowImageUpload(false);
+    setPendingImageNode(null);
+    setIsUploadingImages(false);
   }, []);
 
   return {
@@ -104,5 +114,14 @@ export const useCanvasState = () => {
     resetWebsiteInput,
     isDraggingAudio,
     setIsDraggingAudio,
+    isDraggingImage,
+    setIsDraggingImage,
+    showImageUpload,
+    setShowImageUpload,
+    pendingImageNode,
+    setPendingImageNode,
+    isUploadingImages,
+    setIsUploadingImages,
+    resetImageUpload,
   };
 };

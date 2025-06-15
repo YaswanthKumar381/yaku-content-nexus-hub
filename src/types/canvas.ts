@@ -83,7 +83,25 @@ export interface AudioNode {
   recordings: AudioRecording[];
 }
 
-export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode | AudioNode;
+export interface ImageData {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  base64: string;
+  analysis?: string;
+  uploadedAt: string;
+}
+
+export interface ImageNode {
+  id: string;
+  x: number;
+  y: number;
+  type: 'image';
+  images: ImageData[];
+}
+
+export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode | AudioNode | ImageNode;
 
 export interface Connection {
   id: string;

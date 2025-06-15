@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { VideoInputModal } from './VideoInputModal';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { TranscriptModal } from './TranscriptModal';
 import { WebsiteInputModal } from './WebsiteInputModal';
+import { ImageUploadModal } from './ImageUploadModal';
 
 // Import hook return types
 import type { useCanvasState } from '@/hooks/useCanvasState';
@@ -11,6 +11,7 @@ import type { useCanvasEvents } from '@/hooks/useCanvasEvents';
 import type { useVideoNodes } from '@/hooks/useVideoNodes';
 import type { useDocumentNodes } from '@/hooks/useDocumentNodes';
 import type { useWebsiteNodes } from '@/hooks/useWebsiteNodes';
+import type { useImageNodes } from '@/hooks/useImageNodes';
 
 interface CanvasModalsProps {
   canvasState: ReturnType<typeof useCanvasState>;
@@ -18,9 +19,11 @@ interface CanvasModalsProps {
   videoNodesResult: ReturnType<typeof useVideoNodes>;
   documentNodesResult: ReturnType<typeof useDocumentNodes>;
   websiteNodesResult: ReturnType<typeof useWebsiteNodes>;
+  imageNodesResult: ReturnType<typeof useImageNodes>;
   uploadTargetNodeId: string | null;
   onDocumentModalClose: () => void;
   onTranscriptModalClose: () => void;
+  onImageModalClose: () => void;
 }
 
 export const CanvasModals: React.FC<CanvasModalsProps> = ({
@@ -29,12 +32,17 @@ export const CanvasModals: React.FC<CanvasModalsProps> = ({
   videoNodesResult,
   documentNodesResult,
   websiteNodesResult,
+  imageNodesResult,
   uploadTargetNodeId,
   onDocumentModalClose,
   onTranscriptModalClose,
+  onImageModalClose,
 }) => {
   const targetNode = uploadTargetNodeId ? documentNodesResult.documentNodes.find(n => n.id === uploadTargetNodeId) : null;
   const existingFiles = targetNode ? targetNode.documents : [];
+
+  const imageTargetNode = uploadTargetNodeId ? imageNodesResult.imageNodes.find(n => n.id === uploadTargetNodeId) : null;
+  const existingImages = imageTargetNode ? imageTargetNode.images : [];
 
   return (
     <>
@@ -82,6 +90,15 @@ export const CanvasModals: React.FC<CanvasModalsProps> = ({
           }
           onTranscriptModalClose();
         }}
+      />
+
+      <ImageUploadModal
+        isOpen={canvasState.showImageUpload}
+        isUploading={canvasState.isUploadingImages}
+        onSubmit={eventsResult.handleImageUploadSubmit}
+        onClose={onImageModalClose}
+        mode={uploadTargetNodeId ? 'update' : 'create'}
+        existingImages={existingImages}
       />
     </>
   );

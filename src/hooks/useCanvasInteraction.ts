@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import type { useConnections } from '@/hooks/useConnections';
 import type { useVideoNodes } from '@/hooks/useVideoNodes';
@@ -8,6 +7,7 @@ import type { useTextNodes } from '@/hooks/useTextNodes';
 import type { useWebsiteNodes } from '@/hooks/useWebsiteNodes';
 import type { useAudioNodes } from '@/hooks/useAudioNodes';
 import type { useCanvasTransform } from '@/hooks/useCanvasTransform';
+import type { useImageNodes } from '@/hooks/useImageNodes';
 
 interface UseCanvasInteractionProps {
   connectionsResult: ReturnType<typeof useConnections>;
@@ -17,6 +17,7 @@ interface UseCanvasInteractionProps {
   textNodesResult: ReturnType<typeof useTextNodes>;
   websiteNodesResult: ReturnType<typeof useWebsiteNodes>;
   audioNodesResult: ReturnType<typeof useAudioNodes>;
+  imageNodesResult: ReturnType<typeof useImageNodes>;
   transformResult: ReturnType<typeof useCanvasTransform>;
 }
 
@@ -28,6 +29,7 @@ export const useCanvasInteraction = ({
   textNodesResult,
   websiteNodesResult,
   audioNodesResult,
+  imageNodesResult,
   transformResult,
 }: UseCanvasInteractionProps) => {
   const { connectingInfo, setLiveEndPoint, clearConnectionState } = connectionsResult;
@@ -37,9 +39,10 @@ export const useCanvasInteraction = ({
   const { draggingNodeId: draggingTextNodeId, moveTextNode, handleNodePointerUp: handleTextNodePointerUp } = textNodesResult;
   const { draggingNodeId: draggingWebsiteNodeId, moveWebsiteNode, handleNodePointerUp: handleWebsiteNodePointerUp } = websiteNodesResult;
   const { draggingNodeId: draggingAudioNodeId, moveAudioNode, handleNodePointerUp: handleAudioNodePointerUp } = audioNodesResult;
+  const { draggingNodeId: draggingImageNodeId, moveImageNode, handleNodePointerUp: handleImageNodePointerUp } = imageNodesResult;
   const { transform, canvasContainerRef, handlePointerMove, handlePointerUp } = transformResult;
 
-  const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId || draggingTextNodeId || draggingWebsiteNodeId || draggingAudioNodeId;
+  const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId || draggingTextNodeId || draggingWebsiteNodeId || draggingAudioNodeId || draggingImageNodeId;
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
     if (connectingInfo) {
@@ -62,6 +65,8 @@ export const useCanvasInteraction = ({
       moveWebsiteNode(draggingWebsiteNodeId, e.clientX, e.clientY, transform);
     } else if (draggingAudioNodeId) {
       moveAudioNode(draggingAudioNodeId, e.clientX, e.clientY, transform);
+    } else if (draggingImageNodeId) {
+      moveImageNode(draggingImageNodeId, e.clientX, e.clientY, transform);
     } else {
       handlePointerMove(e, draggingNodeId, () => {});
     }
@@ -73,6 +78,7 @@ export const useCanvasInteraction = ({
       draggingTextNodeId, moveTextNode,
       draggingWebsiteNodeId, moveWebsiteNode,
       draggingAudioNodeId, moveAudioNode,
+      draggingImageNodeId, moveImageNode,
       handlePointerMove, draggingNodeId
   ]);
 
@@ -89,6 +95,8 @@ export const useCanvasInteraction = ({
       handleWebsiteNodePointerUp(e);
     } else if (draggingAudioNodeId) {
       handleAudioNodePointerUp(e);
+    } else if (draggingImageNodeId) {
+      handleImageNodePointerUp(e);
     }
     handlePointerUp(e);
 
@@ -107,6 +115,7 @@ export const useCanvasInteraction = ({
       draggingTextNodeId, handleTextNodePointerUp,
       draggingWebsiteNodeId, handleWebsiteNodePointerUp,
       draggingAudioNodeId, handleAudioNodePointerUp,
+      draggingImageNodeId, handleImageNodePointerUp,
       handlePointerUp, connectingInfo, clearConnectionState
   ]);
 

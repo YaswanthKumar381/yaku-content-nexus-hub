@@ -1,4 +1,3 @@
-
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
@@ -19,6 +18,7 @@ export const useCanvasOrchestration = () => {
     textNodesResult,
     websiteNodesResult,
     audioNodesResult,
+    imageNodesResult,
     connectionsResult,
     contextUsage,
     allNodesMap,
@@ -33,6 +33,7 @@ export const useCanvasOrchestration = () => {
     handleDeleteTextNode,
     handleDeleteWebsiteNode,
     handleDeleteAudioNode,
+    handleDeleteImageNode,
     handleDocumentNodeUploadClick,
     handleDocumentModalClose,
     handleSendMessage,
@@ -47,6 +48,7 @@ export const useCanvasOrchestration = () => {
     textNodesResult,
     websiteNodesResult,
     audioNodesResult,
+    imageNodesResult,
     transformResult,
   });
   
@@ -90,6 +92,15 @@ export const useCanvasOrchestration = () => {
     isDraggingAudio: canvasState.isDraggingAudio,
     setIsDraggingAudio: canvasState.setIsDraggingAudio,
     addAudioNode: audioNodesResult.addAudioNode,
+    isDraggingImage: canvasState.isDraggingImage,
+    setIsDraggingImage: canvasState.setIsDraggingImage,
+    addImageNode: imageNodesResult.addImageNode,
+    setPendingImageNode: canvasState.setPendingImageNode,
+    setShowImageUpload: canvasState.setShowImageUpload,
+    pendingImageNode: canvasState.pendingImageNode,
+    setIsUploadingImages: canvasState.setIsUploadingImages,
+    resetImageUpload: canvasState.resetImageUpload,
+    addImagesToNode: imageNodesResult.addImagesToNode,
     canvasContainerRef: transformResult.canvasContainerRef,
     transform: transformResult.transform,
     addVideoNode: videoNodesResult.addVideoNode,
@@ -105,6 +116,7 @@ export const useCanvasOrchestration = () => {
     textNodesResult,
     websiteNodesResult,
     audioNodesResult,
+    imageNodesResult,
     connectionsResult,
     contextUsage,
     interactionResult,
@@ -117,6 +129,7 @@ export const useCanvasOrchestration = () => {
     onDeleteTextNode: handleDeleteTextNode,
     onDeleteWebsiteNode: handleDeleteWebsiteNode,
     onDeleteAudioNode: handleDeleteAudioNode,
+    onDeleteImageNode: handleDeleteImageNode,
     onDocumentNodeUploadClick: handleDocumentNodeUploadClick,
     onDocumentModalClose: handleDocumentModalClose,
     onSendMessage: handleSendMessage,
