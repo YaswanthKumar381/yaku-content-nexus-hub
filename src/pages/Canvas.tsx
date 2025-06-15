@@ -1,3 +1,4 @@
+
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasOrchestration } from "@/hooks/useCanvasOrchestration";
 import { sidebarTools } from "@/config/sidebar";
@@ -68,6 +69,7 @@ const CanvasContent = () => {
         onDeleteAudioNode={onDeleteAudioNode}
         onDeleteImageNode={onDeleteImageNode}
         onDeleteImageFile={onDeleteImageFile}
+        onImageNodeUploadClick={onImageNodeUploadClick}
         onAnalyzeImage={onAnalyzeImage}
         onSendMessage={onSendMessage}
       />
