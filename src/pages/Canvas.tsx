@@ -1,6 +1,7 @@
+
 import { useCallback } from "react";
 import { Archive, History, Bell } from "lucide-react";
-import { VideoNode, SidebarTool } from "@/types/canvas";
+import { SidebarTool } from "@/types/canvas";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useVideoNodes } from "@/hooks/useVideoNodes";
 import { useCanvasState } from "@/hooks/useCanvasState";
@@ -15,6 +16,9 @@ import { ZoomIndicator } from "@/components/canvas/ZoomIndicator";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { YoutubeIcon } from "@/components/canvas/YoutubeIcon";
 import { FileTextIcon } from "@/components/canvas/FileTextIcon";
+import { useDocumentNodes } from "@/hooks/useDocumentNodes";
+import { DocumentNodeComponent } from "@/components/canvas/DocumentNodeComponent";
+import { DocumentUploadModal } from "@/components/canvas/DocumentUploadModal";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
@@ -41,7 +45,16 @@ const CanvasContent = () => {
     currentVideoUrl,
     setCurrentVideoUrl,
     resetVideoInput,
-    resetTranscriptModal
+    resetTranscriptModal,
+    isDraggingDocument,
+    setIsDraggingDocument,
+    showDocumentUpload,
+    setShowDocumentUpload,
+    pendingDocumentNode,
+    setPendingDocumentNode,
+    isUploading,
+    setIsUploading,
+    resetDocumentUpload
   } = useCanvasState();
 
   const {
@@ -57,20 +70,34 @@ const CanvasContent = () => {
 
   const {
     videoNodes,
-    draggingNodeId,
+    draggingNodeId: draggingVideoNodeId,
     addVideoNode,
     updateVideoNode,
     moveVideoNode,
-    handleNodePointerDown,
-    handleNodePointerUp,
-    forceResetDragState
+    handleNodePointerDown: handleVideoNodePointerDown,
+    handleNodePointerUp: handleVideoNodePointerUp,
+    forceResetDragState: forceResetVideoDragState
   } = useVideoNodes();
 
   const {
+    documentNodes,
+    draggingNodeId: draggingDocumentNodeId,
+    addDocumentNode,
+    moveDocumentNode,
+    handleNodePointerDown: handleDocumentNodePointerDown,
+    handleNodePointerUp: handleDocumentNodePointerUp,
+    forceResetDragState: forceResetDocumentDragState
+  } = useDocumentNodes();
+
+  const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId;
+
+  const {
     handleVideoIconDragStart,
+    handleDocumentIconDragStart,
     handleCanvasDrop,
     handleCanvasDragOver,
     handleVideoUrlSubmit,
+    handleDocumentUploadSubmit,
     handleTranscriptClick
   } = useCanvasEvents({
     isDraggingVideo,
@@ -88,7 +115,18 @@ const CanvasContent = () => {
     setShowTranscriptPopup,
     setCurrentTranscript,
     setTranscriptError,
-    forceResetDragState
+    forceResetDragState: () => {
+      forceResetVideoDragState();
+      forceResetDocumentDragState();
+    },
+    isDraggingDocument,
+    setIsDraggingDocument,
+    setPendingDocumentNode,
+    setShowDocumentUpload,
+    addDocumentNode,
+    pendingDocumentNode,
+    setIsUploading,
+    resetDocumentUpload,
   });
 
   const sidebarTools: SidebarTool[] = [
@@ -106,27 +144,29 @@ const CanvasContent = () => {
     console.log("🔽 Closing transcript modal");
     resetTranscriptModal();
     
-    // Extra safety: force reset drag state when modal closes
     console.log("🔄 Force resetting drag state on modal close");
-    forceResetDragState();
-  }, [resetTranscriptModal, forceResetDragState]);
+    forceResetVideoDragState();
+    forceResetDocumentDragState();
+  }, [resetTranscriptModal, forceResetVideoDragState, forceResetDocumentDragState]);
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
-    if (draggingNodeId) {
-      console.log("📍 Moving node:", draggingNodeId);
-      moveVideoNode(draggingNodeId, e.clientX, e.clientY, transform);
+    if (draggingVideoNodeId) {
+      moveVideoNode(draggingVideoNodeId, e.clientX, e.clientY, transform);
+    } else if (draggingDocumentNodeId) {
+      moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
     } else {
       handlePointerMove(e, draggingNodeId, () => {});
     }
-  }, [handlePointerMove, draggingNodeId, moveVideoNode, transform]);
+  }, [handlePointerMove, draggingVideoNodeId, moveVideoNode, draggingDocumentNodeId, moveDocumentNode, transform]);
 
   const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => {
-    if (draggingNodeId) {
-      console.log("🎯 Ending drag for node:", draggingNodeId);
-      handleNodePointerUp(e);
+    if (draggingVideoNodeId) {
+      handleVideoNodePointerUp(e);
+    } else if (draggingDocumentNodeId) {
+      handleDocumentNodePointerUp(e);
     }
     handlePointerUp(e);
-  }, [draggingNodeId, handleNodePointerUp, handlePointerUp]);
+  }, [draggingVideoNodeId, handleVideoNodePointerUp, handleDocumentNodePointerUp, draggingDocumentNodeId, handlePointerUp]);
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
@@ -154,8 +194,17 @@ const CanvasContent = () => {
           <VideoNodeComponent
             key={node.id}
             node={node}
-            onPointerDown={handleNodePointerDown}
+            onPointerDown={handleVideoNodePointerDown}
             onTranscriptClick={handleTranscriptClick}
+          />
+        ))}
+
+        {/* Document Nodes */}
+        {documentNodes.map((node) => (
+          <DocumentNodeComponent
+            key={node.id}
+            node={node}
+            onPointerDown={handleDocumentNodePointerDown}
           />
         ))}
       </div>
@@ -168,6 +217,14 @@ const CanvasContent = () => {
         onUrlChange={setVideoUrl}
         onSubmit={handleVideoUrlSubmit}
         onCancel={resetVideoInput}
+      />
+
+      {/* Document Upload Modal */}
+      <DocumentUploadModal
+        isOpen={showDocumentUpload}
+        isUploading={isUploading}
+        onSubmit={handleDocumentUploadSubmit}
+        onClose={resetDocumentUpload}
       />
 
       {/* Transcript Options Popup */}
@@ -193,6 +250,7 @@ const CanvasContent = () => {
         selectedTool={selectedTool}
         onToolSelect={setSelectedTool}
         onVideoDragStart={handleVideoIconDragStart}
+        onDocumentDragStart={handleDocumentIconDragStart}
       />
 
       {/* Navigation */}

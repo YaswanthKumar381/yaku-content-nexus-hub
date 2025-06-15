@@ -1,6 +1,6 @@
 
 import { useCallback } from "react";
-import { VideoNode } from "@/types/canvas";
+import { VideoNode, DocumentNode } from "@/types/canvas";
 
 interface UseCanvasEventsProps {
   isDraggingVideo: boolean;
@@ -19,6 +19,15 @@ interface UseCanvasEventsProps {
   setCurrentTranscript: (value: string) => void;
   setTranscriptError: (value: string) => void;
   forceResetDragState: () => void;
+  // Document related props
+  isDraggingDocument: boolean;
+  setIsDraggingDocument: (value: boolean) => void;
+  setPendingDocumentNode: (value: { x: number; y: number } | null) => void;
+  setShowDocumentUpload: (value: boolean) => void;
+  addDocumentNode: (x: number, y: number, file: File) => Promise<DocumentNode>;
+  pendingDocumentNode: { x: number; y: number } | null;
+  setIsUploading: (value: boolean) => void;
+  resetDocumentUpload: () => void;
 }
 
 export const useCanvasEvents = ({
@@ -37,16 +46,29 @@ export const useCanvasEvents = ({
   setShowTranscriptPopup,
   setCurrentTranscript,
   setTranscriptError,
-  forceResetDragState
+  forceResetDragState,
+  // Document props
+  isDraggingDocument,
+  setIsDraggingDocument,
+  setPendingDocumentNode,
+  setShowDocumentUpload,
+  addDocumentNode,
+  pendingDocumentNode,
+  setIsUploading,
+  resetDocumentUpload,
 }: UseCanvasEventsProps) => {
   const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
     setIsDraggingVideo(true);
     e.dataTransfer.setData("text/plain", "video");
   }, [setIsDraggingVideo]);
 
+  const handleDocumentIconDragStart = useCallback((e: React.DragEvent) => {
+    setIsDraggingDocument(true);
+    e.dataTransfer.setData("text/plain", "document");
+  }, [setIsDraggingDocument]);
+
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    if (!isDraggingVideo) return;
 
     const rect = canvasContainerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -54,10 +76,18 @@ export const useCanvasEvents = ({
     const x = (e.clientX - rect.left - transform.x) / transform.scale;
     const y = (e.clientY - rect.top - transform.y) / transform.scale;
 
-    setPendingVideoNode({ x, y });
-    setShowVideoInput(true);
-    setIsDraggingVideo(false);
-  }, [isDraggingVideo, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo]);
+    const dragType = e.dataTransfer.getData("text/plain");
+
+    if (dragType === 'video' && isDraggingVideo) {
+      setPendingVideoNode({ x, y });
+      setShowVideoInput(true);
+      setIsDraggingVideo(false);
+    } else if (dragType === 'document' && isDraggingDocument) {
+      setPendingDocumentNode({ x, y });
+      setShowDocumentUpload(true);
+      setIsDraggingDocument(false);
+    }
+  }, [isDraggingVideo, isDraggingDocument, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument]);
 
   const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -80,6 +110,19 @@ export const useCanvasEvents = ({
     }
   }, [pendingVideoNode, videoUrl, addVideoNode, setIsCreatingNode, resetVideoInput]);
 
+  const handleDocumentUploadSubmit = useCallback(async (file: File) => {
+    if (!pendingDocumentNode) return;
+    setIsUploading(true);
+    try {
+      await addDocumentNode(pendingDocumentNode.x, pendingDocumentNode.y, file);
+      resetDocumentUpload();
+    } catch (error) {
+      console.error("❌ Error creating document node:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [pendingDocumentNode, addDocumentNode, resetDocumentUpload, setIsUploading]);
+
   const handleTranscriptClick = useCallback(async (e: React.MouseEvent, node: VideoNode) => {
     console.log("🎯 Transcript button clicked for:", node.url);
     e.stopPropagation();
@@ -97,9 +140,11 @@ export const useCanvasEvents = ({
 
   return {
     handleVideoIconDragStart,
+    handleDocumentIconDragStart,
     handleCanvasDrop,
     handleCanvasDragOver,
     handleVideoUrlSubmit,
+    handleDocumentUploadSubmit,
     handleTranscriptClick
   };
 };

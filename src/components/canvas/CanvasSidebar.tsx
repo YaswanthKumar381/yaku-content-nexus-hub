@@ -10,13 +10,15 @@ interface CanvasSidebarProps {
   selectedTool: string;
   onToolSelect: (toolId: string) => void;
   onVideoDragStart: (e: React.DragEvent) => void;
+  onDocumentDragStart: (e: React.DragEvent) => void;
 }
 
 export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
   tools,
   selectedTool,
   onToolSelect,
-  onVideoDragStart
+  onVideoDragStart,
+  onDocumentDragStart
 }) => {
   const { isDarkMode } = useTheme();
   
@@ -38,8 +40,14 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
                     : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               }`}
               onClick={() => onToolSelect(tool.id)}
-              draggable={tool.id === "video"}
-              onDragStart={tool.id === "video" ? onVideoDragStart : undefined}
+              draggable={tool.id === "video" || tool.id === "file-text"}
+              onDragStart={
+                tool.id === "video"
+                  ? onVideoDragStart
+                  : tool.id === "file-text"
+                  ? onDocumentDragStart
+                  : undefined
+              }
             >
               <tool.icon className="w-5 h-5" />
             </Button>

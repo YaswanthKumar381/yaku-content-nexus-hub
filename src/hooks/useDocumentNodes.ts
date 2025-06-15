@@ -1,56 +1,51 @@
 
 import { useState, useCallback } from "react";
-import { VideoNode } from "@/types/canvas";
-import { getVideoTitle } from "@/utils/videoUtils";
+import { DocumentNode } from "@/types/canvas";
+import { extractTextFromFile } from "@/utils/documentUtils";
 
-export const useVideoNodes = () => {
-  const [videoNodes, setVideoNodes] = useState<Array<VideoNode>>([]);
+export const useDocumentNodes = () => {
+  const [documentNodes, setDocumentNodes] = useState<Array<DocumentNode>>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  const addVideoNode = useCallback(async (x: number, y: number, url: string) => {
-    const newNode: VideoNode = {
-      id: `video-${Date.now()}`,
-      x,
-      y,
-      url,
-      title: "Loading...",
-      context: undefined,
-      type: 'video',
-    };
-
-    setVideoNodes(prev => [...prev, newNode]);
-    
-    // Fetch the actual title asynchronously
-    try {
-      const title = await getVideoTitle(url);
-      setVideoNodes(prev => prev.map(node => 
-        node.id === newNode.id ? { ...node, title } : node
-      ));
-    } catch (error) {
-      console.error("Failed to update video title:", error);
-      setVideoNodes(prev => prev.map(node => 
-        node.id === newNode.id ? { ...node, title: "YouTube Video" } : node
-      ));
-    }
-    
-    return newNode;
-  }, []);
-
-  const updateVideoNode = useCallback((nodeId: string, updates: Partial<VideoNode>) => {
-    setVideoNodes(prev => prev.map(node => 
+  const updateDocumentNode = useCallback((nodeId: string, updates: Partial<DocumentNode>) => {
+    setDocumentNodes(prev => prev.map(node =>
       node.id === nodeId ? { ...node, ...updates } : node
     ));
   }, []);
 
-  const moveVideoNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: { x: number; y: number; scale: number }) => {
+  const addDocumentNode = useCallback(async (x: number, y: number, file: File) => {
+    const newNode: DocumentNode = {
+      id: `doc-${Date.now()}`,
+      x,
+      y,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      uploadedAt: new Date().toISOString(),
+      type: 'document'
+    };
+    setDocumentNodes(prev => [...prev, newNode]);
+
+    // Extract content right away
+    try {
+      const text = await extractTextFromFile(file);
+      updateDocumentNode(newNode.id, { content: text });
+    } catch (error) {
+      console.error("Error extracting document content:", error);
+      updateDocumentNode(newNode.id, { content: "Failed to extract content." });
+    }
+    
+    return newNode;
+  }, [updateDocumentNode]);
+  
+  const moveDocumentNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: { x: number; y: number; scale: number }) => {
     if (!draggingNodeId || draggingNodeId !== nodeId) return;
     
-    // Calculate the new position accounting for canvas transform and drag offset
     const newX = (clientX - transform.x - dragOffset.x) / transform.scale;
     const newY = (clientY - transform.y - dragOffset.y) / transform.scale;
     
-    setVideoNodes(prev => prev.map(node => 
+    setDocumentNodes(prev => prev.map(node => 
       node.id === nodeId 
         ? { ...node, x: newX, y: newY }
         : node
@@ -58,7 +53,6 @@ export const useVideoNodes = () => {
   }, [draggingNodeId, dragOffset]);
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
-    console.log("🎯 Node pointer down:", nodeId);
     e.stopPropagation();
     
     const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
@@ -67,7 +61,6 @@ export const useVideoNodes = () => {
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       
-      // Calculate offset from cursor to node center
       setDragOffset({
         x: e.clientX - centerX,
         y: e.clientY - centerY
@@ -81,11 +74,8 @@ export const useVideoNodes = () => {
   }, []);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
-    console.log("🎯 Node pointer up, releasing drag state");
     setDraggingNodeId(null);
     setDragOffset({ x: 0, y: 0 });
-    
-    // Ensure pointer capture is released
     try {
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     } catch (error) {
@@ -94,17 +84,16 @@ export const useVideoNodes = () => {
   }, []);
 
   const forceResetDragState = useCallback(() => {
-    console.log("🔄 Force resetting drag state");
     setDraggingNodeId(null);
     setDragOffset({ x: 0, y: 0 });
   }, []);
 
   return {
-    videoNodes,
-    draggingNodeId,
-    addVideoNode,
-    updateVideoNode,
-    moveVideoNode,
+    documentNodes,
+    draggingNodeId: draggingNodeId,
+    addDocumentNode,
+    updateDocumentNode,
+    moveDocumentNode,
     handleNodePointerDown,
     handleNodePointerUp,
     forceResetDragState

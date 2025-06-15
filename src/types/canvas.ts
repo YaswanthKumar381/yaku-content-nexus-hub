@@ -6,7 +6,22 @@ export interface VideoNode {
   url: string;
   title: string;
   context?: string;
+  type: 'video';
 }
+
+export interface DocumentNode {
+  id: string;
+  x: number;
+  y: number;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  content?: string;
+  uploadedAt: string;
+  type: 'document';
+}
+
+export type CanvasNode = VideoNode | DocumentNode;
 
 export interface Transform {
   x: number;
