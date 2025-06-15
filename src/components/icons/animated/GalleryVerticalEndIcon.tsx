@@ -18,7 +18,7 @@ interface GalleryVerticalEndIconProps extends HTMLAttributes<HTMLDivElement> {
 
 const pathVariants: Variants = {
   normal: {
-    translateY: 0,
+    y: 0,
     opacity: 1,
     transition: {
       type: 'tween',
@@ -27,7 +27,7 @@ const pathVariants: Variants = {
     },
   },
   animate: (i: number) => ({
-    translateY: [2 * i, 0],
+    y: [2 * i, 0],
     opacity: [0, 1],
     transition: {
       delay: 0.25 * (2 - i),
