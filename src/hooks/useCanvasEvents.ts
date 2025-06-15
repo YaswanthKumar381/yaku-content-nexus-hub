@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { VideoNode, DocumentNode, ChatNode, TextNode } from "@/types/canvas";
 
@@ -23,7 +24,7 @@ interface UseCanvasEventsProps {
   setIsDraggingDocument: (value: boolean) => void;
   setPendingDocumentNode: (value: { x: number; y: number } | null) => void;
   setShowDocumentUpload: (value: boolean) => void;
-  addDocumentNode: (x: number, y: number, file: File) => Promise<DocumentNode>;
+  addDocumentNode: (x: number, y: number, files: File[]) => Promise<DocumentNode>;
   pendingDocumentNode: { x: number; y: number } | null;
   setIsUploading: (value: boolean) => void;
   resetDocumentUpload: () => void;
@@ -137,11 +138,11 @@ export const useCanvasEvents = ({
     }
   }, [pendingVideoNode, videoUrl, addVideoNode, setIsCreatingNode, resetVideoInput]);
 
-  const handleDocumentUploadSubmit = useCallback(async (file: File) => {
+  const handleDocumentUploadSubmit = useCallback(async (files: File[]) => {
     if (!pendingDocumentNode) return;
     setIsUploading(true);
     try {
-      await addDocumentNode(pendingDocumentNode.x, pendingDocumentNode.y, file);
+      await addDocumentNode(pendingDocumentNode.x, pendingDocumentNode.y, files);
       resetDocumentUpload();
     } catch (error) {
       console.error("❌ Error creating document node:", error);

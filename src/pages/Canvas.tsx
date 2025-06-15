@@ -65,6 +65,15 @@ const CanvasContent = () => {
     connectionsResult.removeConnectionsForNode(nodeId);
   }, [documentNodesResult, connectionsResult]);
 
+  const handleDeleteDocumentFile = useCallback((nodeId: string, fileId: string) => {
+    const node = documentNodesResult.documentNodes.find(n => n.id === nodeId);
+    // If it's the last file, the node will be deleted, so we should clean up connections.
+    if (node && node.documents.length === 1 && node.documents[0].id === fileId) {
+        connectionsResult.removeConnectionsForNode(nodeId);
+    }
+    documentNodesResult.deleteDocumentFromFileNode(nodeId, fileId);
+  }, [documentNodesResult, connectionsResult]);
+
   const handleDeleteTextNode = useCallback((nodeId: string) => {
     textNodesResult.deleteTextNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
@@ -111,7 +120,10 @@ const CanvasContent = () => {
     
     const context = connectedNodes.map(node => {
         if(node.type === 'video') return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
-        if(node.type === 'document') return `Document Name: ${node.fileName}\nContent: ${node.content || 'Not available'}`;
+        if(node.type === 'document') {
+          const docContent = node.documents.map(d => `Document: ${d.fileName}\nContent: ${d.content || 'Content not available'}`).join('\n\n');
+          return `Document Node Content:\n${docContent}`;
+        }
         if(node.type === 'text') return `Text Note:\n${node.content || 'Not available'}`;
         return '';
     }).join('\n\n---\n\n');
@@ -171,6 +183,7 @@ const CanvasContent = () => {
           onEndConnection={connectionsResult.endConnection}
           onDeleteVideoNode={handleDeleteVideoNode}
           onDeleteDocumentNode={handleDeleteDocumentNode}
+          onDeleteDocumentFile={handleDeleteDocumentFile}
           onDeleteTextNode={handleDeleteTextNode}
           onUpdateTextNode={textNodesResult.updateTextNode}
           onSendMessage={handleSendMessage}

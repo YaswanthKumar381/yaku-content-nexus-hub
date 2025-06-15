@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { VideoNode, DocumentNode, ChatNode, Connection, TextNode } from '@/types/canvas';
 import { VideoNodeComponent } from './VideoNodeComponent';
@@ -20,6 +21,7 @@ interface NodeLayerProps {
   onEndConnection: (nodeId:string) => void;
   onDeleteVideoNode: (nodeId: string) => void;
   onDeleteDocumentNode: (nodeId: string) => void;
+  onDeleteDocumentFile: (nodeId: string, fileId: string) => void;
   onDeleteTextNode: (nodeId: string) => void;
   onUpdateTextNode: (nodeId: string, data: Partial<Omit<TextNode, 'id'|'type'>>) => void;
   onSendMessage: (nodeId: string, message: string) => void;
@@ -42,6 +44,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onEndConnection,
   onDeleteVideoNode,
   onDeleteDocumentNode,
+  onDeleteDocumentFile,
   onDeleteTextNode,
   onUpdateTextNode,
   onSendMessage,
@@ -76,6 +79,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onPointerDown={onDocumentNodePointerDown}
             onStartConnection={onStartConnection}
             onDelete={onDeleteDocumentNode}
+            onDeleteFile={onDeleteDocumentFile}
             isConnected={isConnected}
           />
         );

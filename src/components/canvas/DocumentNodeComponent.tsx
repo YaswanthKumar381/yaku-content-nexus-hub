@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DocumentNode } from '@/types/canvas';
 import { FileText, BrainCircuit, Trash2 } from 'lucide-react';
@@ -8,20 +9,22 @@ interface DocumentNodeProps {
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
+  onDeleteFile: (nodeId: string, fileId: string) => void;
   isConnected: boolean;
 }
 
-export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete, isConnected }) => {
+export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete, onDeleteFile, isConnected }) => {
   
   const handleNodePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
-    // Do not start drag if clicking on the connection handle.
-    // The handle has its own onPointerDown.
-    if (target.closest('[data-connection-handle]')) {
+    if (target.closest('[data-connection-handle]') || target.closest('button') || target.closest('ul')) {
         return;
     }
     onPointerDown(e, node.id);
   };
+
+  const nodeTitle = node.documents.length === 1 ? node.documents[0].fileName : node.documents.length > 1 ? `${node.documents.length} documents` : "Empty Node";
+  const totalSize = node.documents.reduce((acc, doc) => acc + doc.fileSize, 0);
 
   return (
     <div
@@ -30,7 +33,7 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
       style={{ left: node.x, top: node.y, transform: 'translate(-50%, -50%)' }}
       onPointerDown={handleNodePointerDown}
     >
-      <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-64 border border-blue-200 hover:shadow-xl transition-shadow">
+      <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-72 border border-blue-200 hover:shadow-xl transition-shadow">
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -59,34 +62,50 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
               </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-medium text-gray-900 text-sm truncate" title={node.fileName}>
-                {node.fileName}
+              <h3 className="font-medium text-gray-900 text-sm truncate" title={nodeTitle}>
+                {nodeTitle}
               </h3>
               <p className="text-xs text-gray-500">
-                {formatBytes(node.fileSize)}
+                Total size: {formatBytes(totalSize)}
               </p>
             </div>
           </div>
-          <div className="mt-3">
-             {node.content === undefined && (
-                <p className="text-xs text-gray-500 flex items-center gap-1">
-                  <BrainCircuit className="w-3 h-3" />
-                  Extracting content...
-                </p>
-             )}
-             {node.content && node.content !== "Failed to extract content." && (
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <BrainCircuit className="w-3 h-3" />
-                  Content extracted
-                </p>
-              )}
-              {node.content === "Failed to extract content." && (
-                <p className="text-xs text-red-600 flex items-center gap-1">
-                  <BrainCircuit className="w-3 h-3" />
-                  Extraction failed
-                </p>
-              )}
-          </div>
+        </div>
+
+        <div className="px-2 pb-2">
+            <div className="bg-white/50 rounded-md max-h-48 overflow-y-auto">
+                <ul className="p-1 space-y-1">
+                    {node.documents.map(doc => (
+                        <li key={doc.id} className="group/item flex items-center justify-between p-2 rounded-md hover:bg-blue-50/80 transition-colors duration-150 cursor-default">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-gray-800 truncate" title={doc.fileName}>{doc.fileName}</p>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <span>{formatBytes(doc.fileSize)}</span>
+                                        &middot;
+                                        {doc.content === undefined && <span className="flex items-center gap-1"><BrainCircuit className="w-3 h-3" />Extracting...</span>}
+                                        {doc.content && doc.content !== "Failed to extract content." && <span className="text-green-600 flex items-center gap-1"><BrainCircuit className="w-3 h-3" />Ready</span>}
+                                        {doc.content === "Failed to extract content." && <span className="text-red-600 flex items-center gap-1"><BrainCircuit className="w-3 h-3" />Failed</span>}
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onDeleteFile(node.id, doc.id); }}
+                                className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-150 ml-2 p-1 rounded-full hover:bg-red-100"
+                                title="Delete file"
+                            >
+                                <Trash2 className="w-4 h-4 text-red-500" />
+                            </button>
+                        </li>
+                    ))}
+                    {node.documents.length === 0 && (
+                        <li className="text-center text-xs text-gray-500 p-4 cursor-default">
+                            This node is empty.
+                        </li>
+                    )}
+                </ul>
+            </div>
         </div>
       </div>
     </div>

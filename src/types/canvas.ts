@@ -1,4 +1,3 @@
-
 export interface VideoNode {
   id: string;
   x: number;
@@ -9,15 +8,20 @@ export interface VideoNode {
   type: 'video';
 }
 
-export interface DocumentNode {
+export interface DocumentFile {
   id: string;
-  x: number;
-  y: number;
   fileName: string;
   fileType: string;
   fileSize: number;
   content?: string;
   uploadedAt: string;
+}
+
+export interface DocumentNode {
+  id: string;
+  x: number;
+  y: number;
+  documents: DocumentFile[];
   type: 'document';
 }
 

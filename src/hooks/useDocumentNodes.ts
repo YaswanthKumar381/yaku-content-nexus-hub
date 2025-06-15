@@ -1,11 +1,25 @@
 import { useState, useCallback } from "react";
-import { DocumentNode } from "@/types/canvas";
+import { DocumentNode, DocumentFile } from "@/types/canvas";
 import { extractTextFromFile } from "@/utils/documentUtils";
 
 export const useDocumentNodes = () => {
   const [documentNodes, setDocumentNodes] = useState<Array<DocumentNode>>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  const updateDocumentFile = useCallback((nodeId: string, fileId: string, updates: Partial<DocumentFile>) => {
+    setDocumentNodes(prev => prev.map(node => {
+      if (node.id === nodeId) {
+        return { 
+          ...node, 
+          documents: node.documents.map(doc => 
+            doc.id === fileId ? { ...doc, ...updates } : doc
+          ) 
+        };
+      }
+      return node;
+    }));
+  }, []);
 
   const updateDocumentNode = useCallback((nodeId: string, updates: Partial<DocumentNode>) => {
     setDocumentNodes(prev => prev.map(node =>
@@ -17,30 +31,53 @@ export const useDocumentNodes = () => {
     setDocumentNodes(prev => prev.filter(node => node.id !== nodeId));
   }, []);
 
-  const addDocumentNode = useCallback(async (x: number, y: number, file: File) => {
-    const newNode: DocumentNode = {
-      id: `doc-${Date.now()}`,
-      x,
-      y,
+  const deleteDocumentFromFileNode = useCallback((nodeId: string, fileId: string) => {
+    setDocumentNodes(prev => 
+      prev
+        .map(node => {
+          if (node.id === nodeId) {
+            const newDocuments = node.documents.filter(doc => doc.id !== fileId);
+            return { ...node, documents: newDocuments };
+          }
+          return node;
+        })
+        .filter(node => node.documents.length > 0) // remove node if it becomes empty
+    );
+  }, []);
+
+  const addDocumentNode = useCallback(async (x: number, y: number, files: File[]) => {
+    const newNodeId = `doc-${Date.now()}`;
+    const initialDocuments: DocumentFile[] = files.map((file, index) => ({
+      id: `${newNodeId}-file-${Date.now()}-${index}`,
       fileName: file.name,
       fileType: file.type,
       fileSize: file.size,
       uploadedAt: new Date().toISOString(),
+    }));
+
+    const newNode: DocumentNode = {
+      id: newNodeId,
+      x,
+      y,
+      documents: initialDocuments,
       type: 'document'
     };
     setDocumentNodes(prev => [...prev, newNode]);
 
-    // Extract content right away
-    try {
-      const text = await extractTextFromFile(file);
-      updateDocumentNode(newNode.id, { content: text });
-    } catch (error) {
-      console.error("Error extracting document content:", error);
-      updateDocumentNode(newNode.id, { content: "Failed to extract content." });
-    }
+    // Extract content for each file
+    initialDocuments.forEach(async (docFile, index) => {
+      const file = files[index];
+      try {
+        const text = await extractTextFromFile(file);
+        updateDocumentFile(newNodeId, docFile.id, { content: text });
+      } catch (error) {
+        console.error("Error extracting document content:", error);
+        updateDocumentFile(newNodeId, docFile.id, { content: "Failed to extract content." });
+      }
+    });
     
     return newNode;
-  }, [updateDocumentNode]);
+  }, [updateDocumentFile]);
   
   const moveDocumentNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: { x: number; y: number; scale: number }) => {
     if (!draggingNodeId || draggingNodeId !== nodeId) return;
@@ -97,6 +134,7 @@ export const useDocumentNodes = () => {
     addDocumentNode,
     updateDocumentNode,
     deleteDocumentNode,
+    deleteDocumentFromFileNode,
     moveDocumentNode,
     handleNodePointerDown,
     handleNodePointerUp,
