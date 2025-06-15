@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { VideoInputModal } from './VideoInputModal';
 import { DocumentUploadModal } from './DocumentUploadModal';
@@ -95,10 +96,8 @@ export const CanvasModals: React.FC<CanvasModalsProps> = ({
       <ImageUploadModal
         isOpen={canvasState.showImageUpload}
         isUploading={canvasState.isUploadingImages}
-        onSubmit={eventsResult.handleImageUploadSubmit}
+        onUpload={eventsResult.handleImageUploadSubmit}
         onClose={onImageModalClose}
-        mode={uploadTargetNodeId ? 'update' : 'create'}
-        existingImages={existingImages}
       />
     </>
   );
