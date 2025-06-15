@@ -1,3 +1,4 @@
+
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
@@ -34,8 +35,12 @@ export const useCanvasOrchestration = () => {
     handleDeleteWebsiteNode,
     handleDeleteAudioNode,
     handleDeleteImageNode,
+    handleDeleteImageFile,
     handleDocumentNodeUploadClick,
     handleDocumentModalClose,
+    handleImageNodeUploadClick,
+    handleImageModalClose,
+    handleAnalyzeImage,
     handleSendMessage,
     handleTranscriptModalClose,
   } = handlersResult;
@@ -130,8 +135,12 @@ export const useCanvasOrchestration = () => {
     onDeleteWebsiteNode: handleDeleteWebsiteNode,
     onDeleteAudioNode: handleDeleteAudioNode,
     onDeleteImageNode: handleDeleteImageNode,
+    onDeleteImageFile: handleDeleteImageFile,
     onDocumentNodeUploadClick: handleDocumentNodeUploadClick,
     onDocumentModalClose: handleDocumentModalClose,
+    onImageNodeUploadClick: handleImageNodeUploadClick,
+    onImageModalClose: handleImageModalClose,
+    onAnalyzeImage: handleAnalyzeImage,
     onSendMessage: handleSendMessage,
     onTranscriptModalClose: handleTranscriptModalClose,
   };
