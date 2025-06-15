@@ -29,8 +29,8 @@ export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
         const targetNode = allNodesMap.get(conn.targetId);
         if (!sourceNode || !targetNode) return null;
         
-        const sourcePos = getHandlePosition(sourceNode);
-        const targetPos = getHandlePosition(targetNode);
+        const sourcePos = getHandlePosition(sourceNode as any);
+        const targetPos = getHandlePosition(targetNode as any);
         
         return (
           <ConnectionLine

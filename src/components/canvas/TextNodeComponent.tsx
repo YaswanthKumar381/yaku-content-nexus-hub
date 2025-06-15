@@ -59,7 +59,7 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
         width: node.width,
         height: node.height,
       }}
-      onPointerDown={onPointerDown}
+      onPointerDown={handlePointerDown}
     >
         <div className="flex-grow p-2 pt-1 flex flex-col">
             <textarea
