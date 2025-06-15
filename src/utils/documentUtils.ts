@@ -13,8 +13,8 @@ export const extractTextFromFile = async (file: File): Promise<string> => {
   console.log(`Extracting text from ${file.name} of type ${fileType}`);
 
   if (fileType === 'application/pdf') {
-    const pdfjsLib = await import('pdfjs-dist/build/pdf');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+    const pdfjsLib = await import('pdfjs-dist');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.mjs`;
     
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
