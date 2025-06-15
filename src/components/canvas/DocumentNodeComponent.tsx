@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DocumentNode } from '@/types/canvas';
 import { FileText, BrainCircuit, Trash2 } from 'lucide-react';
@@ -9,9 +8,10 @@ interface DocumentNodeProps {
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
+  isConnected: boolean;
 }
 
-export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete }) => {
+export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete, isConnected }) => {
   
   const handleNodePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
@@ -47,8 +47,10 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
             e.stopPropagation();
             onStartConnection(node.id);
           }}
-          className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-blue-500 z-10 cursor-pointer"
-        />
+          className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-blue-500 z-10 cursor-pointer flex items-center justify-center"
+        >
+          {isConnected && <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />}
+        </div>
         <div className="p-4">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">

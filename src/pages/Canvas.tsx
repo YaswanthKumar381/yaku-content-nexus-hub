@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasState } from "@/hooks/useCanvasState";
@@ -158,6 +157,7 @@ const CanvasContent = () => {
           onDeleteDocumentNode={handleDeleteDocumentNode}
           onSendMessage={handleSendMessage}
           isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
+          connections={connectionsResult.connections}
         />
       </div>
 

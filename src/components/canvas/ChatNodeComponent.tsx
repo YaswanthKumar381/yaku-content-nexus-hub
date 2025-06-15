@@ -13,9 +13,10 @@ interface ChatNodeComponentProps {
   onSendMessage: (nodeId: string, message: string) => void;
   isSendingMessage: boolean;
   onResize: (nodeId: string, height: number) => void;
+  isConnected: boolean;
 }
 
-export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPointerDown, onEndConnection, onSendMessage, isSendingMessage, onResize }) => {
+export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPointerDown, onEndConnection, onSendMessage, isSendingMessage, onResize, isConnected }) => {
   const { isDarkMode } = useTheme();
   const scrollAreaViewportRef = useRef<HTMLDivElement>(null);
   const resizerRef = useRef<HTMLDivElement>(null);
@@ -77,8 +78,10 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
           e.stopPropagation();
           onEndConnection(node.id);
         }}
-        className={`absolute top-1/2 left-[-16px] transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 ${isDarkMode ? 'border-purple-400' : 'border-purple-600'} z-20 cursor-pointer`}
-      />
+        className={`absolute top-1/2 left-[-16px] transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 ${isDarkMode ? 'border-purple-400' : 'border-purple-600'} z-20 cursor-pointer flex items-center justify-center`}
+      >
+        {isConnected && <div className={`w-1.5 h-1.5 ${isDarkMode ? 'bg-purple-400' : 'bg-purple-600'} rounded-full`} />}
+      </div>
       
       <div className="flex flex-col bg-zinc-800/80 backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-700/50 shadow-2xl shadow-black/30">
         <ScrollArea 

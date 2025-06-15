@@ -10,6 +10,7 @@ interface VideoNodeProps {
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
+  isConnected: boolean;
 }
 
 export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
@@ -18,6 +19,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   onTranscriptClick,
   onStartConnection,
   onDelete,
+  isConnected,
 }) => {
   const embedUrl = getYouTubeEmbedUrl(node.url);
 
@@ -69,8 +71,10 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
             e.stopPropagation();
             onStartConnection(node.id);
           }}
-          className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-red-500 z-20 cursor-pointer"
-        />
+          className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-red-500 z-20 cursor-pointer flex items-center justify-center"
+        >
+          {isConnected && <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
+        </div>
         <div className="relative">
           {embedUrl ? (
             <div className="relative w-full h-48 rounded-t-lg overflow-hidden">
@@ -84,7 +88,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
               />
             </div>
           ) : (
-            <div className="relative rounded-t-lg overflow-hidden">
+            <div className="relative rounded-t-lg overflow-hidden group/thumbnail">
               <img
                 src={getVideoThumbnail(node.url)}
                 alt={node.title}
@@ -93,8 +97,8 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
                   e.currentTarget.src = "/placeholder.svg";
                 }}
               />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 bg-black/70 rounded-full flex items-center justify-center hover:bg-black/90 transition-colors">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/thumbnail:opacity-100 transition-opacity">
+                <div className="w-16 h-16 bg-black/70 rounded-full flex items-center justify-center hover:bg-red-500 transition-colors">
                   <Play className="w-6 h-6 text-white ml-1" fill="white" />
                 </div>
               </div>
