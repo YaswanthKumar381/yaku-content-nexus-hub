@@ -21,8 +21,9 @@ export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | Te
       return { x: node.x + node.width + 8, y: node.y + node.height / 2 };
     case 'website':
       // The handle is on the right of the 384px (w-96) wide component.
-      // Handle is positioned at right: -16px, so it's completely outside
-      // Center of handle is (node.x + 192) + 16 = node.x + 208
+      // Handle is positioned with `-right-8` (right: -2rem / -32px).
+      // This places its left edge on the container's right boundary.
+      // Center of handle: (node.x + 192) + 16 (half handle width) = node.x + 208
       return { x: node.x + 208, y: node.y };
     case 'audio':
       // The handle is on the right of the 320px (w-80) wide component.

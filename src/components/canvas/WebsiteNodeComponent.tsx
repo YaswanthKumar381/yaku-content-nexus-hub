@@ -218,7 +218,7 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
             e.stopPropagation();
             onStartConnection(node.id);
           }}
-          className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-blue-500/20 transition-colors z-10"
+          className="absolute -right-8 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-blue-500/20 transition-colors z-10"
           title="Create connection"
         >
           <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-pulse" />

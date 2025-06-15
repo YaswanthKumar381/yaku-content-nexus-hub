@@ -24,7 +24,7 @@ export const useWebsiteNodes = () => {
       }
       
       const htmlContent = await response.text();
-      console.log(`✅ Successfully fetched content for: ${url}`);
+      console.log(`✅ Successfully fetched content for: ${url}. Length: ${htmlContent.length}`);
       
       const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
       const title = titleMatch ? titleMatch[1].trim() : new URL(url).hostname;
