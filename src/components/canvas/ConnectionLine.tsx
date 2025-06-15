@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { CanvasNode } from '@/types/canvas';
 
 interface ConnectionLineProps {
   id: string;
@@ -9,9 +10,19 @@ interface ConnectionLineProps {
   targetY: number;
   isDarkMode?: boolean;
   onDelete: (id: string) => void;
+  sourceType: CanvasNode['type'];
 }
 
-export const ConnectionLine: React.FC<ConnectionLineProps> = ({ id, sourceX, sourceY, targetX, targetY, isDarkMode = false, onDelete }) => {
+const sourceColorMap: Record<CanvasNode['type'], string> = {
+    video: '#EF4444', // red-500
+    document: '#3B82F6', // blue-500
+    text: '#F97316', // orange-500
+    chat: '#A855F7' // purple-500
+};
+
+const targetColor = '#8B5CF6'; // violet-500
+
+export const ConnectionLine: React.FC<ConnectionLineProps> = ({ id, sourceX, sourceY, targetX, targetY, isDarkMode = false, onDelete, sourceType }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   const dx = targetX - sourceX;
@@ -25,15 +36,27 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ id, sourceX, sou
     onDelete(id);
   };
 
+  const sourceColor = sourceColorMap[sourceType] || sourceColorMap.chat;
+  const gradientId = `grad-${id.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+  const gradient = (
+    <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1={sourceX} y1={sourceY} x2={targetX} y2={targetY}>
+      <stop offset="0%" stopColor={sourceColor} />
+      <stop offset="95%" stopColor={targetColor} />
+    </linearGradient>
+  );
+
   // The live connection line should not be interactive
   if (id === 'live-connection') {
     return (
       <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
+        <defs>{gradient}</defs>
         <path
           d={path}
           fill="none"
-          stroke={isDarkMode ? 'rgba(192, 132, 252, 0.6)' : 'rgba(129, 64, 215, 0.8)'}
+          stroke={`url(#${gradientId})`}
           strokeWidth="2"
+          strokeDasharray="5 5"
           className="animated-path"
         />
       </svg>
@@ -42,6 +65,7 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ id, sourceX, sou
 
   return (
     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
+      <defs>{gradient}</defs>
       <g 
         className="pointer-events-auto"
         onMouseEnter={() => setIsHovered(true)}
@@ -51,8 +75,9 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ id, sourceX, sou
         <path
           d={path}
           fill="none"
-          stroke={isDarkMode ? 'rgba(192, 132, 252, 0.6)' : 'rgba(129, 64, 215, 0.8)'}
+          stroke={`url(#${gradientId})`}
           strokeWidth="2"
+          strokeDasharray="5 5"
           className="animated-path"
         />
         {/* Interaction path - wider and transparent */}

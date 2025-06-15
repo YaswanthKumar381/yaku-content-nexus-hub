@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Connection, CanvasNode } from '@/types/canvas';
 import { ConnectionLine } from './ConnectionLine';
@@ -41,23 +42,30 @@ export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
             targetY={targetPos.y}
             isDarkMode={isDarkMode}
             onDelete={onDeleteConnection}
+            sourceType={sourceNode.type}
           />
         );
       })}
 
       {/* Live connection line */}
-      {connectingInfo && liveEndPoint && (
-        <ConnectionLine
-          sourceX={connectingInfo.startX}
-          sourceY={connectingInfo.startY}
-          targetX={liveEndPoint.x}
-          targetY={liveEndPoint.y}
-          isDarkMode={isDarkMode}
-          // These are temporary and can't be deleted
-          id="live-connection"
-          onDelete={() => {}}
-        />
-      )}
+      {connectingInfo && liveEndPoint && (() => {
+        const sourceNode = allNodesMap.get(connectingInfo.startNodeId);
+        if (!sourceNode) return null;
+
+        return (
+          <ConnectionLine
+            sourceX={connectingInfo.startX}
+            sourceY={connectingInfo.startY}
+            targetX={liveEndPoint.x}
+            targetY={liveEndPoint.y}
+            isDarkMode={isDarkMode}
+            // These are temporary and can't be deleted
+            id="live-connection"
+            onDelete={() => {}}
+            sourceType={sourceNode.type}
+          />
+        );
+      })()}
     </>
   );
 };

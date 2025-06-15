@@ -16,8 +16,9 @@ export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | Te
       // So center of handle is (node.x + 128) + 8 = node.x + 136
       return { x: node.x + 136, y: node.y };
     case 'text':
-      // TextNode position is top-left, handle is on the right edge, centered.
-      return { x: node.x + node.width, y: node.y + node.height / 2 };
+      // TextNode position is top-left. Handle is w-4 (1rem=16px), so its radius is 8px.
+      // To have it outside touching the border, we add its radius to the position.
+      return { x: node.x + node.width + 8, y: node.y + node.height / 2 };
     default: {
       const _exhaustiveCheck: never = node;
       throw new Error(`Unhandled node type: ${(_exhaustiveCheck as any)?.type}`);

@@ -90,7 +90,7 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
               e.stopPropagation();
               onStartConnection(node.id);
             }}
-            className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-orange-400 hover:border-orange-500 z-10 cursor-pointer flex items-center justify-center transition-opacity"
+            className="absolute top-1/2 -right-4 -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-orange-400 hover:border-orange-500 z-10 cursor-pointer flex items-center justify-center transition-opacity"
           >
             {isConnected && <div className="w-2 h-2 bg-orange-500 rounded-full" />}
           </div>
