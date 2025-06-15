@@ -28,7 +28,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
   
   const handlePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area]')) {
+    if (target.closest('button, input, textarea, a, [data-resizer]')) {
       return;
     }
     onPointerDown(e, node.id);
@@ -84,7 +84,6 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
         <ScrollArea 
             className="flex-grow pr-2"
             style={{ height: `${node.height}px` }}
-            data-scroll-area
         >
             <div className="h-full p-4 flex flex-col gap-4" ref={scrollAreaViewportRef}>
                 {node.messages.filter(m => m.role !== 'system').map(message => (
