@@ -25,6 +25,8 @@ interface UseCanvasEventsProps {
   setPendingDocumentNode: (value: { x: number; y: number } | null) => void;
   setShowDocumentUpload: (value: boolean) => void;
   addDocumentNode: (x: number, y: number, files: File[]) => Promise<DocumentNode>;
+  addDocumentsToNode: (nodeId: string, files: File[]) => Promise<void>;
+  uploadTargetNodeId: string | null;
   pendingDocumentNode: { x: number; y: number } | null;
   setIsUploading: (value: boolean) => void;
   resetDocumentUpload: () => void;
@@ -59,6 +61,8 @@ export const useCanvasEvents = ({
   setPendingDocumentNode,
   setShowDocumentUpload,
   addDocumentNode,
+  addDocumentsToNode,
+  uploadTargetNodeId,
   pendingDocumentNode,
   setIsUploading,
   resetDocumentUpload,
@@ -139,17 +143,21 @@ export const useCanvasEvents = ({
   }, [pendingVideoNode, videoUrl, addVideoNode, setIsCreatingNode, resetVideoInput]);
 
   const handleDocumentUploadSubmit = useCallback(async (files: File[]) => {
-    if (!pendingDocumentNode) return;
+    if (files.length === 0) return;
     setIsUploading(true);
     try {
-      await addDocumentNode(pendingDocumentNode.x, pendingDocumentNode.y, files);
+      if (uploadTargetNodeId) {
+        await addDocumentsToNode(uploadTargetNodeId, files);
+      } else if (pendingDocumentNode) {
+        await addDocumentNode(pendingDocumentNode.x, pendingDocumentNode.y, files);
+      }
       resetDocumentUpload();
     } catch (error) {
-      console.error("❌ Error creating document node:", error);
+      console.error("❌ Error creating/updating document node:", error);
     } finally {
       setIsUploading(false);
     }
-  }, [pendingDocumentNode, addDocumentNode, resetDocumentUpload, setIsUploading]);
+  }, [pendingDocumentNode, addDocumentNode, resetDocumentUpload, setIsUploading, uploadTargetNodeId, addDocumentsToNode]);
 
   const handleTranscriptClick = useCallback(async (e: React.MouseEvent, node: VideoNode) => {
     console.log("🎯 Transcript button clicked for:", node.url);

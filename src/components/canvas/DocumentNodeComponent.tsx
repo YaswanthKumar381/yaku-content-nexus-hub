@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { DocumentNode } from '@/types/canvas';
-import { FileText, BrainCircuit, Trash2 } from 'lucide-react';
+import { FileText, BrainCircuit, Trash2, UploadCloud } from 'lucide-react';
 import { formatBytes } from '@/utils/documentUtils';
 
 interface DocumentNodeProps {
@@ -10,10 +10,11 @@ interface DocumentNodeProps {
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   onDeleteFile: (nodeId: string, fileId: string) => void;
+  onUploadClick: (nodeId: string) => void;
   isConnected: boolean;
 }
 
-export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete, onDeleteFile, isConnected }) => {
+export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete, onDeleteFile, onUploadClick, isConnected }) => {
   
   const handleNodePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
@@ -43,6 +44,16 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
           title="Delete Node"
         >
           <Trash2 className="w-4 h-4 text-red-500" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onUploadClick(node.id);
+          }}
+          className="absolute -top-2 -right-2 w-8 h-8 bg-white hover:bg-blue-100 rounded-full flex items-center justify-center z-20 cursor-pointer border border-gray-300 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          title="Upload more files"
+        >
+          <UploadCloud className="w-4 h-4 text-blue-500" />
         </button>
         <div 
           data-connection-handle

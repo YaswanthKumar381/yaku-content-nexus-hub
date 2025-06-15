@@ -22,6 +22,7 @@ interface NodeLayerProps {
   onDeleteVideoNode: (nodeId: string) => void;
   onDeleteDocumentNode: (nodeId: string) => void;
   onDeleteDocumentFile: (nodeId: string, fileId: string) => void;
+  onDocumentNodeUploadClick: (nodeId: string) => void;
   onDeleteTextNode: (nodeId: string) => void;
   onUpdateTextNode: (nodeId: string, data: Partial<Omit<TextNode, 'id'|'type'>>) => void;
   onSendMessage: (nodeId: string, message: string) => void;
@@ -45,6 +46,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onDeleteVideoNode,
   onDeleteDocumentNode,
   onDeleteDocumentFile,
+  onDocumentNodeUploadClick,
   onDeleteTextNode,
   onUpdateTextNode,
   onSendMessage,
@@ -80,6 +82,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onStartConnection={onStartConnection}
             onDelete={onDeleteDocumentNode}
             onDeleteFile={onDeleteDocumentFile}
+            onUploadClick={onDocumentNodeUploadClick}
             isConnected={isConnected}
           />
         );

@@ -10,6 +10,7 @@ interface DocumentUploadModalProps {
   onClose: () => void;
   onSubmit: (files: File[]) => void;
   isUploading: boolean;
+  mode: 'create' | 'update';
 }
 
 export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
@@ -17,6 +18,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
   onClose,
   onSubmit,
   isUploading,
+  mode,
 }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -27,6 +29,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
         const uniqueNewFiles = newFiles.filter(nf => !prev.some(pf => pf.name === nf.name && pf.size === nf.size));
         return [...prev, ...uniqueNewFiles];
       });
+      e.target.value = ''; // Allow re-selecting the same file if removed
     }
   };
 
@@ -49,7 +52,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleModalClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload Document(s)</DialogTitle>
+          <DialogTitle>{mode === 'create' ? 'Upload Document(s)' : 'Add More Documents'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="flex flex-col items-center justify-center w-full">
@@ -67,18 +70,18 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
               <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} multiple />
             </label>
             {selectedFiles.length > 0 && (
-              <div className="mt-4 w-full text-sm text-gray-600 max-h-40 overflow-y-auto pr-2">
-                <p className="font-semibold mb-2 text-xs">Selected files:</p>
-                <ul className="space-y-1">
+              <div className="mt-4 w-full text-sm">
+                <p className="font-semibold mb-2 text-xs text-gray-500">Selected files:</p>
+                <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
                   {selectedFiles.map((file) => (
-                    <li key={`${file.name}-${file.lastModified}`} className="flex justify-between items-center text-xs bg-gray-50 hover:bg-gray-100 p-2 rounded-md">
+                    <div key={`${file.name}-${file.lastModified}`} className="flex justify-between items-center text-xs bg-gray-50 hover:bg-gray-100 p-2 rounded-md border border-gray-200">
                       <span className="truncate pr-2" title={file.name}>{file.name}</span>
                       <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => removeFile(file)}>
                         <Trash2 className="w-3.5 h-3.5 text-red-500"/>
                       </Button>
-                    </li>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
           </div>
@@ -86,7 +89,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
         <DialogFooter>
           <Button variant="ghost" onClick={handleModalClose}>Cancel</Button>
           <Button onClick={handleSubmit} disabled={selectedFiles.length === 0 || isUploading}>
-            {isUploading ? 'Uploading...' : `Upload & Create Node (${selectedFiles.length})`}
+            {isUploading ? 'Uploading...' : (mode === 'create' ? `Upload & Create Node (${selectedFiles.length})` : `Add Files (${selectedFiles.length})`)}
           </Button>
         </DialogFooter>
       </DialogContent>

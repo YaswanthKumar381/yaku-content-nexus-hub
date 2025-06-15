@@ -21,6 +21,42 @@ export const useDocumentNodes = () => {
     }));
   }, []);
 
+  const addDocumentsToNode = useCallback(async (nodeId: string, files: File[]) => {
+    const node = documentNodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    const newDocumentFiles: DocumentFile[] = files.map((file, index) => ({
+      id: `${nodeId}-file-${Date.now()}-${index}`,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      uploadedAt: new Date().toISOString(),
+    }));
+
+    setDocumentNodes(prev => prev.map(n => {
+      if (n.id === nodeId) {
+        const existingFileNames = new Set(n.documents.map(d => d.fileName));
+        const uniqueNewDocs = newDocumentFiles.filter(nd => !existingFileNames.has(nd.fileName));
+        return {
+          ...n,
+          documents: [...n.documents, ...uniqueNewDocs]
+        };
+      }
+      return n;
+    }));
+
+    newDocumentFiles.forEach(async (docFile, index) => {
+      const file = files[index];
+      try {
+        const text = await extractTextFromFile(file);
+        updateDocumentFile(nodeId, docFile.id, { content: text });
+      } catch (error) {
+        console.error("Error extracting document content:", error);
+        updateDocumentFile(nodeId, docFile.id, { content: "Failed to extract content." });
+      }
+    });
+  }, [documentNodes, updateDocumentFile]);
+
   const updateDocumentNode = useCallback((nodeId: string, updates: Partial<DocumentNode>) => {
     setDocumentNodes(prev => prev.map(node =>
       node.id === nodeId ? { ...node, ...updates } : node
@@ -132,6 +168,7 @@ export const useDocumentNodes = () => {
     documentNodes,
     draggingNodeId: draggingNodeId,
     addDocumentNode,
+    addDocumentsToNode,
     updateDocumentNode,
     deleteDocumentNode,
     deleteDocumentFromFileNode,

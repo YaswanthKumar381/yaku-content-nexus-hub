@@ -1,4 +1,5 @@
-import { useCallback } from "react";
+
+import { useCallback, useState } from "react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
@@ -31,6 +32,8 @@ const CanvasContent = () => {
   const documentNodesResult = useDocumentNodes();
   const chatNodesResult = useChatNodes();
   const textNodesResult = useTextNodes();
+
+  const [uploadTargetNodeId, setUploadTargetNodeId] = useState<string | null>(null);
 
   const allNodes = [...videoNodesResult.videoNodes, ...documentNodesResult.documentNodes, ...chatNodesResult.chatNodes, ...textNodesResult.textNodes];
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
@@ -78,6 +81,16 @@ const CanvasContent = () => {
     textNodesResult.deleteTextNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
   }, [textNodesResult, connectionsResult]);
+
+  const handleDocumentNodeUploadClick = useCallback((nodeId: string) => {
+    setUploadTargetNodeId(nodeId);
+    canvasState.setShowDocumentUpload(true);
+  }, [canvasState]);
+
+  const handleDocumentModalClose = useCallback(() => {
+    canvasState.resetDocumentUpload();
+    setUploadTargetNodeId(null);
+  }, [canvasState]);
   
   const canvasEvents = useCanvasEvents({
     isDraggingVideo: canvasState.isDraggingVideo,
@@ -97,9 +110,11 @@ const CanvasContent = () => {
     setPendingDocumentNode: canvasState.setPendingDocumentNode,
     setShowDocumentUpload: canvasState.setShowDocumentUpload,
     addDocumentNode: documentNodesResult.addDocumentNode,
+    addDocumentsToNode: documentNodesResult.addDocumentsToNode,
+    uploadTargetNodeId: uploadTargetNodeId,
     pendingDocumentNode: canvasState.pendingDocumentNode,
     setIsUploading: canvasState.setIsUploading,
-    resetDocumentUpload: canvasState.resetDocumentUpload,
+    resetDocumentUpload: handleDocumentModalClose,
     isDraggingChat: canvasState.isDraggingChat,
     setIsDraggingChat: canvasState.setIsDraggingChat,
     addChatNode: chatNodesResult.addChatNode,
@@ -184,6 +199,7 @@ const CanvasContent = () => {
           onDeleteVideoNode={handleDeleteVideoNode}
           onDeleteDocumentNode={handleDeleteDocumentNode}
           onDeleteDocumentFile={handleDeleteDocumentFile}
+          onDocumentNodeUploadClick={handleDocumentNodeUploadClick}
           onDeleteTextNode={handleDeleteTextNode}
           onUpdateTextNode={textNodesResult.updateTextNode}
           onSendMessage={handleSendMessage}
@@ -205,7 +221,8 @@ const CanvasContent = () => {
         isOpen={canvasState.showDocumentUpload}
         isUploading={canvasState.isUploading}
         onSubmit={canvasEvents.handleDocumentUploadSubmit}
-        onClose={canvasState.resetDocumentUpload}
+        onClose={handleDocumentModalClose}
+        mode={uploadTargetNodeId ? 'update' : 'create'}
       />
 
       <TranscriptModal
