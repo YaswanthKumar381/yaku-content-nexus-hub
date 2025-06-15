@@ -85,13 +85,15 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
           </button>
 
           <div
-              className={`absolute -right-[7px] top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full cursor-pointer
-              ${isConnected ? 'bg-green-500' : 'bg-orange-400/80 hover:bg-orange-500/80'} border-2 ${isDarkMode ? 'border-zinc-900' : 'border-white'} z-10`}
-              onPointerDown={(e) => {
-                  e.stopPropagation();
-                  onStartConnection(node.id);
-              }}
-          />
+            data-connection-handle
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              onStartConnection(node.id);
+            }}
+            className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-orange-400/80 hover:border-orange-500/80 z-10 cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            {isConnected && <div className="w-2 h-2 bg-orange-500 rounded-full" />}
+          </div>
         </div>
       </PopoverTrigger>
       <PopoverContent className="w-80 z-50" onPointerDown={(e) => e.stopPropagation()}>

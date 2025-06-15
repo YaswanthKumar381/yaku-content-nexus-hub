@@ -44,7 +44,7 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
     if (connectingInfo) return;
     const node = allNodesMap.get(nodeId);
     if (!node) return;
-    const startPos = getHandlePosition(node as any); // FIX: Cast to any to bypass TS error
+    const startPos = getHandlePosition(node);
     setConnectingInfo({ startNodeId: nodeId, startX: startPos.x, startY: startPos.y });
   }, [allNodesMap, connectingInfo]);
 
