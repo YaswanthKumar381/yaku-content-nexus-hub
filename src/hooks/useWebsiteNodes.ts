@@ -9,8 +9,9 @@ export const useWebsiteNodes = () => {
     try {
       console.log(`🌐 Fetching content for: ${url}`);
       
-      // Use the provided proxy service
-      const proxyUrl = `https://thingproxy.freeboard.io/fetch/${url}`;
+      // Use the allorigins proxy service
+      const encodedURL = encodeURIComponent(url);
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodedURL}`;
       const response = await fetch(proxyUrl);
       
       if (!response.ok) {
