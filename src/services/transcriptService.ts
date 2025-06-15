@@ -1,3 +1,4 @@
+
 export interface TranscriptSegment {
   start: string;
   end: string;
@@ -17,18 +18,6 @@ export interface VideoInfo {
   genre: string;
   author: string;
   channel_id: string;
-}
-
-export interface KomeTranscriptResponse {
-  success: boolean;
-  transcript?: string;
-  segments?: Array<{
-    text: string;
-    start: number;
-    end: number;
-  }>;
-  error?: string;
-  message?: string;
 }
 
 export interface TranscriptResponse {
@@ -52,20 +41,16 @@ export interface TranscriptResponse {
 }
 
 export const fetchYouTubeTranscript = async (videoUrl: string): Promise<TranscriptResponse> => {
-  const url = 'https://kome.ai/api/transcript';
+  const url = 'https://n8n-anrqdske.ap-southeast-1.clawcloudrun.com/webhook/get-transcript';
   
-  console.log("📡 Fetching transcript from kome.ai for video:", videoUrl);
+  console.log("📡 Fetching transcript from webhook for video:", videoUrl);
   
   const headers = {
-    "Content-Type": "application/json",
-    "Accept": "application/json, text/plain, */*",
-    "Origin": "https://kome.ai",
-    "Referer": "https://kome.ai/tools/youtube-transcript-generator"
+    "Content-Type": "application/json"
   };
   
   const data = {
-    video_id: videoUrl, // Use original URL format
-    format: true
+    video_url: videoUrl
   };
   
   console.log("📤 Sending request data:", data);
@@ -76,27 +61,26 @@ export const fetchYouTubeTranscript = async (videoUrl: string): Promise<Transcri
     body: JSON.stringify(data)
   });
   
-  const responseData: KomeTranscriptResponse = await response.json();
-  console.log("📋 Transcript API Response:", responseData);
-  
   if (!response.ok) {
     console.error("❌ HTTP Error:", response.status, response.statusText);
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
   
-  if (!responseData.success) {
-    console.error("❌ API Error:", responseData.error || responseData.message);
-    throw new Error(responseData.error || responseData.message || 'Failed to fetch transcript');
+  const transcriptText = await response.text();
+  console.log("📋 Received transcript:", transcriptText);
+  
+  if (!transcriptText || transcriptText.trim() === '') {
+    throw new Error('No transcript received from the webhook');
   }
   
-  // Convert segments from kome.ai format
-  const segments: TranscriptSegment[] = responseData.segments?.map(segment => ({
-    start: segment.start.toString(),
-    end: segment.end.toString(),
-    text: segment.text
-  })) || [];
+  // Create a single segment with the entire transcript
+  const segments: TranscriptSegment[] = [{
+    start: "0",
+    end: "0",
+    text: transcriptText.trim()
+  }];
   
-  console.log("✅ Processed segments count:", segments.length);
+  console.log("✅ Processed transcript successfully");
   
   // Extract video ID for thumbnail generation
   const videoId = getYouTubeVideoId(videoUrl);
