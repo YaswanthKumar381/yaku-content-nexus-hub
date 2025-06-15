@@ -1,17 +1,15 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  Moon,
-  Sun,
-  Settings
-} from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SettingsPopover } from "./SettingsPopover";
 import { HomeIcon } from "../icons/animated/HomeIcon";
 import { ArrowLeftIcon } from "../icons/animated/ArrowLeftIcon";
 import { ArrowRightIcon } from "../icons/animated/ArrowRightIcon";
+import { SettingsGearIcon } from "../icons/animated/SettingsGearIcon";
+import { MoonIcon } from "../icons/animated/MoonIcon";
+import { SunIcon } from "../icons/animated/SunIcon";
 import { ContextUsageIndicator } from "./ContextUsageIndicator";
 
 interface CanvasNavigationProps {
@@ -27,8 +25,8 @@ export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({ contextUsage
   
   const iconButtonClass = `w-6 h-6 rounded-full ${
     isDarkMode
-      ? "text-zinc-400 hover:text-white hover:bg-white/10"
-      : "text-gray-500 hover:text-gray-900 hover:bg-black/10"
+      ? "text-zinc-400 hover:text-white hover:bg-white/20"
+      : "text-gray-500 hover:text-gray-900 hover:bg-black/20"
   }`;
 
   return (
@@ -48,7 +46,7 @@ export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({ contextUsage
         </div>
       </div>
 
-      {/* Top Right Corner - Theme Toggle and Green Bubble */}
+      {/* Top Right Corner - Theme Toggle and Settings */}
       <div className="fixed top-4 right-4 z-20">
         <div className="flex items-center space-x-4">
           <Popover>
@@ -56,9 +54,9 @@ export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({ contextUsage
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className={`w-10 h-10 rounded-full ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50 text-zinc-400 hover:text-white' : 'bg-white/90 border-gray-200/50 text-gray-500 hover:text-gray-900'} backdrop-blur-md border`}
+                className={`w-10 h-10 rounded-full ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-white/20' : 'bg-white/90 border-gray-200/50 text-gray-500 hover:text-gray-900 hover:bg-black/20'} backdrop-blur-md border transition-all duration-200`}
               >
-                <Settings className="w-5 h-5" />
+                <SettingsGearIcon size={20} />
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-96" align="end">
@@ -68,10 +66,10 @@ export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({ contextUsage
           <Button 
             variant="ghost" 
             size="icon" 
-            className={`w-10 h-10 rounded-full ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50 text-zinc-400 hover:text-white' : 'bg-white/90 border-gray-200/50 text-gray-500 hover:text-gray-900'} backdrop-blur-md border`}
+            className={`w-10 h-10 rounded-full ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-white/20' : 'bg-white/90 border-gray-200/50 text-gray-500 hover:text-gray-900 hover:bg-black/20'} backdrop-blur-md border transition-all duration-200`}
             onClick={toggleTheme}
           >
-            {isDarkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            {isDarkMode ? <MoonIcon size={20} /> : <SunIcon size={20} />}
           </Button>
           <ContextUsageIndicator {...contextUsage} />
         </div>
