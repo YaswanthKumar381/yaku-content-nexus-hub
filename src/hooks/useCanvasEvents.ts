@@ -39,9 +39,10 @@ export const useCanvasEvents = ({
   setTranscriptError,
   forceResetDragState
 }: UseCanvasEventsProps) => {
-  const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
+  const handleVideoIconDragStart = useCallback((e: React.DragEvent, platform: string = "youtube") => {
     setIsDraggingVideo(true);
     e.dataTransfer.setData("text/plain", "video");
+    e.dataTransfer.setData("platform", platform);
   }, [setIsDraggingVideo]);
 
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
