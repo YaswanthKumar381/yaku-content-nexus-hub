@@ -69,14 +69,14 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
               <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} multiple />
             </label>
             {selectedFiles.length > 0 && (
-              <div className="w-full text-sm space-y-2">
+              <div className="w-full space-y-2">
                 <p className="font-semibold text-xs text-gray-500 dark:text-gray-400">Selected files:</p>
-                <div className="max-h-40 overflow-y-auto space-y-2 pr-2 border rounded-md p-2 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
+                <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
                   {selectedFiles.map((file) => (
-                    <div key={`${file.name}-${file.lastModified}`} className="flex justify-between items-center text-xs bg-white dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md border border-gray-200 dark:border-gray-600">
+                    <div key={`${file.name}-${file.lastModified}`} className="flex justify-between items-center text-sm p-2 rounded-md bg-gray-50 dark:bg-zinc-800">
                       <span className="truncate pr-2" title={file.name}>{file.name}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => removeFile(file)}>
-                        <Trash2 className="w-3.5 h-3.5 text-red-500"/>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeFile(file)}>
+                        <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600"/>
                       </Button>
                     </div>
                   ))}

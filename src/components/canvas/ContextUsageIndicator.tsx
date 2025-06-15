@@ -16,15 +16,26 @@ export const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({ pe
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percentage / 100) * circumference;
 
-  let colorClass = 'text-green-500';
-  let bgColorClass = 'bg-green-500';
-  if (percentage > 80) {
+  let colorClass = 'text-transparent';
+  let bgColorClass = 'bg-transparent';
+
+  if (percentage > 90) {
     colorClass = 'text-red-500';
     bgColorClass = 'bg-red-500';
+  } else if (percentage > 80) {
+    colorClass = 'text-orange-500 dark:text-orange-400';
+    bgColorClass = 'bg-orange-500 dark:bg-orange-400';
   } else if (percentage > 60) {
-    colorClass = 'text-yellow-500';
-    bgColorClass = 'bg-yellow-500';
+    colorClass = 'text-yellow-500 dark:text-yellow-400';
+    bgColorClass = 'bg-yellow-500 dark:bg-yellow-400';
+  } else if (percentage > 40) {
+    colorClass = 'text-green-500 dark:text-green-400';
+    bgColorClass = 'bg-green-500 dark:bg-green-400';
+  } else if (percentage > 0) {
+    colorClass = 'text-green-800 dark:text-green-500';
+    bgColorClass = 'bg-green-800 dark:bg-green-500';
   }
+
 
   const formattedTotal = totalTokens.toLocaleString();
   const formattedLimit = (limit / 1000).toLocaleString() + 'k';
@@ -42,21 +53,25 @@ export const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({ pe
                         cx="20"
                         cy="20"
                     />
-                    <circle
-                        className={`${colorClass} transition-all duration-300 ease-in-out`}
-                        strokeWidth="4"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={offset}
-                        strokeLinecap="round"
-                        fill="transparent"
-                        r={radius}
-                        cx="20"
-                        cy="20"
-                    />
+                    {percentage > 0 &&
+                      <circle
+                          className={`${colorClass} transition-all duration-300 ease-in-out`}
+                          strokeWidth="4"
+                          strokeDasharray={circumference}
+                          strokeDashoffset={offset}
+                          strokeLinecap="round"
+                          fill="transparent"
+                          r={radius}
+                          cx="20"
+                          cy="20"
+                      />
+                    }
                 </svg>
-                <span className={`absolute text-xs font-bold ${isDarkMode ? 'text-white' : 'text-zinc-800'}`}>
-                    {Math.round(percentage)}%
-                </span>
+                {percentage > 0 &&
+                  <span className={`absolute text-xs font-bold ${isDarkMode ? 'text-white' : 'text-zinc-800'}`}>
+                      {Math.round(percentage)}%
+                  </span>
+                }
             </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-64 text-sm">
