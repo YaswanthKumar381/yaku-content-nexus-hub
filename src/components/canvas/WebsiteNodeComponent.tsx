@@ -47,6 +47,13 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
     return `${diffInDays}d ago`;
   };
 
+  const scrollbarStyles = {
+    width: '4px',
+    background: 'transparent',
+    thumb: isDarkMode ? 'rgba(156, 163, 175, 0.5)' : 'rgba(107, 114, 128, 0.5)',
+    thumbHover: isDarkMode ? 'rgba(156, 163, 175, 0.7)' : 'rgba(107, 114, 128, 0.7)'
+  };
+
   return (
     <div
       className={`absolute pointer-events-auto group`}
@@ -180,7 +187,8 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
         </CardContent>
       </Card>
       
-      <style jsx>{`
+      <style>
+        {`
         .custom-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
@@ -188,13 +196,14 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: ${isDarkMode ? 'rgba(156, 163, 175, 0.5)' : 'rgba(107, 114, 128, 0.5)'};
+          background: ${scrollbarStyles.thumb};
           border-radius: 2px;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: ${isDarkMode ? 'rgba(156, 163, 175, 0.7)' : 'rgba(107, 114, 128, 0.7)'};
+          background: ${scrollbarStyles.thumbHover};
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
