@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Connection, CanvasNode } from "@/types/canvas";
@@ -27,6 +26,10 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
     setConnections((prev) => [...prev, newConnection]);
   }, [connections]);
   
+  const removeConnectionsForNode = useCallback((nodeId: string) => {
+    setConnections(prev => prev.filter(c => c.sourceId !== nodeId && c.targetId !== nodeId));
+  }, []);
+  
   const startConnection = useCallback((nodeId: string) => {
     if (connectingInfo) return;
     const node = allNodesMap.get(nodeId);
@@ -51,5 +54,5 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
     setLiveEndPoint(null);
   }, []);
 
-  return { connections, connectingInfo, liveEndPoint, setLiveEndPoint, startConnection, endConnection, clearConnectionState };
+  return { connections, connectingInfo, liveEndPoint, setLiveEndPoint, startConnection, endConnection, clearConnectionState, removeConnectionsForNode };
 };

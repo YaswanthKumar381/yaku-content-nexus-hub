@@ -1,16 +1,17 @@
 
 import React from 'react';
 import { DocumentNode } from '@/types/canvas';
-import { FileText, BrainCircuit } from 'lucide-react';
+import { FileText, BrainCircuit, Trash2 } from 'lucide-react';
 import { formatBytes } from '@/utils/documentUtils';
 
 interface DocumentNodeProps {
   node: DocumentNode;
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onStartConnection: (nodeId: string) => void;
+  onDelete: (nodeId: string) => void;
 }
 
-export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection }) => {
+export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete }) => {
   
   const handleNodePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
@@ -30,6 +31,16 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
       onPointerDown={handleNodePointerDown}
     >
       <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-64 border border-blue-200 hover:shadow-xl transition-shadow">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(node.id);
+          }}
+          className="absolute -top-2 -left-2 w-8 h-8 bg-white hover:bg-red-100 rounded-full flex items-center justify-center transition-colors z-20 cursor-pointer border border-gray-300 shadow-sm"
+          title="Delete Node"
+        >
+          <Trash2 className="w-4 h-4 text-red-500" />
+        </button>
         <div 
           data-connection-handle
           onPointerDown={(e) => {

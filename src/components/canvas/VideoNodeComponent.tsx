@@ -1,13 +1,15 @@
+
 import React from "react";
 import { VideoNode } from "@/types/canvas";
 import { getVideoThumbnail, getYouTubeEmbedUrl } from "@/utils/videoUtils";
-import { Text, AlertCircle, Play } from "lucide-react";
+import { Text, AlertCircle, Play, Trash2 } from "lucide-react";
 
 interface VideoNodeProps {
   node: VideoNode;
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
+  onDelete: (nodeId: string) => void;
 }
 
 export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
@@ -15,6 +17,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   onPointerDown,
   onTranscriptClick,
   onStartConnection,
+  onDelete,
 }) => {
   const embedUrl = getYouTubeEmbedUrl(node.url);
 
@@ -50,6 +53,16 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
       onPointerDown={handleNodePointerDown}
     >
       <div className="relative bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-lg w-80 border border-red-200 hover:shadow-xl transition-shadow">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(node.id);
+          }}
+          className="absolute -top-2 -left-2 w-8 h-8 bg-white hover:bg-red-100 rounded-full flex items-center justify-center transition-colors z-20 cursor-pointer border border-gray-300 shadow-sm"
+          title="Delete Node"
+        >
+          <Trash2 className="w-4 h-4 text-red-500" />
+        </button>
         <div 
           data-connection-handle
           onPointerDown={(e) => {

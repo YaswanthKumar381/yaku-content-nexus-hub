@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { DocumentNode } from "@/types/canvas";
 import { extractTextFromFile } from "@/utils/documentUtils";
@@ -12,6 +11,10 @@ export const useDocumentNodes = () => {
     setDocumentNodes(prev => prev.map(node =>
       node.id === nodeId ? { ...node, ...updates } : node
     ));
+  }, []);
+
+  const deleteDocumentNode = useCallback((nodeId: string) => {
+    setDocumentNodes(prev => prev.filter(node => node.id !== nodeId));
   }, []);
 
   const addDocumentNode = useCallback(async (x: number, y: number, file: File) => {
@@ -93,6 +96,7 @@ export const useDocumentNodes = () => {
     draggingNodeId: draggingNodeId,
     addDocumentNode,
     updateDocumentNode,
+    deleteDocumentNode,
     moveDocumentNode,
     handleNodePointerDown,
     handleNodePointerUp,

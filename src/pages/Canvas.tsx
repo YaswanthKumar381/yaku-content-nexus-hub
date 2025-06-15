@@ -51,6 +51,16 @@ const CanvasContent = () => {
     documentNodesResult.forceResetDragState();
     chatNodesResult.forceResetDragState();
   }, [videoNodesResult, documentNodesResult, chatNodesResult]);
+
+  const handleDeleteVideoNode = useCallback((nodeId: string) => {
+    videoNodesResult.deleteVideoNode(nodeId);
+    connectionsResult.removeConnectionsForNode(nodeId);
+  }, [videoNodesResult, connectionsResult]);
+
+  const handleDeleteDocumentNode = useCallback((nodeId: string) => {
+    documentNodesResult.deleteDocumentNode(nodeId);
+    connectionsResult.removeConnectionsForNode(nodeId);
+  }, [documentNodesResult, connectionsResult]);
   
   const canvasEvents = useCanvasEvents({
     isDraggingVideo: canvasState.isDraggingVideo,
@@ -144,6 +154,8 @@ const CanvasContent = () => {
           onTranscriptClick={canvasEvents.handleTranscriptClick}
           onStartConnection={connectionsResult.startConnection}
           onEndConnection={connectionsResult.endConnection}
+          onDeleteVideoNode={handleDeleteVideoNode}
+          onDeleteDocumentNode={handleDeleteDocumentNode}
           onSendMessage={handleSendMessage}
           isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
         />

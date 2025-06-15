@@ -43,6 +43,10 @@ export const useVideoNodes = () => {
     ));
   }, []);
 
+  const deleteVideoNode = useCallback((nodeId: string) => {
+    setVideoNodes(prev => prev.filter(node => node.id !== nodeId));
+  }, []);
+
   const moveVideoNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: { x: number; y: number; scale: number }) => {
     if (!draggingNodeId || draggingNodeId !== nodeId) return;
     
@@ -104,6 +108,7 @@ export const useVideoNodes = () => {
     draggingNodeId,
     addVideoNode,
     updateVideoNode,
+    deleteVideoNode,
     moveVideoNode,
     handleNodePointerDown,
     handleNodePointerUp,

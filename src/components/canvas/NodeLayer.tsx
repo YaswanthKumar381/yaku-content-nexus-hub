@@ -16,6 +16,8 @@ interface NodeLayerProps {
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
   onEndConnection: (nodeId:string) => void;
+  onDeleteVideoNode: (nodeId: string) => void;
+  onDeleteDocumentNode: (nodeId: string) => void;
   onSendMessage: (nodeId: string, message: string) => void;
   isSendingMessageNodeId: string | null;
 }
@@ -31,6 +33,8 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onTranscriptClick,
   onStartConnection,
   onEndConnection,
+  onDeleteVideoNode,
+  onDeleteDocumentNode,
   onSendMessage,
   isSendingMessageNodeId,
 }) => {
@@ -44,6 +48,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
           onPointerDown={onVideoNodePointerDown}
           onTranscriptClick={onTranscriptClick}
           onStartConnection={onStartConnection}
+          onDelete={onDeleteVideoNode}
         />
       ))}
 
@@ -54,6 +59,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
           node={node}
           onPointerDown={onDocumentNodePointerDown}
           onStartConnection={onStartConnection}
+          onDelete={onDeleteDocumentNode}
         />
       ))}
 
