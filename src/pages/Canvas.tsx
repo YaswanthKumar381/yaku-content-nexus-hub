@@ -14,6 +14,7 @@ import { CanvasBackground } from "@/components/canvas/CanvasBackground";
 import { ZoomIndicator } from "@/components/canvas/ZoomIndicator";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { YoutubeIcon } from "@/components/canvas/YoutubeIcon";
+import { FileTextIcon } from "@/components/canvas/FileTextIcon";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
@@ -94,6 +95,7 @@ const CanvasContent = () => {
     { id: "video", icon: YoutubeIcon, label: "Video" },
     { id: "filter", icon: Archive, label: "Filter" },
     { id: "history", icon: History, label: "History" },
+    { id: "file-text", icon: FileTextIcon, label: "File" },
     { id: "folder", icon: Archive, label: "Folder" },
     { id: "rocket", icon: Bell, label: "Rocket" },
     { id: "chat", icon: Bell, label: "Chat" },
