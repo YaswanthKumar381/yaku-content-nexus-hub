@@ -7,11 +7,12 @@ import { useDocumentNodes } from "@/hooks/useDocumentNodes";
 import { useChatNodes } from "@/hooks/useChatNodes";
 import { useTextNodes } from "@/hooks/useTextNodes";
 import { useWebsiteNodes } from "@/hooks/useWebsiteNodes";
+import { useAudioNodes } from "@/hooks/useAudioNodes";
 import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { useContextUsage } from "@/hooks/useContextUsage";
-import { VideoNode, DocumentNode, TextNode, WebsiteNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, TextNode, WebsiteNode, AudioNode } from "@/types/canvas";
 
 export const useCanvasOrchestration = () => {
   const canvasState = useCanvasState();
@@ -21,10 +22,11 @@ export const useCanvasOrchestration = () => {
   const chatNodesResult = useChatNodes();
   const textNodesResult = useTextNodes();
   const websiteNodesResult = useWebsiteNodes();
+  const audioNodesResult = useAudioNodes();
 
   const [uploadTargetNodeId, setUploadTargetNodeId] = useState<string | null>(null);
 
-  const allNodes = [...videoNodesResult.videoNodes, ...documentNodesResult.documentNodes, ...chatNodesResult.chatNodes, ...textNodesResult.textNodes, ...websiteNodesResult.websiteNodes];
+  const allNodes = [...videoNodesResult.videoNodes, ...documentNodesResult.documentNodes, ...chatNodesResult.chatNodes, ...textNodesResult.textNodes, ...websiteNodesResult.websiteNodes, ...audioNodesResult.audioNodes];
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
   const connectionsResult = useConnections(allNodesMap);
@@ -45,7 +47,8 @@ export const useCanvasOrchestration = () => {
     chatNodesResult.forceResetDragState();
     textNodesResult.forceResetDragState();
     websiteNodesResult.forceResetDragState();
-  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult]);
+    audioNodesResult.forceResetDragState();
+  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult, audioNodesResult]);
 
   const handleDeleteVideoNode = useCallback((nodeId: string) => {
     videoNodesResult.deleteVideoNode(nodeId);
@@ -74,6 +77,11 @@ export const useCanvasOrchestration = () => {
     websiteNodesResult.deleteWebsiteNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
   }, [websiteNodesResult, connectionsResult]);
+
+  const handleDeleteAudioNode = useCallback((nodeId: string) => {
+    audioNodesResult.deleteAudioNode(nodeId);
+    connectionsResult.removeConnectionsForNode(nodeId);
+  }, [audioNodesResult, connectionsResult]);
 
   const handleDocumentNodeUploadClick = useCallback((nodeId: string) => {
     setUploadTargetNodeId(nodeId);
@@ -134,7 +142,7 @@ export const useCanvasOrchestration = () => {
     const connectedNodes = connectionsResult.connections
         .filter(conn => conn.targetId === nodeId)
         .map(conn => allNodesMap.get(conn.sourceId))
-        .filter((node): node is VideoNode | DocumentNode | TextNode | WebsiteNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website'));
+        .filter((node): node is VideoNode | DocumentNode | TextNode | WebsiteNode | AudioNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website' || node.type === 'audio'));
     
     const context = connectedNodes.map(node => {
         if(node.type === 'video') return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
@@ -146,6 +154,10 @@ export const useCanvasOrchestration = () => {
         if(node.type === 'website') {
           const websiteContent = node.websites.map(w => `Website: ${w.title}\nURL: ${w.url}\nContent: ${w.content || 'Content not available'}`).join('\n\n');
           return `Website Node Content:\n${websiteContent}`;
+        }
+        if(node.type === 'audio') {
+          const audioContent = node.recordings.map(r => `Audio Recording:\nTranscript: ${r.transcript || 'Transcript not available'}`).join('\n\n');
+          return `Audio Node Content:\n${audioContent}`;
         }
         return '';
     }).join('\n\n---\n\n');
@@ -166,6 +178,7 @@ export const useCanvasOrchestration = () => {
     chatNodesResult,
     textNodesResult,
     websiteNodesResult,
+    audioNodesResult,
     connectionsResult,
     contextUsage,
     interactionResult,
@@ -177,6 +190,7 @@ export const useCanvasOrchestration = () => {
     onDeleteDocumentFile: handleDeleteDocumentFile,
     onDeleteTextNode: handleDeleteTextNode,
     onDeleteWebsiteNode: handleDeleteWebsiteNode,
+    onDeleteAudioNode: handleDeleteAudioNode,
     onDocumentNodeUploadClick: handleDocumentNodeUploadClick,
     onDocumentModalClose: handleDocumentModalClose,
     onSendMessage: handleSendMessage,

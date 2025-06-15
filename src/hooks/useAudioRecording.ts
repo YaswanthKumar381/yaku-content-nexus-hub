@@ -19,7 +19,7 @@ export const useAudioRecording = (): UseAudioRecordingReturn => {
 
   const isSupported = typeof navigator !== 'undefined' && 
                      navigator.mediaDevices && 
-                     navigator.mediaDevices.getUserMedia;
+                     typeof navigator.mediaDevices.getUserMedia === 'function';
 
   const startRecording = useCallback(async () => {
     if (!isSupported) {
@@ -30,8 +30,7 @@ export const useAudioRecording = (): UseAudioRecordingReturn => {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 44100,
-          channelCount: 1,
-          volume: 1.0
+          channelCount: 1
         } 
       });
       

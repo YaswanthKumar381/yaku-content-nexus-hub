@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode, AudioNode } from "@/types/canvas";
 
 interface UseCanvasEventsProps {
   isDraggingVideo: boolean;
@@ -43,6 +43,9 @@ interface UseCanvasEventsProps {
   pendingWebsiteNode: { x: number; y: number } | null;
   setIsScrapingWebsites: (value: boolean) => void;
   resetWebsiteInput: () => void;
+  isDraggingAudio: boolean;
+  setIsDraggingAudio: (value: boolean) => void;
+  addAudioNode: (x: number, y: number) => AudioNode;
 }
 
 export const useCanvasEvents = ({
@@ -87,6 +90,9 @@ export const useCanvasEvents = ({
   pendingWebsiteNode,
   setIsScrapingWebsites,
   resetWebsiteInput,
+  isDraggingAudio,
+  setIsDraggingAudio,
+  addAudioNode,
 }: UseCanvasEventsProps) => {
   const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
     setIsDraggingVideo(true);
@@ -112,6 +118,11 @@ export const useCanvasEvents = ({
     setIsDraggingWebsite(true);
     e.dataTransfer.setData("text/plain", "website");
   }, [setIsDraggingWebsite]);
+
+  const handleAudioDragStart = useCallback((e: React.DragEvent) => {
+    setIsDraggingAudio(true);
+    e.dataTransfer.setData("text/plain", "audio");
+  }, [setIsDraggingAudio]);
 
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -142,8 +153,11 @@ export const useCanvasEvents = ({
       setPendingWebsiteNode({ x, y });
       setShowWebsiteInput(true);
       setIsDraggingWebsite(false);
+    } else if (dragType === 'audio' && isDraggingAudio) {
+      addAudioNode(x, y);
+      setIsDraggingAudio(false);
     }
-  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, isDraggingText, isDraggingWebsite, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat, addTextNode, setIsDraggingText, setPendingWebsiteNode, setShowWebsiteInput, setIsDraggingWebsite]);
+  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, isDraggingText, isDraggingWebsite, isDraggingAudio, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat, addTextNode, setIsDraggingText, setPendingWebsiteNode, setShowWebsiteInput, setIsDraggingWebsite, addAudioNode, setIsDraggingAudio]);
 
   const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -227,5 +241,6 @@ export const useCanvasEvents = ({
     handleTranscriptClick,
     handleWebsiteDragStart,
     handleWebsiteUrlSubmit,
+    handleAudioDragStart,
   };
 };

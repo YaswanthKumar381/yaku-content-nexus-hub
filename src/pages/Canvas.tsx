@@ -20,6 +20,7 @@ const CanvasContent = () => {
     chatNodesResult,
     textNodesResult,
     websiteNodesResult,
+    audioNodesResult,
     connectionsResult,
     contextUsage,
     interactionResult,
@@ -31,6 +32,7 @@ const CanvasContent = () => {
     onDeleteDocumentFile,
     onDeleteTextNode,
     onDeleteWebsiteNode,
+    onDeleteAudioNode,
     onDocumentNodeUploadClick,
     onDocumentModalClose,
     onSendMessage,
@@ -49,6 +51,7 @@ const CanvasContent = () => {
         chatNodesResult={chatNodesResult}
         textNodesResult={textNodesResult}
         websiteNodesResult={websiteNodesResult}
+        audioNodesResult={audioNodesResult}
         allNodesMap={allNodesMap}
         onDeleteVideoNode={onDeleteVideoNode}
         onDeleteDocumentNode={onDeleteDocumentNode}
@@ -56,6 +59,7 @@ const CanvasContent = () => {
         onDocumentNodeUploadClick={onDocumentNodeUploadClick}
         onDeleteTextNode={onDeleteTextNode}
         onDeleteWebsiteNode={onDeleteWebsiteNode}
+        onDeleteAudioNode={onDeleteAudioNode}
         onSendMessage={onSendMessage}
       />
 
@@ -79,6 +83,7 @@ const CanvasContent = () => {
         onChatDragStart={eventsResult.handleChatIconDragStart}
         onTextDragStart={eventsResult.handleTextIconDragStart}
         onWebsiteDragStart={eventsResult.handleWebsiteDragStart}
+        onAudioDragStart={eventsResult.handleAudioDragStart}
       />
 
       <CanvasNavigation contextUsage={contextUsage} />

@@ -1,7 +1,7 @@
 
-import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode, AudioNode } from "@/types/canvas";
 
-export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode) => {
+export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode | AudioNode) => {
   switch (node.type) {
     case 'chat':
       // The handle is on the left of the 600px wide component.
@@ -20,6 +20,10 @@ export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | Te
       // To have it outside touching the border, we add its radius to the position.
       return { x: node.x + node.width + 8, y: node.y + node.height / 2 };
     case 'website':
+      // The handle is on the right of the 320px (w-80) wide component.
+      // So center of handle is (node.x + 160) + 8 = node.x + 168
+      return { x: node.x + 168, y: node.y };
+    case 'audio':
       // The handle is on the right of the 320px (w-80) wide component.
       // So center of handle is (node.x + 160) + 8 = node.x + 168
       return { x: node.x + 168, y: node.y };
