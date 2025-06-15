@@ -1,9 +1,12 @@
+
 import { useState, useCallback } from "react";
-import { WebsiteNode, WebsiteData } from "@/types/canvas";
+import { WebsiteNode, WebsiteData, Transform } from "@/types/canvas";
 import { v4 as uuidv4 } from 'uuid';
 
 export const useWebsiteNodes = () => {
   const [websiteNodes, setWebsiteNodes] = useState<WebsiteNode[]>([]);
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const fetchWebsiteContent = async (url: string): Promise<WebsiteData> => {
     try {
@@ -102,21 +105,53 @@ export const useWebsiteNodes = () => {
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     e.stopPropagation();
-    // Handle pointer down for website nodes
-  }, []);
+    const node = websiteNodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    setDraggingNodeId(nodeId);
+    setDragOffset({
+      x: e.clientX - node.x,
+      y: e.clientY - node.y
+    });
+    console.log("🌐 Started dragging website node:", nodeId);
+  }, [websiteNodes]);
+
+  const moveWebsiteNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: Transform) => {
+    const rect = document.querySelector('[data-canvas-container]')?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = (clientX - rect.left - transform.x - dragOffset.x) / transform.scale;
+    const y = (clientY - rect.top - transform.y - dragOffset.y) / transform.scale;
+
+    setWebsiteNodes(prev => prev.map(node => 
+      node.id === nodeId ? { ...node, x, y } : node
+    ));
+  }, [dragOffset]);
+
+  const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
+    if (draggingNodeId) {
+      console.log("🌐 Stopped dragging website node:", draggingNodeId);
+      setDraggingNodeId(null);
+      setDragOffset({ x: 0, y: 0 });
+    }
+  }, [draggingNodeId]);
 
   const forceResetDragState = useCallback(() => {
-    // Reset any dragging state for website nodes
     console.log("🔄 Resetting website node drag state");
+    setDraggingNodeId(null);
+    setDragOffset({ x: 0, y: 0 });
   }, []);
 
   return {
     websiteNodes,
+    draggingNodeId,
     addWebsiteNode,
     addWebsitesToNode,
     deleteWebsiteNode,
     deleteWebsite,
     handleNodePointerDown,
+    moveWebsiteNode,
+    handleNodePointerUp,
     forceResetDragState,
   };
 };
