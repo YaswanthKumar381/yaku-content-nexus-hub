@@ -13,15 +13,11 @@ import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { sidebarTools } from "@/config/sidebar";
 import { VideoNode, DocumentNode, TextNode } from "@/types/canvas";
 
-import { VideoInputModal } from "@/components/canvas/VideoInputModal";
-import { TranscriptModal } from "@/components/canvas/TranscriptModal";
-import { DocumentUploadModal } from "@/components/canvas/DocumentUploadModal";
 import { CanvasSidebar } from "@/components/canvas/CanvasSidebar";
 import { CanvasNavigation } from "@/components/canvas/CanvasNavigation";
-import { CanvasBackground } from "@/components/canvas/CanvasBackground";
 import { ZoomIndicator } from "@/components/canvas/ZoomIndicator";
-import { NodeLayer } from "@/components/canvas/NodeLayer";
-import { ConnectionLayer } from "@/components/canvas/ConnectionLayer";
+import { CanvasArea } from "@/components/canvas/CanvasArea";
+import { CanvasModals } from "@/components/canvas/CanvasModals";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
@@ -40,7 +36,7 @@ const CanvasContent = () => {
 
   const connectionsResult = useConnections(allNodesMap);
 
-  const { draggingNodeId, handleCanvasPointerMove, handleCanvasPointerUp } = useCanvasInteraction({
+  const interactionResult = useCanvasInteraction({
     connectionsResult,
     videoNodesResult,
     documentNodesResult,
@@ -49,8 +45,6 @@ const CanvasContent = () => {
     transformResult,
   });
   
-  const { transform, canvasContainerRef, handlePointerDown, handleTouchStart, handleTouchMove, handleTouchEnd } = transformResult;
-
   const forceResetAllDragState = useCallback(() => {
     videoNodesResult.forceResetDragState();
     documentNodesResult.forceResetDragState();
@@ -87,12 +81,14 @@ const CanvasContent = () => {
     canvasState.setShowDocumentUpload(true);
   }, [canvasState]);
 
+  const { resetDocumentUpload, resetTranscriptModal } = canvasState;
+
   const handleDocumentModalClose = useCallback(() => {
-    canvasState.resetDocumentUpload();
+    resetDocumentUpload();
     setUploadTargetNodeId(null);
-  }, [canvasState]);
+  }, [resetDocumentUpload]);
   
-  const canvasEvents = useCanvasEvents({
+  const eventsResult = useCanvasEvents({
     isDraggingVideo: canvasState.isDraggingVideo,
     setIsDraggingVideo: canvasState.setIsDraggingVideo,
     setPendingVideoNode: canvasState.setPendingVideoNode,
@@ -121,8 +117,8 @@ const CanvasContent = () => {
     isDraggingText: canvasState.isDraggingText,
     setIsDraggingText: canvasState.setIsDraggingText,
     addTextNode: textNodesResult.addTextNode,
-    canvasContainerRef,
-    transform,
+    canvasContainerRef: transformResult.canvasContainerRef,
+    transform: transformResult.transform,
     addVideoNode: videoNodesResult.addVideoNode,
     forceResetDragState: forceResetAllDragState,
   });
@@ -144,121 +140,55 @@ const CanvasContent = () => {
     }).join('\n\n---\n\n');
 
     chatNodesResult.sendMessage(nodeId, message, context);
-  }, [connectionsResult.connections, allNodesMap, chatNodesResult.sendMessage]);
+  }, [connectionsResult.connections, allNodesMap, chatNodesResult]);
 
   const handleTranscriptModalClose = useCallback(() => {
-    console.log("🔽 Closing transcript modal");
-    canvasState.resetTranscriptModal();
-    
-    console.log("🔄 Force resetting drag state on modal close");
+    resetTranscriptModal();
     forceResetAllDragState();
-  }, [canvasState.resetTranscriptModal, forceResetAllDragState]);
+  }, [resetTranscriptModal, forceResetAllDragState]);
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
-      <div 
-        ref={canvasContainerRef}
-        className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
-        onPointerDown={(e) => handlePointerDown(e, draggingNodeId)}
-        onPointerMove={handleCanvasPointerMove}
-        onPointerUp={handleCanvasPointerUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onDrop={canvasEvents.handleCanvasDrop}
-        onDragOver={canvasEvents.handleCanvasDragOver}
-        style={{ 
-          transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-          transformOrigin: '0 0'
-        }}
-      >
-        <CanvasBackground transform={transform} />
-
-        <ConnectionLayer 
-          connections={connectionsResult.connections}
-          allNodesMap={allNodesMap}
-          connectingInfo={connectionsResult.connectingInfo}
-          liveEndPoint={connectionsResult.liveEndPoint}
-          isDarkMode={isDarkMode}
-          onDeleteConnection={connectionsResult.removeConnection}
-        />
-        
-        <NodeLayer
-          videoNodes={videoNodesResult.videoNodes}
-          documentNodes={documentNodesResult.documentNodes}
-          chatNodes={chatNodesResult.chatNodes}
-          textNodes={textNodesResult.textNodes}
-          onVideoNodePointerDown={videoNodesResult.handleNodePointerDown}
-          onDocumentNodePointerDown={documentNodesResult.handleNodePointerDown}
-          onChatNodePointerDown={chatNodesResult.handleNodePointerDown}
-          onTextNodePointerDown={textNodesResult.handleNodePointerDown}
-          onChatNodeResize={chatNodesResult.updateChatNodeHeight}
-          onTranscriptClick={canvasEvents.handleTranscriptClick}
-          onStartConnection={connectionsResult.startConnection}
-          onEndConnection={connectionsResult.endConnection}
-          onDeleteVideoNode={handleDeleteVideoNode}
-          onDeleteDocumentNode={handleDeleteDocumentNode}
-          onDeleteDocumentFile={handleDeleteDocumentFile}
-          onDocumentNodeUploadClick={handleDocumentNodeUploadClick}
-          onDeleteTextNode={handleDeleteTextNode}
-          onUpdateTextNode={textNodesResult.updateTextNode}
-          onSendMessage={handleSendMessage}
-          isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
-          connections={connectionsResult.connections}
-        />
-      </div>
-
-      <VideoInputModal
-        isOpen={canvasState.showVideoInput}
-        videoUrl={canvasState.videoUrl}
-        isCreating={canvasState.isCreatingNode}
-        onUrlChange={canvasState.setVideoUrl}
-        onSubmit={canvasEvents.handleVideoUrlSubmit}
-        onCancel={canvasState.resetVideoInput}
+      <CanvasArea
+        transformResult={transformResult}
+        interactionResult={interactionResult}
+        eventsResult={eventsResult}
+        connectionsResult={connectionsResult}
+        videoNodesResult={videoNodesResult}
+        documentNodesResult={documentNodesResult}
+        chatNodesResult={chatNodesResult}
+        textNodesResult={textNodesResult}
+        allNodesMap={allNodesMap}
+        onDeleteVideoNode={handleDeleteVideoNode}
+        onDeleteDocumentNode={handleDeleteDocumentNode}
+        onDeleteDocumentFile={handleDeleteDocumentFile}
+        onDocumentNodeUploadClick={handleDocumentNodeUploadClick}
+        onDeleteTextNode={handleDeleteTextNode}
+        onSendMessage={handleSendMessage}
       />
 
-      <DocumentUploadModal
-        isOpen={canvasState.showDocumentUpload}
-        isUploading={canvasState.isUploading}
-        onSubmit={canvasEvents.handleDocumentUploadSubmit}
-        onClose={handleDocumentModalClose}
-        mode={uploadTargetNodeId ? 'update' : 'create'}
-      />
-
-      <TranscriptModal
-        isOpen={canvasState.showTranscriptPopup}
-        videoUrl={canvasState.currentVideoUrl}
-        transcript={canvasState.currentTranscript}
-        error={canvasState.transcriptError}
-        onClose={handleTranscriptModalClose}
-        onTranscriptChange={canvasState.setCurrentTranscript}
-        onSave={() => {
-          if (canvasState.currentVideoUrl) {
-            const nodeToUpdate = videoNodesResult.videoNodes.find(node => node.url === canvasState.currentVideoUrl);
-            if (nodeToUpdate) {
-              videoNodesResult.updateVideoNode(
-                nodeToUpdate.id,
-                { context: canvasState.currentTranscript }
-              );
-            }
-          }
-          handleTranscriptModalClose();
-        }}
+      <CanvasModals
+        canvasState={canvasState}
+        eventsResult={eventsResult}
+        videoNodesResult={videoNodesResult}
+        uploadTargetNodeId={uploadTargetNodeId}
+        onDocumentModalClose={handleDocumentModalClose}
+        onTranscriptModalClose={handleTranscriptModalClose}
       />
 
       <CanvasSidebar
         tools={sidebarTools}
         selectedTool={canvasState.selectedTool}
         onToolSelect={canvasState.setSelectedTool}
-        onVideoDragStart={canvasEvents.handleVideoIconDragStart}
-        onDocumentDragStart={canvasEvents.handleDocumentIconDragStart}
-        onChatDragStart={canvasEvents.handleChatIconDragStart}
-        onTextDragStart={canvasEvents.handleTextIconDragStart}
+        onVideoDragStart={eventsResult.handleVideoIconDragStart}
+        onDocumentDragStart={eventsResult.handleDocumentIconDragStart}
+        onChatDragStart={eventsResult.handleChatIconDragStart}
+        onTextDragStart={eventsResult.handleTextIconDragStart}
       />
 
       <CanvasNavigation />
 
-      <ZoomIndicator scale={transform.scale} />
+      <ZoomIndicator scale={transformResult.transform.scale} />
     </div>
   );
 };
