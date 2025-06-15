@@ -52,7 +52,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
       onPointerDown={handleNodePointerDown}
     >
       <div className="relative bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-lg overflow-hidden w-80 border border-red-200 hover:shadow-xl transition-shadow">
-        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-red-500 rounded-full border-2 border-red-100 z-20" />
+        <div className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-red-500 z-20" />
         <div className="relative">
           {embedUrl ? (
             <div className="relative w-full h-48">
