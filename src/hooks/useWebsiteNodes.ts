@@ -116,7 +116,7 @@ export const useWebsiteNodes = () => {
     setWebsiteNodes(prev => prev.map(node =>
       node.id === nodeId ? { ...node, x, y } : node
     ));
-  }, [dragOffset, transform.x, transform.y, transform.scale]);
+  }, [dragOffset]);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
     console.log("🌐 Website node pointer up");
