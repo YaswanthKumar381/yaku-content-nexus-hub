@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { DocumentNode } from '@/types/canvas';
 import { FileText, BrainCircuit } from 'lucide-react';
@@ -7,10 +8,9 @@ interface DocumentNodeProps {
   node: DocumentNode;
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onStartConnection: (nodeId: string) => void;
-  onDoubleClick: (e: React.MouseEvent) => void;
 }
 
-export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDoubleClick }) => {
+export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection }) => {
   
   const handleNodePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
@@ -28,7 +28,6 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
       data-node-id={node.id}
       style={{ left: node.x, top: node.y, transform: 'translate(-50%, -50%)' }}
       onPointerDown={handleNodePointerDown}
-      onDoubleClick={onDoubleClick}
     >
       <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-64 border border-blue-200 hover:shadow-xl transition-shadow">
         <div 
