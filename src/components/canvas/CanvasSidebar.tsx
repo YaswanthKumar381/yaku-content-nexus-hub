@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import { SidebarTool } from "@/types/canvas";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface CanvasSidebarProps {
   tools: SidebarTool[];
@@ -17,9 +18,11 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
   onToolSelect,
   onVideoDragStart
 }) => {
+  const { isDarkMode } = useTheme();
+  
   return (
     <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-20">
-      <div className="w-16 bg-zinc-800/90 backdrop-blur-md border border-zinc-700/50 rounded-full flex flex-col items-center py-6 shadow-2xl">
+      <div className={`w-16 ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50' : 'bg-white/90 border-gray-200/50'} backdrop-blur-md border rounded-full flex flex-col items-center py-6 shadow-2xl`}>
         {/* Top Tools */}
         <div className="flex flex-col space-y-3 mb-6">
           {tools.map((tool) => (
@@ -30,7 +33,9 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
               className={`w-10 h-10 rounded-full ${
                 selectedTool === tool.id 
                   ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                  : "text-zinc-400 hover:text-white hover:bg-zinc-700"
+                  : isDarkMode 
+                    ? "text-zinc-400 hover:text-white hover:bg-zinc-700" 
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               }`}
               onClick={() => onToolSelect(tool.id)}
               draggable={tool.id === "video"}
@@ -46,9 +51,9 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="w-10 h-10 rounded-full bg-zinc-700 hover:bg-zinc-600"
+            className={`w-10 h-10 rounded-full ${isDarkMode ? 'bg-zinc-700 hover:bg-zinc-600' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
-            <User className="w-5 h-5 text-zinc-300" />
+            <User className={`w-5 h-5 ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`} />
           </Button>
         </div>
       </div>

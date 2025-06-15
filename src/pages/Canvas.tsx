@@ -12,8 +12,11 @@ import { CanvasSidebar } from "@/components/canvas/CanvasSidebar";
 import { CanvasNavigation } from "@/components/canvas/CanvasNavigation";
 import { CanvasBackground } from "@/components/canvas/CanvasBackground";
 import { ZoomIndicator } from "@/components/canvas/ZoomIndicator";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 
-const Canvas = () => {
+const CanvasContent = () => {
+  const { isDarkMode } = useTheme();
+  
   const {
     selectedTool,
     setSelectedTool,
@@ -123,7 +126,7 @@ const Canvas = () => {
   }, [draggingNodeId, handleNodePointerUp, handlePointerUp]);
 
   return (
-    <div className="min-h-screen bg-zinc-900 relative overflow-hidden">
+    <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
       {/* Canvas Container */}
       <div 
         ref={canvasContainerRef}
@@ -195,6 +198,14 @@ const Canvas = () => {
       {/* Zoom indicator */}
       <ZoomIndicator scale={transform.scale} />
     </div>
+  );
+};
+
+const Canvas = () => {
+  return (
+    <ThemeProvider>
+      <CanvasContent />
+    </ThemeProvider>
   );
 };
 
