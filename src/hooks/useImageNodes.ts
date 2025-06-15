@@ -66,15 +66,25 @@ export const useImageNodes = () => {
   }, []);
 
   const analyzeImage = useCallback(async (nodeId: string, imageId: string, apiKey: string, prompt?: string): Promise<void> => {
+    console.log('🔍 analyzeImage called with:', { nodeId, imageId, hasApiKey: !!apiKey, hasPrompt: !!prompt });
+    
     const node = imageNodes.find(n => n.id === nodeId);
     const image = node?.images.find(img => img.id === imageId);
     
     if (!node || !image) {
+      console.error('❌ Node or image not found:', { nodeId, imageId, nodeExists: !!node, imageExists: !!image });
       throw new Error('Node or image not found');
     }
 
+    if (!apiKey || apiKey.trim() === '') {
+      console.error('❌ API key is missing or empty');
+      throw new Error('Groq API key is required');
+    }
+
     try {
+      console.log('🧠 Calling Groq Vision API...');
       const analysis = await analyzeImageWithGroq(image, apiKey, prompt);
+      console.log('✅ Analysis received:', analysis.substring(0, 100) + '...');
       
       setImageNodes(prev => prev.map(n => 
         n.id === nodeId 
@@ -88,8 +98,10 @@ export const useImageNodes = () => {
             }
           : n
       ));
+      
+      console.log('✅ Analysis saved to node state');
     } catch (error) {
-      console.error('Error analyzing image:', error);
+      console.error('❌ Error analyzing image:', error);
       throw error;
     }
   }, [imageNodes]);

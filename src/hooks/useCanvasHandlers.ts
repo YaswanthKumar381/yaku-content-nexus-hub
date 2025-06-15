@@ -99,15 +99,33 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
   }, [canvasState, setUploadTargetNodeId]);
 
   const handleAnalyzeImage = useCallback(async (nodeId: string, imageId: string, prompt?: string) => {
-    // This will need to be implemented with API key management
-    // For now, we'll store the API key in localStorage as a temporary solution
-    const apiKey = localStorage.getItem('groq_api_key');
+    // Check both possible API key storage formats
+    const apiKey = localStorage.getItem('groq-api-key') || localStorage.getItem('groq_api_key');
+    
+    console.log('🔍 Checking for Groq API key:', { 
+      hasKey: !!apiKey, 
+      keyLength: apiKey?.length || 0,
+      storage: localStorage.getItem('groq-api-key') ? 'groq-api-key' : 'groq_api_key'
+    });
+    
     if (!apiKey) {
-      alert('Please set your Groq API key in the settings');
+      console.error('❌ No Groq API key found in localStorage');
+      alert('Please set your Groq API key in the settings (gear icon in top right)');
       return;
     }
     
-    await imageNodesResult.analyzeImage(nodeId, imageId, apiKey, prompt);
+    try {
+      console.log('🧠 Starting image analysis for:', { nodeId, imageId, hasPrompt: !!prompt });
+      await imageNodesResult.analyzeImage(nodeId, imageId, apiKey, prompt);
+      console.log('✅ Image analysis completed successfully');
+    } catch (error) {
+      console.error('❌ Image analysis failed:', error);
+      if (error instanceof Error && error.message.includes('API')) {
+        alert('Image analysis failed. Please check your Groq API key in settings.');
+      } else {
+        alert('Image analysis failed. Please try again.');
+      }
+    }
   }, [imageNodesResult]);
 
   const handleSendMessage = useCallback((nodeId: string, message: string) => {
