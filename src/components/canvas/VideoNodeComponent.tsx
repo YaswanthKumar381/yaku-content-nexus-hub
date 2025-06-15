@@ -18,14 +18,23 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   const handleTranscriptClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    console.log("🎯 Transcript button clicked, preventing drag");
     onTranscriptClick(e, node);
   };
 
   const handleNodePointerDown = (e: React.PointerEvent) => {
-    // Only allow dragging if not clicking on the transcript button
-    if ((e.target as HTMLElement).closest('[data-transcript-button]')) {
+    // Check if the click is on the transcript button or its children
+    const target = e.target as HTMLElement;
+    const transcriptButton = target.closest('[data-transcript-button]');
+    
+    if (transcriptButton) {
+      console.log("🚫 Preventing drag - clicked on transcript button");
+      e.stopPropagation();
+      e.preventDefault();
       return;
     }
+    
+    console.log("✅ Starting node drag for:", node.id);
     onPointerDown(e, node.id);
   };
 
@@ -57,6 +66,11 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
           <button
             data-transcript-button
             onClick={handleTranscriptClick}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              console.log("🚫 Transcript button pointer down prevented");
+            }}
             className="absolute top-2 right-2 w-8 h-8 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center transition-colors z-10 cursor-pointer"
             title="Transcript Options"
           >

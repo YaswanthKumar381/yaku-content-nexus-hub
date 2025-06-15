@@ -54,14 +54,27 @@ export const useVideoNodes = () => {
   }, []);
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
+    console.log("🎯 Node pointer down:", nodeId);
     e.stopPropagation();
     setDraggingNodeId(nodeId);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }, []);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
+    console.log("🎯 Node pointer up, releasing drag state");
     setDraggingNodeId(null);
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    
+    // Ensure pointer capture is released
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch (error) {
+      console.warn("Could not release pointer capture:", error);
+    }
+  }, []);
+
+  const forceResetDragState = useCallback(() => {
+    console.log("🔄 Force resetting drag state");
+    setDraggingNodeId(null);
   }, []);
 
   return {
@@ -71,6 +84,7 @@ export const useVideoNodes = () => {
     updateVideoNode,
     moveVideoNode,
     handleNodePointerDown,
-    handleNodePointerUp
+    handleNodePointerUp,
+    forceResetDragState
   };
 };

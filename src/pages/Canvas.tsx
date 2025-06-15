@@ -39,7 +39,8 @@ const Canvas = () => {
     updateVideoNode,
     moveVideoNode,
     handleNodePointerDown,
-    handleNodePointerUp
+    handleNodePointerUp,
+    forceResetDragState
   } = useVideoNodes();
 
   const sidebarTools: SidebarTool[] = [
@@ -100,23 +101,9 @@ const Canvas = () => {
     e.stopPropagation();
     e.preventDefault();
     
-    // Immediately reset any dragging state when opening transcript modal
-    if (draggingNodeId) {
-      const canvasContainer = canvasContainerRef.current;
-      if (canvasContainer) {
-        // Release any active pointer captures
-        try {
-          canvasContainer.releasePointerCapture(0);
-        } catch (e) {
-          // Ignore capture release errors
-        }
-      }
-      // Force reset dragging state
-      handleNodePointerUp({ 
-        target: { releasePointerCapture: () => {} },
-        pointerId: 0
-      } as any);
-    }
+    // Force reset any dragging state immediately
+    console.log("🔄 Force resetting drag state before opening modal");
+    forceResetDragState();
     
     setCurrentVideoUrl(node.url);
     setShowTranscriptPopup(true);
@@ -125,33 +112,36 @@ const Canvas = () => {
   };
 
   const handleTranscriptModalClose = useCallback(() => {
-    console.log("🔽 Closing transcript popup");
+    console.log("🔽 Closing transcript modal");
     setShowTranscriptPopup(false);
     setCurrentTranscript("");
     setTranscriptError("");
     setCurrentVideoUrl("");
     
-    // Force complete reset of dragging state
+    // Extra safety: force reset drag state when modal closes
+    console.log("🔄 Force resetting drag state on modal close");
+    forceResetDragState();
+  }, [forceResetDragState]);
+
+  const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
     if (draggingNodeId) {
-      const canvasContainer = canvasContainerRef.current;
-      if (canvasContainer) {
-        // Release all possible pointer captures
-        for (let i = 0; i < 10; i++) {
-          try {
-            canvasContainer.releasePointerCapture(i);
-          } catch (e) {
-            // Ignore capture release errors
-          }
-        }
-      }
-      
-      // Force reset using the hook
-      handleNodePointerUp({ 
-        target: { releasePointerCapture: () => {} },
-        pointerId: 0
-      } as any);
+      console.log("📍 Moving node:", draggingNodeId);
     }
-  }, [draggingNodeId, handleNodePointerUp]);
+    
+    handlePointerMove(e, draggingNodeId, (deltaX, deltaY) => {
+      if (draggingNodeId) {
+        moveVideoNode(draggingNodeId, deltaX, deltaY, transform.scale);
+      }
+    });
+  }, [handlePointerMove, draggingNodeId, moveVideoNode, transform.scale]);
+
+  const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => {
+    if (draggingNodeId) {
+      console.log("🎯 Ending drag for node:", draggingNodeId);
+      handleNodePointerUp(e);
+    }
+    handlePointerUp(e);
+  }, [draggingNodeId, handleNodePointerUp, handlePointerUp]);
 
   return (
     <div className="min-h-screen bg-zinc-900 relative overflow-hidden">
@@ -160,12 +150,8 @@ const Canvas = () => {
         ref={canvasContainerRef}
         className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
         onPointerDown={(e) => handlePointerDown(e, draggingNodeId)}
-        onPointerMove={(e) => handlePointerMove(e, draggingNodeId, (deltaX, deltaY) => {
-          if (draggingNodeId) {
-            moveVideoNode(draggingNodeId, deltaX, deltaY, transform.scale);
-          }
-        })}
-        onPointerUp={handlePointerUp}
+        onPointerMove={handleCanvasPointerMove}
+        onPointerUp={handleCanvasPointerUp}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
