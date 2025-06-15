@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { WebsiteNode, WebsiteData } from "@/types/canvas";
 import { v4 as uuidv4 } from 'uuid';
@@ -8,30 +7,50 @@ export const useWebsiteNodes = () => {
 
   const fetchWebsiteContent = async (url: string): Promise<WebsiteData> => {
     try {
-      // For now, we'll simulate website scraping
-      // In a real implementation, you'd need a backend service or API
-      const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-      const data = await response.json();
+      console.log(`🌐 Fetching content for: ${url}`);
+      
+      // Use the provided proxy service
+      const proxyUrl = `https://thingproxy.freeboard.io/fetch/${url}`;
+      const response = await fetch(proxyUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const htmlContent = await response.text();
+      console.log(`✅ Successfully fetched content for: ${url}`);
       
       // Extract title from the HTML content
-      const titleMatch = data.contents.match(/<title>(.*?)<\/title>/i);
-      const title = titleMatch ? titleMatch[1] : url;
+      const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].trim() : new URL(url).hostname;
+      
+      // Extract meta description
+      const descMatch = htmlContent.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+      const metaDescription = descMatch ? descMatch[1] : '';
       
       // Remove HTML tags and get text content
-      const textContent = data.contents.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      let textContent = htmlContent
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove scripts
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove styles
+        .replace(/<[^>]*>/g, ' ') // Remove HTML tags
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+      
+      // Prioritize meta description, then first paragraph of content
+      const finalContent = metaDescription || textContent.substring(0, 2000);
       
       return {
         url,
         title,
-        content: textContent.substring(0, 5000), // Limit content length
+        content: finalContent,
         fetchedAt: new Date().toISOString(),
       };
     } catch (error) {
-      console.error('Error fetching website content:', error);
+      console.error(`❌ Error fetching website content for ${url}:`, error);
       return {
         url,
-        title: url,
-        content: `Failed to fetch content from ${url}`,
+        title: new URL(url).hostname || url,
+        content: `Failed to fetch content from ${url}. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         fetchedAt: new Date().toISOString(),
       };
     }

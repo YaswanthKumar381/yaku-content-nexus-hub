@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Globe, Trash2, Plus, ExternalLink } from "lucide-react";
+import { Globe, Trash2, ExternalLink, Clock, Link as LinkIcon, Sparkles } from "lucide-react";
 import { WebsiteNode, WebsiteData } from "@/types/canvas";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -24,6 +24,29 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
 }) => {
   const { isDarkMode } = useTheme();
 
+  const formatDomain = (url: string) => {
+    try {
+      return new URL(url).hostname.replace('www.', '');
+    } catch {
+      return url;
+    }
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const fetchedAt = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - fetchedAt.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+  };
+
   return (
     <div
       className={`absolute pointer-events-auto group`}
@@ -34,80 +57,144 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
       }}
       onPointerDown={(e) => onPointerDown(e, node.id)}
     >
-      <Card className={`w-80 max-h-96 overflow-hidden ${
+      <Card className={`w-96 max-h-[500px] overflow-hidden transition-all duration-300 hover:shadow-2xl ${
         isDarkMode 
-          ? 'bg-zinc-800/95 border-zinc-700' 
-          : 'bg-white/95 border-gray-200'
-      } backdrop-blur-sm shadow-lg`}>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              <span>Websites ({node.websites.length})</span>
+          ? 'bg-gradient-to-br from-zinc-800/95 to-zinc-900/95 border-zinc-700/50 shadow-xl shadow-purple-500/5' 
+          : 'bg-gradient-to-br from-white/95 to-gray-50/95 border-gray-200/50 shadow-xl shadow-blue-500/5'
+      } backdrop-blur-md group-hover:scale-[1.02] border-2`}>
+        <CardHeader className="pb-4 relative overflow-hidden">
+          <div className={`absolute inset-0 bg-gradient-to-r ${
+            isDarkMode 
+              ? 'from-purple-600/10 to-blue-600/10' 
+              : 'from-purple-500/5 to-blue-500/5'
+          }`} />
+          <CardTitle className="flex items-center justify-between text-sm relative z-10">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${
+                isDarkMode ? 'bg-purple-600/20' : 'bg-purple-500/10'
+              } border ${isDarkMode ? 'border-purple-500/30' : 'border-purple-500/20'}`}>
+                <Globe className="w-4 h-4 text-purple-500" />
+              </div>
+              <div>
+                <span className="font-semibold">Websites</span>
+                <div className="flex items-center gap-1 mt-1">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span className="text-xs text-amber-500 font-medium">{node.websites.length} sites</span>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               {isConnected && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onStartConnection(node.id)}
-                  className="h-6 w-6 p-0"
+                  className="h-8 w-8 p-0 rounded-full hover:bg-blue-500/20 transition-colors"
+                  title="Create connection"
                 >
-                  <div className="w-4 h-4 rounded-full bg-blue-500" />
+                  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-pulse" />
                 </Button>
               )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onDelete(node.id)}
-                className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                className="h-8 w-8 p-0 rounded-full text-red-500 hover:text-red-400 hover:bg-red-500/20 transition-colors"
+                title="Delete node"
               >
-                <Trash2 className="w-3 h-3" />
+                <Trash2 className="w-4 h-4" />
               </Button>
             </div>
           </CardTitle>
         </CardHeader>
         
-        <CardContent className="space-y-3 max-h-80 overflow-y-auto">
+        <CardContent className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
           {node.websites.map((website, index) => (
             <div
               key={index}
-              className={`p-3 rounded-lg border ${
+              className={`p-4 rounded-xl border transition-all duration-200 hover:shadow-lg ${
                 isDarkMode 
-                  ? 'bg-zinc-700/50 border-zinc-600' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}
+                  ? 'bg-gradient-to-r from-zinc-700/30 to-zinc-600/30 border-zinc-600/50 hover:border-zinc-500/70' 
+                  : 'bg-gradient-to-r from-gray-50/80 to-white/80 border-gray-200/70 hover:border-gray-300/70'
+              } hover:scale-[1.01] group/item`}
             >
-              <div className="flex items-start justify-between mb-2">
+              <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate" title={website.title}>
-                    {website.title}
-                  </h4>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <LinkIcon className="w-3 h-3 text-blue-500 flex-shrink-0" />
+                    <h4 className="font-semibold text-sm truncate group-hover/item:text-blue-500 transition-colors" title={website.title}>
+                      {website.title}
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <a 
                       href={website.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 truncate"
+                      className="text-xs text-blue-500 hover:text-blue-400 flex items-center gap-1 truncate transition-colors font-medium"
+                      title={website.url}
                     >
                       <ExternalLink className="w-3 h-3" />
-                      {website.url}
+                      {formatDomain(website.url)}
                     </a>
                   </div>
                 </div>
               </div>
               
-              <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
-                {website.content.substring(0, 200)}...
+              <p className={`text-xs leading-relaxed line-clamp-4 mb-3 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                {website.content.substring(0, 300)}
+                {website.content.length > 300 && '...'}
               </p>
               
-              <Badge variant="secondary" className="mt-2 text-xs">
-                {new Date(website.fetchedAt).toLocaleDateString()}
-              </Badge>
+              <div className="flex items-center justify-between">
+                <Badge 
+                  variant="secondary" 
+                  className={`text-xs font-medium ${
+                    isDarkMode 
+                      ? 'bg-zinc-600/50 text-zinc-300 border-zinc-500/30' 
+                      : 'bg-gray-100/80 text-gray-600 border-gray-200/50'
+                  } border`}
+                >
+                  <Clock className="w-3 h-3 mr-1" />
+                  {getTimeAgo(website.fetchedAt)}
+                </Badge>
+                <div className={`w-2 h-2 rounded-full ${
+                  website.content.includes('Failed to fetch') 
+                    ? 'bg-red-500' 
+                    : 'bg-green-500'
+                } animate-pulse`} 
+                title={website.content.includes('Failed to fetch') ? 'Failed to load' : 'Successfully loaded'}
+                />
+              </div>
             </div>
           ))}
+          
+          {node.websites.length === 0 && (
+            <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <Globe className="w-8 h-8 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">No websites added yet</p>
+            </div>
+          )}
         </CardContent>
       </Card>
+      
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: ${isDarkMode ? 'rgba(156, 163, 175, 0.5)' : 'rgba(107, 114, 128, 0.5)'};
+          border-radius: 2px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: ${isDarkMode ? 'rgba(156, 163, 175, 0.7)' : 'rgba(107, 114, 128, 0.7)'};
+        }
+      `}</style>
     </div>
   );
 };
