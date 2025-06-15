@@ -46,20 +46,35 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
     if (!node) return;
     const startPos = getHandlePosition(node);
     setConnectingInfo({ startNodeId: nodeId, startX: startPos.x, startY: startPos.y });
+    console.log('🔗 Starting connection from node:', nodeId, 'type:', node.type);
   }, [allNodesMap, connectingInfo]);
 
   const endConnection = useCallback((nodeId: string) => {
     if (!connectingInfo) return;
     const startNode = allNodesMap.get(connectingInfo.startNodeId);
     const endNode = allNodesMap.get(nodeId);
-    if (startNode && endNode && (startNode.type === 'video' || startNode.type === 'document' || startNode.type === 'text' || startNode.type === 'website' || startNode.type === 'audio' || startNode.type === 'image') && endNode.type === 'chat') {
+    
+    console.log('🔗 Attempting to end connection:', {
+      startNode: startNode?.type,
+      endNode: endNode?.type,
+      startNodeId: connectingInfo.startNodeId,
+      endNodeId: nodeId
+    });
+    
+    if (startNode && endNode && 
+        (startNode.type === 'video' || startNode.type === 'document' || startNode.type === 'text' || startNode.type === 'website' || startNode.type === 'audio' || startNode.type === 'image') && 
+        endNode.type === 'chat') {
+      console.log('✅ Connection allowed, adding connection');
       addConnection(connectingInfo.startNodeId, nodeId);
+    } else {
+      console.log('❌ Connection not allowed');
     }
     setConnectingInfo(null);
     setLiveEndPoint(null);
   }, [addConnection, allNodesMap, connectingInfo]);
   
   const clearConnectionState = useCallback(() => {
+    console.log('🧹 Clearing connection state');
     setConnectingInfo(null);
     setLiveEndPoint(null);
   }, []);

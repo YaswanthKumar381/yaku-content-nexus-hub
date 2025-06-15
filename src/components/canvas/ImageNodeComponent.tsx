@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -16,7 +17,8 @@ import {
   Brain,
   AlertCircle,
   CheckCircle,
-  Loader2
+  Loader2,
+  FileText
 } from 'lucide-react';
 
 interface ImageNodeComponentProps {
@@ -44,6 +46,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
   const [analyzingImageId, setAnalyzingImageId] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState('');
   const [showImageViewer, setShowImageViewer] = useState<string | null>(null);
+  const [showTranscriptDialog, setShowTranscriptDialog] = useState(false);
 
   const handleAnalyzeImage = async (imageId: string, prompt?: string) => {
     setAnalyzingImageId(imageId);
@@ -61,19 +64,27 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
   };
 
   const handleNodePointerDown = (e: React.PointerEvent) => {
-    e.stopPropagation(); // Prevent canvas drag
+    // Don't propagate to canvas if clicking on buttons or interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('[data-no-drag]')) {
+      return;
+    }
+    
+    e.stopPropagation();
     onPointerDown(e, node.id);
   };
 
   const handleConnectionClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent any bubbling
+    e.stopPropagation();
     onStartConnection(node.id);
   };
 
   const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
-    e.stopPropagation(); // Prevent canvas interaction
+    e.stopPropagation();
     callback();
   };
+
+  const analyzedImages = node.images.filter(img => img.analysis);
 
   return (
     <div
@@ -102,7 +113,18 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
               </div>
             </div>
             
-            <div className="flex gap-1">
+            <div className="flex gap-1" data-no-drag>
+              {analyzedImages.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => handleButtonClick(e, () => setShowTranscriptDialog(true))}
+                  className={`h-8 w-8 p-0 ${isDarkMode ? 'hover:bg-gray-700 text-blue-400' : 'hover:bg-gray-100 text-blue-600'}`}
+                  title="View Analysis Transcript"
+                >
+                  <FileText className="w-3 h-3" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -136,6 +158,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
                 size="sm"
                 onClick={(e) => handleButtonClick(e, () => onUploadClick(node.id))}
                 className="mt-2"
+                data-no-drag
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Images
@@ -155,7 +178,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
                     }}
                   />
                   
-                  <div className="absolute top-1 right-1 flex gap-1">
+                  <div className="absolute top-1 right-1 flex gap-1" data-no-drag>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -229,26 +252,31 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
             </div>
           )}
 
-          {node.images.some(img => img.analysis) && (
+          {analyzedImages.length > 0 && (
             <div className="mt-3">
               <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Image Analysis
+                Recent Analysis
               </h4>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {node.images.filter(img => img.analysis).map((image) => (
+              <div className="space-y-2 max-h-20 overflow-y-auto">
+                {analyzedImages.slice(0, 2).map((image) => (
                   <div key={image.id} className={`p-2 rounded text-xs ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
                     <div className="font-medium mb-1">{image.fileName}</div>
-                    <div className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                    <div className={`line-clamp-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                       {image.analysis}
                     </div>
                   </div>
                 ))}
+                {analyzedImages.length > 2 && (
+                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    +{analyzedImages.length - 2} more analyzed images
+                  </p>
+                )}
               </div>
             </div>
           )}
         </CardContent>
 
-        {/* Connection handle - positioned outside the card */}
+        {/* Connection handle - positioned completely outside the card */}
         <div
           className={`absolute top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 cursor-pointer ${
             isConnected
@@ -260,9 +288,10 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
                 : 'bg-gray-300 border-gray-400 hover:bg-indigo-600 hover:border-indigo-500'
           } transition-colors`}
           style={{
-            right: '-8px', // Position outside the card
+            right: '-16px', // Position completely outside
           }}
           onClick={handleConnectionClick}
+          data-no-drag
         />
 
         {/* Image viewer modal */}
@@ -289,6 +318,53 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
             </div>
           </div>
         )}
+
+        {/* Analysis Transcript Dialog */}
+        <Dialog open={showTranscriptDialog} onOpenChange={setShowTranscriptDialog}>
+          <DialogContent className={`max-w-2xl max-h-[80vh] ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
+            <DialogHeader>
+              <DialogTitle className={isDarkMode ? 'text-white' : 'text-gray-900'}>
+                Image Analysis Transcript
+              </DialogTitle>
+              <DialogDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+                View all analyzed text from uploaded images
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 overflow-y-auto max-h-96">
+              {analyzedImages.length === 0 ? (
+                <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No analyzed images available</p>
+                </div>
+              ) : (
+                analyzedImages.map((image) => (
+                  <div key={image.id} className={`border rounded-lg p-4 ${isDarkMode ? 'border-gray-600 bg-gray-700/50' : 'border-gray-200 bg-gray-50'}`}>
+                    <div className="flex items-center gap-3 mb-3">
+                      <img
+                        src={getImageDataUrl(image.base64, image.fileType)}
+                        alt={image.fileName}
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                      <div>
+                        <h4 className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {image.fileName}
+                        </h4>
+                        <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                          Analyzed on {new Date(image.uploadedAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      <h5 className="font-medium mb-2">Analysis:</h5>
+                      <p className="whitespace-pre-wrap">{image.analysis}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </Card>
     </div>
   );

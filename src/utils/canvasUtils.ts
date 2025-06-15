@@ -29,9 +29,9 @@ export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | Te
       return { x: node.x + 168, y: node.y };
     case 'image':
       // The handle is on the right of the 320px (w-80) wide component.
-      // ImageNode uses same positioning as other 320px components
-      // So center of handle is (node.x + 160) + 8 = node.x + 168
-      return { x: node.x + 168, y: node.y };
+      // Handle is positioned at right: -16px, so it's completely outside
+      // Center of handle is (node.x + 160) + 16 = node.x + 176
+      return { x: node.x + 176, y: node.y };
     default: {
       const _exhaustiveCheck: never = node;
       throw new Error(`Unhandled node type: ${(_exhaustiveCheck as any)?.type}`);
