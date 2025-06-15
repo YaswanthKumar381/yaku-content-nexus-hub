@@ -1,8 +1,8 @@
 
 import React from "react";
 import { VideoNode } from "@/types/canvas";
-import { getVideoThumbnail } from "@/utils/videoUtils";
-import { Text, AlertCircle } from "lucide-react";
+import { getVideoThumbnail, getYouTubeEmbedUrl } from "@/utils/videoUtils";
+import { Text, AlertCircle, Play } from "lucide-react";
 
 interface VideoNodeProps {
   node: VideoNode;
@@ -15,6 +15,8 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   onPointerDown,
   onTranscriptClick
 }) => {
+  const embedUrl = getYouTubeEmbedUrl(node.url);
+
   const handleTranscriptClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -41,6 +43,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   return (
     <div
       className="absolute cursor-move"
+      data-node-id={node.id}
       style={{
         left: node.x,
         top: node.y,
@@ -48,21 +51,37 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
       }}
       onPointerDown={handleNodePointerDown}
     >
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden w-64 border border-gray-200 hover:shadow-xl transition-shadow">
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden w-80 border border-gray-200 hover:shadow-xl transition-shadow">
         <div className="relative">
-          <img
-            src={getVideoThumbnail(node.url)}
-            alt={node.title}
-            className="w-full h-36 object-cover"
-            onError={(e) => {
-              e.currentTarget.src = "/placeholder.svg";
-            }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-12 h-12 bg-black/70 rounded-full flex items-center justify-center">
-              <div className="w-0 h-0 border-l-[8px] border-l-white border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ml-1"></div>
+          {embedUrl ? (
+            <div className="relative w-full h-48">
+              <iframe
+                src={embedUrl}
+                title={node.title}
+                className="w-full h-full"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
-          </div>
+          ) : (
+            <div className="relative">
+              <img
+                src={getVideoThumbnail(node.url)}
+                alt={node.title}
+                className="w-full h-48 object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = "/placeholder.svg";
+                }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 bg-black/70 rounded-full flex items-center justify-center hover:bg-black/90 transition-colors">
+                  <Play className="w-6 h-6 text-white ml-1" fill="white" />
+                </div>
+              </div>
+            </div>
+          )}
+          
           <button
             data-transcript-button
             onClick={handleTranscriptClick}
@@ -77,17 +96,17 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
             <Text className="w-4 h-4 text-white" />
           </button>
         </div>
-        <div className="p-3">
-          <h3 className="font-medium text-gray-900 text-sm mb-1">{node.title}</h3>
-          <p className="text-xs text-gray-500 truncate">{node.url}</p>
+        <div className="p-4">
+          <h3 className="font-medium text-gray-900 text-sm mb-2 leading-tight">{node.title}</h3>
+          <p className="text-xs text-gray-500 truncate mb-2">{node.url}</p>
           {!node.context && (
-            <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+            <p className="text-xs text-amber-600 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
               Transcript not loaded
             </p>
           )}
           {node.context && (
-            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+            <p className="text-xs text-green-600 flex items-center gap-1">
               <Text className="w-3 h-3" />
               Transcript available
             </p>

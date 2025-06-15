@@ -2,21 +2,42 @@
 import { fetchYouTubeTranscript } from "@/services/transcriptService";
 
 export const getVideoTitle = async (url: string): Promise<string> => {
-  const videoId = getYouTubeVideoId(url);
-  if (videoId) {
-    try {
-      const transcriptData = await fetchYouTubeTranscript(url); // Pass original URL
-      return transcriptData.data.videoInfo.name || "YouTube Video";
-    } catch (error) {
-      console.error("Failed to fetch video title:", error);
-      return "YouTube Video";
+  try {
+    console.log("🎥 Fetching video title from noembed for:", url);
+    const response = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    console.log("📋 Received noembed data:", data);
+    
+    if (data.title) {
+      return data.title;
+    }
+    
+    throw new Error('No title found in noembed response');
+  } catch (error) {
+    console.error("Failed to fetch video title from noembed:", error);
+    
+    // Fallback to original method
+    const videoId = getYouTubeVideoId(url);
+    if (videoId) {
+      try {
+        const transcriptData = await fetchYouTubeTranscript(url);
+        return transcriptData.data.videoInfo.name || "YouTube Video";
+      } catch (error) {
+        console.error("Failed to fetch video title from transcript service:", error);
+        return "YouTube Video";
+      }
+    }
+    
+    if (url.includes('vimeo.com')) {
+      return "Vimeo Video";
+    }
+    return "Video";
   }
-  
-  if (url.includes('vimeo.com')) {
-    return "Vimeo Video";
-  }
-  return "Video";
 };
 
 export const getVideoThumbnail = (url: string): string => {
@@ -44,5 +65,13 @@ export const getYouTubeVideoId = (url: string): string => {
     return url.split('embed/')[1]?.split('?')[0] || '';
   }
   
+  return '';
+};
+
+export const getYouTubeEmbedUrl = (url: string): string => {
+  const videoId = getYouTubeVideoId(url);
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
   return '';
 };

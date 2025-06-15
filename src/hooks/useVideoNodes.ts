@@ -6,6 +6,7 @@ import { getVideoTitle } from "@/utils/videoUtils";
 export const useVideoNodes = () => {
   const [videoNodes, setVideoNodes] = useState<Array<VideoNode>>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const addVideoNode = useCallback(async (x: number, y: number, url: string) => {
     const newNode: VideoNode = {
@@ -41,21 +42,39 @@ export const useVideoNodes = () => {
     ));
   }, []);
 
-  const moveVideoNode = useCallback((nodeId: string, deltaX: number, deltaY: number, scale: number) => {
+  const moveVideoNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: { x: number; y: number; scale: number }) => {
+    if (!draggingNodeId || draggingNodeId !== nodeId) return;
+    
+    // Calculate the new position accounting for canvas transform and drag offset
+    const newX = (clientX - transform.x - dragOffset.x) / transform.scale;
+    const newY = (clientY - transform.y - dragOffset.y) / transform.scale;
+    
     setVideoNodes(prev => prev.map(node => 
       node.id === nodeId 
-        ? { 
-            ...node, 
-            x: node.x + deltaX / scale, 
-            y: node.y + deltaY / scale 
-          }
+        ? { ...node, x: newX, y: newY }
         : node
     ));
-  }, []);
+  }, [draggingNodeId, dragOffset]);
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     console.log("🎯 Node pointer down:", nodeId);
     e.stopPropagation();
+    
+    const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
+    if (node) {
+      const rect = node.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Calculate offset from cursor to node center
+      setDragOffset({
+        x: e.clientX - centerX,
+        y: e.clientY - centerY
+      });
+    } else {
+      setDragOffset({ x: 0, y: 0 });
+    }
+    
     setDraggingNodeId(nodeId);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }, []);
@@ -63,6 +82,7 @@ export const useVideoNodes = () => {
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
     console.log("🎯 Node pointer up, releasing drag state");
     setDraggingNodeId(null);
+    setDragOffset({ x: 0, y: 0 });
     
     // Ensure pointer capture is released
     try {
@@ -75,6 +95,7 @@ export const useVideoNodes = () => {
   const forceResetDragState = useCallback(() => {
     console.log("🔄 Force resetting drag state");
     setDraggingNodeId(null);
+    setDragOffset({ x: 0, y: 0 });
   }, []);
 
   return {

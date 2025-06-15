@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { Video, Archive, History, Bell } from "lucide-react";
 import { VideoNode, SidebarTool } from "@/types/canvas";
@@ -109,14 +108,11 @@ const Canvas = () => {
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
     if (draggingNodeId) {
       console.log("📍 Moving node:", draggingNodeId);
+      moveVideoNode(draggingNodeId, e.clientX, e.clientY, transform);
+    } else {
+      handlePointerMove(e, draggingNodeId, () => {});
     }
-    
-    handlePointerMove(e, draggingNodeId, (deltaX, deltaY) => {
-      if (draggingNodeId) {
-        moveVideoNode(draggingNodeId, deltaX, deltaY, transform.scale);
-      }
-    });
-  }, [handlePointerMove, draggingNodeId, moveVideoNode, transform.scale]);
+  }, [handlePointerMove, draggingNodeId, moveVideoNode, transform]);
 
   const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => {
     if (draggingNodeId) {
