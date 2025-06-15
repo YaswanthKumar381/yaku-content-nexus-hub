@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import type { useConnections } from '@/hooks/useConnections';
 import type { useVideoNodes } from '@/hooks/useVideoNodes';
@@ -43,7 +42,7 @@ export const useCanvasInteraction = ({
     } else if (draggingDocumentNodeId) {
       moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
     } else if (draggingChatNodeId) {
-      moveChatNode(draggingChatNodeId, e, transform);
+      moveChatNode(draggingChatNodeId, e.clientX, e.clientY, transform);
     } else {
       handlePointerMove(e, draggingNodeId, () => {});
     }
@@ -77,4 +76,3 @@ export const useCanvasInteraction = ({
 
   return { handleCanvasPointerMove, handleCanvasPointerUp, draggingNodeId };
 };
-

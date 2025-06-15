@@ -7,6 +7,7 @@ export const useChatNodes = () => {
   const [chatNodes, setChatNodes] = useState<ChatNode[]>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [isSendingMessageNodeId, setIsSendingMessageNodeId] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const addChatNode = useCallback((x: number, y: number) => {
     const newNode: ChatNode = {
@@ -60,16 +61,21 @@ export const useChatNodes = () => {
   }, [chatNodes, updateChatNodeMessages]);
 
   const moveChatNode = useCallback(
-    (nodeId: string, event: React.PointerEvent, transform: { scale: number }) => {
+    (nodeId: string, clientX: number, clientY: number, transform: { x: number; y: number; scale: number }) => {
+      if (!draggingNodeId || draggingNodeId !== nodeId) return;
+
+      const newX = (clientX - transform.x - dragOffset.x) / transform.scale;
+      const newY = (clientY - transform.y - dragOffset.y) / transform.scale;
+      
       setChatNodes((prevNodes) =>
         prevNodes.map((node) =>
           node.id === nodeId
-            ? { ...node, x: node.x + event.movementX / transform.scale, y: node.y + event.movementY / transform.scale }
+            ? { ...node, x: newX, y: newY }
             : node
         )
       );
     },
-    []
+    [draggingNodeId, dragOffset]
   );
 
   const updateChatNodeHeight = useCallback((nodeId: string, height: number) => {
@@ -80,21 +86,40 @@ export const useChatNodes = () => {
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     e.stopPropagation();
-    const target = e.target as HTMLElement;
-    target.setPointerCapture(e.pointerId);
+    
+    const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
+    if (node) {
+      const rect = node.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      setDragOffset({
+        x: e.clientX - centerX,
+        y: e.clientY - centerY
+      });
+    } else {
+      setDragOffset({ x: 0, y: 0 });
+    }
+    
     setDraggingNodeId(nodeId);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }, []);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
     if (draggingNodeId) {
-      const target = e.target as HTMLElement;
-      target.releasePointerCapture(e.pointerId);
       setDraggingNodeId(null);
+      setDragOffset({ x: 0, y: 0 });
+      try {
+        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch (error) {
+        console.warn("Could not release pointer capture:", error);
+      }
     }
   }, [draggingNodeId]);
   
   const forceResetDragState = useCallback(() => {
     setDraggingNodeId(null);
+    setDragOffset({ x: 0, y: 0 });
   }, []);
 
   return {
