@@ -1,10 +1,8 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ChatNode } from '@/types/canvas';
 import { PromptInputBox } from './PromptInputBox';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Bot, User } from 'lucide-react';
-import { ApiKeyInput } from './ApiKeyInput';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChatNodeComponentProps {
@@ -34,34 +32,6 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
     }
     onPointerDown(e, node.id);
   };
-
-  const lastModelMessage = useMemo(() => 
-    [...node.messages].reverse().find(m => m.role === 'model'), 
-    [node.messages]
-  );
-  
-  const isApiKeyMissing = lastModelMessage?.content.startsWith('Please provide your Gemini API key');
-  
-  const [isSavingApiKey, setIsSavingApiKey] = useState(false);
-
-  const handleSaveApiKey = (apiKey: string) => {
-      setIsSavingApiKey(true);
-      localStorage.setItem('gemini_api_key', apiKey);
-      const lastUserMessage = [...node.messages].reverse().find(m => m.role === 'user');
-      if (lastUserMessage) {
-          onSendMessage(node.id, lastUserMessage.content);
-      } else {
-        // If there's no previous message, we can't resend.
-        // Let's remove the prompt to provide a key.
-        setIsSavingApiKey(false);
-      }
-  };
-
-  useEffect(() => {
-      if (!isSendingMessage) {
-          setIsSavingApiKey(false);
-      }
-  }, [isSendingMessage]);
 
   const handleResizePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
@@ -116,13 +86,13 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
         >
             <div className="h-full p-4 flex flex-col gap-4" ref={scrollAreaViewportRef}>
                 {node.messages.filter(m => m.role !== 'system').map(message => (
-                <div key={message.id} className={`flex items-start gap-3 max-w-[85%] ${message.role === 'user' ? 'self-end' : 'self-start'}`}>
-                    {message.role === 'model' && <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0"><Bot className="w-5 h-5 text-white" /></div>}
-                    <div className={`px-4 py-2.5 rounded-2xl text-white ${message.role === 'user' ? 'bg-blue-600 rounded-br-none' : 'bg-zinc-700 rounded-bl-none'}`}>
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    <div key={message.id} className={`flex items-start gap-3 max-w-[85%] ${message.role === 'user' ? 'self-end' : 'self-start'}`}>
+                        {message.role === 'model' && <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0"><Bot className="w-5 h-5 text-white" /></div>}
+                        <div className={`px-4 py-2.5 rounded-2xl text-white ${message.role === 'user' ? 'bg-blue-600 rounded-br-none' : 'bg-zinc-700 rounded-bl-none'}`}>
+                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        </div>
+                        {message.role === 'user' && <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0"><User className="w-5 h-5 text-white" /></div>}
                     </div>
-                    {message.role === 'user' && <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0"><User className="w-5 h-5 text-white" /></div>}
-                </div>
                 ))}
                 {isSendingMessage && (
                     <div className="flex items-start gap-3 self-start">
@@ -140,9 +110,6 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
         </ScrollArea>
 
         <div className="cursor-default border-t border-zinc-700/50">
-            {isApiKeyMissing && !isSendingMessage && (
-                <ApiKeyInput onSave={handleSaveApiKey} isSaving={isSavingApiKey || isSendingMessage} />
-            )}
             <PromptInputBox 
                 onSend={(message) => onSendMessage(node.id, message)}
                 isLoading={isSendingMessage}
