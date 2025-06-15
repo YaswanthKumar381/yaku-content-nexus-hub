@@ -1,4 +1,5 @@
-import { useCallback, useState } from "react";
+
+import { useCallback } from "react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
@@ -8,36 +9,19 @@ import { useChatNodes } from "@/hooks/useChatNodes";
 import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
+import { useInteractionLogic } from "@/hooks/useInteractionLogic";
 import { sidebarTools } from "@/config/sidebar";
-import { VideoNode, DocumentNode, CanvasNode, Connection } from "@/types/canvas";
-import { useToast } from "@/hooks/use-toast";
+import { VideoNode, DocumentNode } from "@/types/canvas";
 
-import { VideoInputModal } from "@/components/canvas/VideoInputModal";
-import { TranscriptModal } from "@/components/canvas/TranscriptModal";
-import { DocumentUploadModal } from "@/components/canvas/DocumentUploadModal";
 import { CanvasSidebar } from "@/components/canvas/CanvasSidebar";
 import { CanvasNavigation } from "@/components/canvas/CanvasNavigation";
-import { CanvasBackground } from "@/components/canvas/CanvasBackground";
 import { ZoomIndicator } from "@/components/canvas/ZoomIndicator";
-import { NodeLayer } from "@/components/canvas/NodeLayer";
-import { ConnectionLayer } from "@/components/canvas/ConnectionLayer";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Trash2, Unlink } from "lucide-react";
+import { CanvasContainer } from "@/components/canvas/CanvasContainer";
+import { CanvasOverlays } from "@/components/canvas/CanvasOverlays";
+import { CanvasModals } from "@/components/canvas/CanvasModals";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
-  const { toast } = useToast();
   
   const canvasState = useCanvasState();
   const transformResult = useCanvasTransform();
@@ -49,11 +33,14 @@ const CanvasContent = () => {
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
   const connectionsResult = useConnections(allNodesMap);
+  
+  const { transform, canvasContainerRef, handlePointerDown, handleTouchStart, handleTouchMove, handleTouchEnd } = transformResult;
 
-  const [nodeToEdit, setNodeToEdit] = useState<CanvasNode | null>(null);
-  const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
-  const [nodeToDelete, setNodeToDelete] = useState<CanvasNode | null>(null);
-  const [connectionToEdit, setConnectionToEdit] = useState<Connection | null>(null);
+  const interactionLogic = useInteractionLogic({
+    connectionsResult,
+    chatNodesResult,
+    canvasContainerRef,
+  });
 
   const { draggingNodeId, handleCanvasPointerMove, handleCanvasPointerUp } = useCanvasInteraction({
     connectionsResult,
@@ -63,8 +50,6 @@ const CanvasContent = () => {
     transformResult,
   });
   
-  const { transform, canvasContainerRef, handlePointerDown, handleTouchStart, handleTouchMove, handleTouchEnd } = transformResult;
-
   const forceResetAllDragState = useCallback(() => {
     videoNodesResult.forceResetDragState();
     documentNodesResult.forceResetDragState();
@@ -122,63 +107,27 @@ const CanvasContent = () => {
     
     console.log("🔄 Force resetting drag state on modal close");
     forceResetAllDragState();
-  }, [canvasState.resetTranscriptModal, forceResetAllDragState]);
+  }, [canvasState, forceResetAllDragState]);
 
-  const handleNodeDoubleClick = (node: CanvasNode, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = canvasContainerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setNodeToEdit(node);
-    setPopoverPosition({ x: e.clientX, y: e.clientY });
-  };
-  
-  const handleConnectionDoubleClick = (connection: Connection, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = canvasContainerRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setConnectionToEdit(connection);
-    setPopoverPosition({ x: e.clientX, y: e.clientY });
-  };
-  
-  const handleDeleteNodeRequest = () => {
-    if (nodeToEdit) {
-      setNodeToDelete(nodeToEdit);
-      setNodeToEdit(null);
+  const handleSaveTranscript = useCallback(() => {
+    if (canvasState.currentVideoUrl) {
+      const nodeToUpdate = videoNodesResult.videoNodes.find(node => node.url === canvasState.currentVideoUrl);
+      if (nodeToUpdate) {
+        videoNodesResult.updateVideoNode(
+          nodeToUpdate.id,
+          { context: canvasState.currentTranscript }
+        );
+      }
     }
-  };
-
-  const handleConfirmDeleteNode = () => {
-    if (!nodeToDelete) return;
-    
-    connectionsResult.removeConnectionsForNode(nodeToDelete.id);
-
-    if (nodeToDelete.type === 'chat') {
-        chatNodesResult.deleteChatNode(nodeToDelete.id);
-        toast({ title: "Node deleted", description: "The chat node and its connections have been deleted." });
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Action not supported",
-            description: `Deleting ${nodeToDelete.type} nodes is not yet supported.`,
-        });
-    }
-    setNodeToDelete(null);
-  };
-  
-  const handleDisconnect = () => {
-      if (!connectionToEdit) return;
-      connectionsResult.removeConnection(connectionToEdit.id);
-      setConnectionToEdit(null);
-      toast({ title: "Connection removed" });
-  };
+    handleTranscriptModalClose();
+  }, [canvasState, videoNodesResult, handleTranscriptModalClose]);
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
-      <div 
-        ref={canvasContainerRef}
-        className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
+      <CanvasContainer
+        canvasContainerRef={canvasContainerRef}
+        transform={transform}
+        isDarkMode={isDarkMode}
         onPointerDown={(e) => handlePointerDown(e, draggingNodeId)}
         onPointerMove={handleCanvasPointerMove}
         onPointerUp={handleCanvasPointerUp}
@@ -187,107 +136,56 @@ const CanvasContent = () => {
         onTouchEnd={handleTouchEnd}
         onDrop={canvasEvents.handleCanvasDrop}
         onDragOver={canvasEvents.handleCanvasDragOver}
-        style={{ 
-          transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
-          transformOrigin: '0 0'
-        }}
-      >
-        <CanvasBackground transform={transform} />
+        connections={connectionsResult.connections}
+        allNodesMap={allNodesMap}
+        connectingInfo={connectionsResult.connectingInfo}
+        liveEndPoint={connectionsResult.liveEndPoint}
+        onConnectionDoubleClick={interactionLogic.handleConnectionDoubleClick}
+        videoNodes={videoNodesResult.videoNodes}
+        documentNodes={documentNodesResult.documentNodes}
+        chatNodes={chatNodesResult.chatNodes}
+        onVideoNodePointerDown={videoNodesResult.handleNodePointerDown}
+        onDocumentNodePointerDown={documentNodesResult.handleNodePointerDown}
+        onChatNodePointerDown={chatNodesResult.handleNodePointerDown}
+        onChatNodeResize={chatNodesResult.updateChatNodeHeight}
+        onTranscriptClick={canvasEvents.handleTranscriptClick}
+        onStartConnection={connectionsResult.startConnection}
+        onEndConnection={connectionsResult.endConnection}
+        onSendMessage={handleSendMessage}
+        isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
+        onNodeDoubleClick={interactionLogic.handleNodeDoubleClick}
+      />
 
-        <ConnectionLayer 
-          connections={connectionsResult.connections}
-          allNodesMap={allNodesMap}
-          connectingInfo={connectionsResult.connectingInfo}
-          liveEndPoint={connectionsResult.liveEndPoint}
-          isDarkMode={isDarkMode}
-          onConnectionDoubleClick={handleConnectionDoubleClick}
-        />
-        
-        <NodeLayer
-          videoNodes={videoNodesResult.videoNodes}
-          documentNodes={documentNodesResult.documentNodes}
-          chatNodes={chatNodesResult.chatNodes}
-          onVideoNodePointerDown={videoNodesResult.handleNodePointerDown}
-          onDocumentNodePointerDown={documentNodesResult.handleNodePointerDown}
-          onChatNodePointerDown={chatNodesResult.handleNodePointerDown}
-          onChatNodeResize={chatNodesResult.updateChatNodeHeight}
-          onTranscriptClick={canvasEvents.handleTranscriptClick}
-          onStartConnection={connectionsResult.startConnection}
-          onEndConnection={connectionsResult.endConnection}
-          onSendMessage={handleSendMessage}
-          isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
-          onNodeDoubleClick={handleNodeDoubleClick}
-        />
-      </div>
-
-      <Popover open={!!nodeToEdit || !!connectionToEdit} onOpenChange={() => { setNodeToEdit(null); setConnectionToEdit(null); }}>
-        <PopoverTrigger asChild>
-          <div className="absolute" style={{ top: popoverPosition.y, left: popoverPosition.x }} />
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-1">
-          {nodeToEdit && (
-            <Button variant="destructive" onClick={handleDeleteNodeRequest} size="sm" className="w-full">
-              <Trash2 className="h-4 w-4 mr-2" /> Delete Node
-            </Button>
-          )}
-          {connectionToEdit && (
-            <Button variant="destructive" onClick={handleDisconnect} size="sm" className="w-full">
-              <Unlink className="h-4 w-4 mr-2" /> Disconnect
-            </Button>
-          )}
-        </PopoverContent>
-      </Popover>
-
-      <AlertDialog open={!!nodeToDelete} onOpenChange={(open) => !open && setNodeToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the node and all its connections.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDeleteNode}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <VideoInputModal
-        isOpen={canvasState.showVideoInput}
+      <CanvasOverlays
+        nodeToEdit={interactionLogic.nodeToEdit}
+        connectionToEdit={interactionLogic.connectionToEdit}
+        popoverPosition={interactionLogic.popoverPosition}
+        nodeToDelete={interactionLogic.nodeToDelete}
+        onClosePopover={interactionLogic.closePopover}
+        onDeleteNodeRequest={interactionLogic.handleDeleteNodeRequest}
+        onDisconnect={interactionLogic.handleDisconnect}
+        onConfirmDeleteNode={interactionLogic.handleConfirmDeleteNode}
+        onCancelDelete={interactionLogic.handleCancelDelete}
+      />
+      
+      <CanvasModals
+        showVideoInput={canvasState.showVideoInput}
         videoUrl={canvasState.videoUrl}
-        isCreating={canvasState.isCreatingNode}
-        onUrlChange={canvasState.setVideoUrl}
-        onSubmit={canvasEvents.handleVideoUrlSubmit}
-        onCancel={canvasState.resetVideoInput}
-      />
-
-      <DocumentUploadModal
-        isOpen={canvasState.showDocumentUpload}
+        isCreatingNode={canvasState.isCreatingNode}
+        onVideoUrlChange={canvasState.setVideoUrl}
+        onVideoUrlSubmit={canvasEvents.handleVideoUrlSubmit}
+        onCancelVideoInput={canvasState.resetVideoInput}
+        showDocumentUpload={canvasState.showDocumentUpload}
         isUploading={canvasState.isUploading}
-        onSubmit={canvasEvents.handleDocumentUploadSubmit}
-        onClose={canvasState.resetDocumentUpload}
-      />
-
-      <TranscriptModal
-        isOpen={canvasState.showTranscriptPopup}
-        videoUrl={canvasState.currentVideoUrl}
-        transcript={canvasState.currentTranscript}
-        error={canvasState.transcriptError}
-        onClose={handleTranscriptModalClose}
+        onDocumentUploadSubmit={canvasEvents.handleDocumentUploadSubmit}
+        onCloseDocumentUpload={canvasState.resetDocumentUpload}
+        showTranscriptPopup={canvasState.showTranscriptPopup}
+        currentVideoUrl={canvasState.currentVideoUrl}
+        currentTranscript={canvasState.currentTranscript}
+        transcriptError={canvasState.transcriptError}
+        onCloseTranscriptModal={handleTranscriptModalClose}
         onTranscriptChange={canvasState.setCurrentTranscript}
-        onSave={() => {
-          if (canvasState.currentVideoUrl) {
-            const nodeToUpdate = videoNodesResult.videoNodes.find(node => node.url === canvasState.currentVideoUrl);
-            if (nodeToUpdate) {
-              videoNodesResult.updateVideoNode(
-                nodeToUpdate.id,
-                { context: canvasState.currentTranscript }
-              );
-            }
-          }
-          handleTranscriptModalClose();
-        }}
+        onSaveTranscript={handleSaveTranscript}
       />
 
       <CanvasSidebar
