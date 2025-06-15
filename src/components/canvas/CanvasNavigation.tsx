@@ -6,9 +6,12 @@ import {
   ArrowLeft, 
   ArrowRight, 
   Moon,
-  Sun 
+  Sun,
+  Settings
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SettingsPopover } from "./SettingsPopover";
 
 export const CanvasNavigation: React.FC = () => {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -37,6 +40,20 @@ export const CanvasNavigation: React.FC = () => {
       {/* Top Right Corner - Theme Toggle and Green Bubble */}
       <div className="fixed top-4 right-4 z-20">
         <div className="flex items-center space-x-4">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`w-10 h-10 rounded-full ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50 text-zinc-400 hover:text-white' : 'bg-white/90 border-gray-200/50 text-gray-500 hover:text-gray-900'} backdrop-blur-md border`}
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96" align="end">
+              <SettingsPopover />
+            </PopoverContent>
+          </Popover>
           <Button 
             variant="ghost" 
             size="icon" 
