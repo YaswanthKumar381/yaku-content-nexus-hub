@@ -12,13 +12,13 @@ export const useWebsiteNodes = () => {
     try {
       console.log(`🌐 Fetching content for: ${url}`);
       
-      // Use the new webhook API
-      const response = await fetch('https://n8n-anrqdske.ap-southeast-1.clawcloudrun.com/webhook/website', {
+      // Use the correct GET request format with URL as query parameter
+      const webhookUrl = `https://n8n-anrqdske.ap-southeast-1.clawcloudrun.com/webhook/website?url=${encodeURIComponent(url)}`;
+      const response = await fetch(webhookUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url }),
       });
       
       if (!response.ok) {
