@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Connection, CanvasNode } from "@/types/canvas";
@@ -15,16 +16,21 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
   const addConnection = useCallback((sourceId: string, targetId: string) => {
     // Prevent connecting a node to itself
     if (sourceId === targetId) return;
-    // Prevent duplicate connections
-    if (connections.some(c => c.sourceId === sourceId && c.targetId === targetId)) return;
 
-    const newConnection: Connection = {
-      id: uuidv4(),
-      sourceId,
-      targetId,
-    };
-    setConnections((prev) => [...prev, newConnection]);
-  }, [connections]);
+    setConnections((prevConnections) => {
+      // Prevent duplicate connections
+      if (prevConnections.some(c => c.sourceId === sourceId && c.targetId === targetId)) {
+        return prevConnections;
+      }
+
+      const newConnection: Connection = {
+        id: uuidv4(),
+        sourceId,
+        targetId,
+      };
+      return [...prevConnections, newConnection];
+    });
+  }, []);
   
   const removeConnection = useCallback((connectionId: string) => {
     setConnections(prev => prev.filter(c => c.id !== connectionId));
