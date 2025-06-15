@@ -1,67 +1,29 @@
 
-import { useCallback, useState } from "react";
-import { Archive, History, Bell } from "lucide-react";
-import { SidebarTool, VideoNode, DocumentNode, ChatNode } from "@/types/canvas";
+import { useCallback } from "react";
+import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useVideoNodes } from "@/hooks/useVideoNodes";
-import { useCanvasState } from "@/hooks/useCanvasState";
+import { useDocumentNodes } from "@/hooks/useDocumentNodes";
+import { useChatNodes } from "@/hooks/useChatNodes";
+import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
-import { VideoNodeComponent } from "@/components/canvas/VideoNodeComponent";
+import { sidebarTools } from "@/config/sidebar";
+
 import { VideoInputModal } from "@/components/canvas/VideoInputModal";
 import { TranscriptModal } from "@/components/canvas/TranscriptModal";
+import { DocumentUploadModal } from "@/components/canvas/DocumentUploadModal";
 import { CanvasSidebar } from "@/components/canvas/CanvasSidebar";
 import { CanvasNavigation } from "@/components/canvas/CanvasNavigation";
 import { CanvasBackground } from "@/components/canvas/CanvasBackground";
 import { ZoomIndicator } from "@/components/canvas/ZoomIndicator";
-import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
-import { YoutubeIcon } from "@/components/canvas/YoutubeIcon";
-import { FileTextIcon } from "@/components/canvas/FileTextIcon";
-import { useDocumentNodes } from "@/hooks/useDocumentNodes";
-import { DocumentNodeComponent } from "@/components/canvas/DocumentNodeComponent";
-import { DocumentUploadModal } from "@/components/canvas/DocumentUploadModal";
-import { useChatNodes } from "@/hooks/useChatNodes";
-import { ChatNodeComponent } from "@/components/canvas/ChatNodeComponent";
-import { useConnections } from "@/hooks/useConnections";
-import { ConnectionLine } from "@/components/canvas/ConnectionLine";
+import { NodeLayer } from "@/components/canvas/NodeLayer";
+import { ConnectionLayer } from "@/components/canvas/ConnectionLayer";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
   
-  const {
-    selectedTool,
-    setSelectedTool,
-    isDraggingVideo,
-    setIsDraggingVideo,
-    showVideoInput,
-    setShowVideoInput,
-    pendingVideoNode,
-    setPendingVideoNode,
-    videoUrl,
-    setVideoUrl,
-    showTranscriptPopup,
-    setShowTranscriptPopup,
-    currentTranscript,
-    setCurrentTranscript,
-    transcriptError,
-    setTranscriptError,
-    isCreatingNode,
-    setIsCreatingNode,
-    currentVideoUrl,
-    setCurrentVideoUrl,
-    resetVideoInput,
-    resetTranscriptModal,
-    isDraggingDocument,
-    setIsDraggingDocument,
-    showDocumentUpload,
-    setShowDocumentUpload,
-    pendingDocumentNode,
-    setPendingDocumentNode,
-    isUploading,
-    setIsUploading,
-    resetDocumentUpload,
-    isDraggingChat,
-    setIsDraggingChat,
-  } = useCanvasState();
+  const canvasState = useCanvasState();
 
   const {
     transform,
@@ -105,127 +67,72 @@ const CanvasContent = () => {
     forceResetDragState: forceResetChatDragState,
   } = useChatNodes();
 
-  const { connections, addConnection } = useConnections();
-  const [connectingInfo, setConnectingInfo] = useState<{
-    startNodeId: string;
-    startX: number;
-    startY: number;
-  } | null>(null);
-  const [liveEndPoint, setLiveEndPoint] = useState<{ x: number, y: number } | null>(null);
-
   const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId;
   
   const allNodes = [...videoNodes, ...documentNodes, ...chatNodes];
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
-  const {
-    handleVideoIconDragStart,
-    handleDocumentIconDragStart,
-    handleChatIconDragStart,
-    handleCanvasDrop,
-    handleCanvasDragOver,
-    handleVideoUrlSubmit,
-    handleDocumentUploadSubmit,
-    handleTranscriptClick
-  } = useCanvasEvents({
-    isDraggingVideo,
-    setIsDraggingVideo,
-    setPendingVideoNode,
-    setShowVideoInput,
+  const { 
+    connections, 
+    connectingInfo, 
+    liveEndPoint, 
+    setLiveEndPoint, 
+    startConnection, 
+    endConnection, 
+    clearConnectionState 
+  } = useConnections(allNodesMap);
+
+  const canvasEvents = useCanvasEvents({
+    isDraggingVideo: canvasState.isDraggingVideo,
+    setIsDraggingVideo: canvasState.setIsDraggingVideo,
+    setPendingVideoNode: canvasState.setPendingVideoNode,
+    setShowVideoInput: canvasState.setShowVideoInput,
+    pendingVideoNode: canvasState.pendingVideoNode,
+    videoUrl: canvasState.videoUrl,
+    setIsCreatingNode: canvasState.setIsCreatingNode,
+    resetVideoInput: canvasState.resetVideoInput,
+    setCurrentVideoUrl: canvasState.setCurrentVideoUrl,
+    setShowTranscriptPopup: canvasState.setShowTranscriptPopup,
+    setCurrentTranscript: canvasState.setCurrentTranscript,
+    setTranscriptError: canvasState.setTranscriptError,
+    isDraggingDocument: canvasState.isDraggingDocument,
+    setIsDraggingDocument: canvasState.setIsDraggingDocument,
+    setPendingDocumentNode: canvasState.setPendingDocumentNode,
+    setShowDocumentUpload: canvasState.setShowDocumentUpload,
+    addDocumentNode,
+    pendingDocumentNode: canvasState.pendingDocumentNode,
+    setIsUploading: canvasState.setIsUploading,
+    resetDocumentUpload: canvasState.resetDocumentUpload,
+    isDraggingChat: canvasState.isDraggingChat,
+    setIsDraggingChat: canvasState.setIsDraggingChat,
+    addChatNode,
     canvasContainerRef,
     transform,
     addVideoNode,
-    pendingVideoNode,
-    videoUrl,
-    setIsCreatingNode,
-    resetVideoInput,
-    setCurrentVideoUrl,
-    setShowTranscriptPopup,
-    setCurrentTranscript,
-    setTranscriptError,
     forceResetDragState: () => {
       forceResetVideoDragState();
       forceResetDocumentDragState();
       forceResetChatDragState();
     },
-    isDraggingDocument,
-    setIsDraggingDocument,
-    setPendingDocumentNode,
-    setShowDocumentUpload,
-    addDocumentNode,
-    pendingDocumentNode,
-    setIsUploading,
-    resetDocumentUpload,
-    isDraggingChat,
-    setIsDraggingChat,
-    addChatNode,
   });
-
-  const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode) => {
-    switch (node.type) {
-      case 'chat':
-        // The handle is on the left of the 500px wide component.
-        // Center of component is node.x. Left edge is node.x - 250.
-        // Handle is 16px wide, and its left edge is 16px from the component's left edge.
-        // So center of handle is (node.x - 250) - 16 + 8 = node.x - 258
-        return { x: node.x - 258, y: node.y };
-      case 'video':
-        // The handle is on the right of the 320px (w-80) wide component.
-        // Center of component is node.x. Right edge is node.x + 160.
-        // Handle is 16px wide, and its left edge is at the component's right edge.
-        // So center of handle is (node.x + 160) + 8 = node.x + 168
-        return { x: node.x + 168, y: node.y };
-      case 'document':
-        // The handle is on the right of the 256px (w-64) wide component.
-        // Center of component is node.x. Right edge is node.x + 128.
-        // Handle is 16px wide, and its left edge is at the component's right edge.
-        // So center of handle is (node.x + 128) + 8 = node.x + 136
-        return { x: node.x + 136, y: node.y };
-      default: {
-        // This ensures exhaustiveness. If a new node type is added,
-        // this will cause a compile-time error.
-        const _exhaustiveCheck: never = node;
-        throw new Error(`Unhandled node type: ${(_exhaustiveCheck as any)?.type}`);
-      }
-    }
-  };
-
-  const handleStartConnection = (nodeId: string) => {
-    if (connectingInfo) return;
-    const node = allNodesMap.get(nodeId);
-    if (!node) return;
-    const startPos = getHandlePosition(node);
-    setConnectingInfo({ startNodeId: nodeId, startX: startPos.x, startY: startPos.y });
-  };
-
-  const handleEndConnection = (nodeId: string) => {
-    if (!connectingInfo) return;
-    const startNode = allNodesMap.get(connectingInfo.startNodeId);
-    const endNode = allNodesMap.get(nodeId);
-    if (startNode && endNode && (startNode.type === 'video' || startNode.type === 'document') && endNode.type === 'chat') {
-      addConnection(connectingInfo.startNodeId, nodeId);
-    }
-    setConnectingInfo(null);
-    setLiveEndPoint(null);
-  };
 
   const handleTranscriptModalClose = useCallback(() => {
     console.log("🔽 Closing transcript modal");
-    resetTranscriptModal();
+    canvasState.resetTranscriptModal();
     
     console.log("🔄 Force resetting drag state on modal close");
     forceResetVideoDragState();
     forceResetDocumentDragState();
     forceResetChatDragState();
-  }, [resetTranscriptModal, forceResetVideoDragState, forceResetDocumentDragState, forceResetChatDragState]);
+  }, [canvasState.resetTranscriptModal, forceResetVideoDragState, forceResetDocumentDragState, forceResetChatDragState]);
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
     if (connectingInfo) {
       const rect = canvasContainerRef.current?.getBoundingClientRect();
       if (rect) {
         setLiveEndPoint({
-          x: (e.clientX - rect.left) / transform.scale,
-          y: (e.clientY - rect.top) / transform.scale,
+          x: (e.clientX - rect.left - transform.x) / transform.scale,
+          y: (e.clientY - rect.top - transform.y) / transform.scale,
         });
       }
     } else if (draggingVideoNodeId) {
@@ -237,7 +144,7 @@ const CanvasContent = () => {
     } else {
       handlePointerMove(e, draggingNodeId, () => {});
     }
-  }, [handlePointerMove, draggingVideoNodeId, moveVideoNode, draggingDocumentNodeId, moveDocumentNode, transform, draggingChatNodeId, moveChatNode, connectingInfo]);
+  }, [handlePointerMove, draggingVideoNodeId, moveVideoNode, draggingDocumentNodeId, moveDocumentNode, transform, draggingChatNodeId, moveChatNode, connectingInfo, canvasContainerRef, setLiveEndPoint]);
 
   const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => {
     if (draggingVideoNodeId) {
@@ -250,21 +157,9 @@ const CanvasContent = () => {
     handlePointerUp(e);
 
     if (connectingInfo) {
-      setConnectingInfo(null);
-      setLiveEndPoint(null);
+      clearConnectionState();
     }
-  }, [draggingVideoNodeId, handleVideoNodePointerUp, handleDocumentNodePointerUp, draggingDocumentNodeId, handleChatNodePointerUp, draggingChatNodeId, handlePointerUp, connectingInfo]);
-
-  const sidebarTools: SidebarTool[] = [
-    { id: "video", icon: YoutubeIcon, label: "Video" },
-    { id: "filter", icon: Archive, label: "Filter" },
-    { id: "history", icon: History, label: "History" },
-    { id: "file-text", icon: FileTextIcon, label: "File" },
-    { id: "folder", icon: Archive, label: "Folder" },
-    { id: "rocket", icon: Bell, label: "Rocket" },
-    { id: "chat", icon: Bell, label: "Chat" },
-    { id: "help", icon: Bell, label: "Help" }
-  ];
+  }, [draggingVideoNodeId, handleVideoNodePointerUp, handleDocumentNodePointerUp, draggingDocumentNodeId, handleChatNodePointerUp, draggingChatNodeId, handlePointerUp, connectingInfo, clearConnectionState]);
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
@@ -278,8 +173,8 @@ const CanvasContent = () => {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onDrop={handleCanvasDrop}
-        onDragOver={handleCanvasDragOver}
+        onDrop={canvasEvents.handleCanvasDrop}
+        onDragOver={canvasEvents.handleCanvasDragOver}
         style={{ 
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           transformOrigin: '0 0'
@@ -287,100 +182,57 @@ const CanvasContent = () => {
       >
         <CanvasBackground transform={transform} />
 
-        {/* Connection Lines */}
-        {connections.map(conn => {
-          const sourceNode = allNodesMap.get(conn.sourceId);
-          const targetNode = allNodesMap.get(conn.targetId);
-          if (!sourceNode || !targetNode) return null;
-          
-          const sourcePos = getHandlePosition(sourceNode);
-          const targetPos = getHandlePosition(targetNode);
-          
-          return (
-            <ConnectionLine
-              key={conn.id}
-              sourceX={sourcePos.x}
-              sourceY={sourcePos.y}
-              targetX={targetPos.x}
-              targetY={targetPos.y}
-              isDarkMode={isDarkMode}
-            />
-          );
-        })}
-
-        {/* Live connection line */}
-        {connectingInfo && liveEndPoint && (
-          <ConnectionLine
-            sourceX={connectingInfo.startX}
-            sourceY={connectingInfo.startY}
-            targetX={liveEndPoint.x}
-            targetY={liveEndPoint.y}
-            isDarkMode={isDarkMode}
-          />
-        )}
-
-        {/* Video Nodes */}
-        {videoNodes.map((node) => (
-          <VideoNodeComponent
-            key={node.id}
-            node={node}
-            onPointerDown={handleVideoNodePointerDown}
-            onTranscriptClick={handleTranscriptClick}
-            onStartConnection={handleStartConnection}
-          />
-        ))}
-
-        {/* Document Nodes */}
-        {documentNodes.map((node) => (
-          <DocumentNodeComponent
-            key={node.id}
-            node={node}
-            onPointerDown={handleDocumentNodePointerDown}
-            onStartConnection={handleStartConnection}
-          />
-        ))}
-
-        {/* Chat Nodes */}
-        {chatNodes.map((node) => (
-          <ChatNodeComponent
-            key={node.id}
-            node={node}
-            onPointerDown={handleChatNodePointerDown}
-            onEndConnection={handleEndConnection}
-          />
-        ))}
+        <ConnectionLayer 
+          connections={connections}
+          allNodesMap={allNodesMap}
+          connectingInfo={connectingInfo}
+          liveEndPoint={liveEndPoint}
+          isDarkMode={isDarkMode}
+        />
+        
+        <NodeLayer
+          videoNodes={videoNodes}
+          documentNodes={documentNodes}
+          chatNodes={chatNodes}
+          onVideoNodePointerDown={handleVideoNodePointerDown}
+          onDocumentNodePointerDown={handleDocumentNodePointerDown}
+          onChatNodePointerDown={handleChatNodePointerDown}
+          onTranscriptClick={canvasEvents.handleTranscriptClick}
+          onStartConnection={startConnection}
+          onEndConnection={endConnection}
+        />
       </div>
 
       {/* Video URL Input Modal */}
       <VideoInputModal
-        isOpen={showVideoInput}
-        videoUrl={videoUrl}
-        isCreating={isCreatingNode}
-        onUrlChange={setVideoUrl}
-        onSubmit={handleVideoUrlSubmit}
-        onCancel={resetVideoInput}
+        isOpen={canvasState.showVideoInput}
+        videoUrl={canvasState.videoUrl}
+        isCreating={canvasState.isCreatingNode}
+        onUrlChange={canvasState.setVideoUrl}
+        onSubmit={canvasEvents.handleVideoUrlSubmit}
+        onCancel={canvasState.resetVideoInput}
       />
 
       {/* Document Upload Modal */}
       <DocumentUploadModal
-        isOpen={showDocumentUpload}
-        isUploading={isUploading}
-        onSubmit={handleDocumentUploadSubmit}
-        onClose={resetDocumentUpload}
+        isOpen={canvasState.showDocumentUpload}
+        isUploading={canvasState.isUploading}
+        onSubmit={canvasEvents.handleDocumentUploadSubmit}
+        onClose={canvasState.resetDocumentUpload}
       />
 
       {/* Transcript Options Popup */}
       <TranscriptModal
-        isOpen={showTranscriptPopup}
-        videoUrl={currentVideoUrl}
-        transcript={currentTranscript}
-        error={transcriptError}
+        isOpen={canvasState.showTranscriptPopup}
+        videoUrl={canvasState.currentVideoUrl}
+        transcript={canvasState.currentTranscript}
+        error={canvasState.transcriptError}
         onClose={handleTranscriptModalClose}
-        onTranscriptChange={setCurrentTranscript}
+        onTranscriptChange={canvasState.setCurrentTranscript}
         onSave={() => {
           updateVideoNode(
-            videoNodes.find(node => node.url === currentVideoUrl)?.id || '',
-            { context: currentTranscript }
+            videoNodes.find(node => node.url === canvasState.currentVideoUrl)?.id || '',
+            { context: canvasState.currentTranscript }
           );
           handleTranscriptModalClose();
         }}
@@ -389,11 +241,11 @@ const CanvasContent = () => {
       {/* Floating Left Sidebar */}
       <CanvasSidebar
         tools={sidebarTools}
-        selectedTool={selectedTool}
-        onToolSelect={setSelectedTool}
-        onVideoDragStart={handleVideoIconDragStart}
-        onDocumentDragStart={handleDocumentIconDragStart}
-        onChatDragStart={handleChatIconDragStart}
+        selectedTool={canvasState.selectedTool}
+        onToolSelect={canvasState.setSelectedTool}
+        onVideoDragStart={canvasEvents.handleVideoIconDragStart}
+        onDocumentDragStart={canvasEvents.handleDocumentIconDragStart}
+        onChatDragStart={canvasEvents.handleChatIconDragStart}
       />
 
       {/* Navigation */}
