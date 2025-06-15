@@ -9,6 +9,7 @@ import { useChatNodes } from "@/hooks/useChatNodes";
 import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { sidebarTools } from "@/config/sidebar";
+import { VideoNode, DocumentNode } from "@/types/canvas";
 
 import { VideoInputModal } from "@/components/canvas/VideoInputModal";
 import { TranscriptModal } from "@/components/canvas/TranscriptModal";
@@ -60,8 +61,10 @@ const CanvasContent = () => {
   const {
     chatNodes,
     draggingNodeId: draggingChatNodeId,
+    isSendingMessageNodeId,
     addChatNode,
     moveChatNode,
+    sendMessage,
     handleNodePointerDown: handleChatNodePointerDown,
     handleNodePointerUp: handleChatNodePointerUp,
     forceResetDragState: forceResetChatDragState,
@@ -81,6 +84,21 @@ const CanvasContent = () => {
     endConnection, 
     clearConnectionState 
   } = useConnections(allNodesMap);
+
+  const handleSendMessage = useCallback((nodeId: string, message: string) => {
+    const connectedNodes = connections
+        .filter(conn => conn.targetId === nodeId)
+        .map(conn => allNodesMap.get(conn.sourceId))
+        .filter((node): node is VideoNode | DocumentNode => !!node && (node.type === 'video' || node.type === 'document'));
+    
+    const context = connectedNodes.map(node => {
+        if(node.type === 'video') return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
+        if(node.type === 'document') return `Document Name: ${node.fileName}\nContent: ${node.content || 'Not available'}`;
+        return '';
+    }).join('\n\n---\n\n');
+
+    sendMessage(nodeId, message, context);
+  }, [connections, allNodesMap, sendMessage]);
 
   const canvasEvents = useCanvasEvents({
     isDraggingVideo: canvasState.isDraggingVideo,
@@ -200,6 +218,8 @@ const CanvasContent = () => {
           onTranscriptClick={canvasEvents.handleTranscriptClick}
           onStartConnection={startConnection}
           onEndConnection={endConnection}
+          onSendMessage={handleSendMessage}
+          isSendingMessageNodeId={isSendingMessageNodeId}
         />
       </div>
 

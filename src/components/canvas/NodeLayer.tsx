@@ -15,6 +15,8 @@ interface NodeLayerProps {
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
   onEndConnection: (nodeId:string) => void;
+  onSendMessage: (nodeId: string, message: string) => void;
+  isSendingMessageNodeId: string | null;
 }
 
 export const NodeLayer: React.FC<NodeLayerProps> = ({
@@ -27,6 +29,8 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onTranscriptClick,
   onStartConnection,
   onEndConnection,
+  onSendMessage,
+  isSendingMessageNodeId,
 }) => {
   return (
     <>
@@ -58,6 +62,8 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
           node={node}
           onPointerDown={onChatNodePointerDown}
           onEndConnection={onEndConnection}
+          onSendMessage={onSendMessage}
+          isSendingMessage={isSendingMessageNodeId === node.id}
         />
       ))}
     </>

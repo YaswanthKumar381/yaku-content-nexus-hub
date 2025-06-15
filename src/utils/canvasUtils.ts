@@ -4,9 +4,9 @@ import { VideoNode, DocumentNode, ChatNode } from "@/types/canvas";
 export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode) => {
   switch (node.type) {
     case 'chat':
-      // The handle is on the left of the 500px wide component.
-      // So center of handle is (node.x - 250) - 16 + 8 = node.x - 258
-      return { x: node.x - 258, y: node.y };
+      // The handle is on the left of the 600px wide component.
+      // So center of handle is (node.x - 300) - 16 + 8 = node.x - 308
+      return { x: node.x - 308, y: node.y };
     case 'video':
       // The handle is on the right of the 320px (w-80) wide component.
       // So center of handle is (node.x + 160) + 8 = node.x + 168
