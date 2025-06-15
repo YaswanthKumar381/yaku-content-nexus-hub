@@ -13,6 +13,12 @@ interface DocumentNodeProps {
 export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection }) => {
   
   const handleNodePointerDown = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    // Do not start drag if clicking on the connection handle.
+    // The handle has its own onPointerDown.
+    if (target.closest('[data-connection-handle]')) {
+        return;
+    }
     onPointerDown(e, node.id);
   };
 
@@ -25,6 +31,7 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
     >
       <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-64 border border-blue-200 hover:shadow-xl transition-shadow">
         <div 
+          data-connection-handle
           onPointerDown={(e) => {
             e.stopPropagation();
             onStartConnection(node.id);
