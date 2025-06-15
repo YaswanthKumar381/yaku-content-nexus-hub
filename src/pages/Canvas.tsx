@@ -154,9 +154,9 @@ const CanvasContent = () => {
         });
       }
     } else if (draggingVideoNodeId) {
-      moveVideoNode(draggingVideoNodeId, e, transform, () => {});
+      moveVideoNode(draggingVideoNodeId, e.clientX, e.clientY, transform);
     } else if (draggingDocumentNodeId) {
-      moveDocumentNode(draggingDocumentNodeId, e, transform, () => {});
+      moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
     } else if (draggingChatNodeId) {
       moveChatNode(draggingChatNodeId, e, transform);
     } else {
