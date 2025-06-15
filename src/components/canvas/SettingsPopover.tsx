@@ -13,23 +13,27 @@ import {
 import { toast } from 'sonner';
 
 export const SettingsPopover = () => {
-  const [apiKey, setApiKey] = useState('');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+  const [groqApiKey, setGroqApiKey] = useState('');
   const [provider, setProvider] = useState('gemini');
 
   useEffect(() => {
-    const storedKey = localStorage.getItem('gemini-api-key');
-    if (storedKey) {
-      setApiKey(storedKey);
+    const storedGeminiKey = localStorage.getItem('gemini-api-key');
+    const storedGroqKey = localStorage.getItem('groq-api-key');
+    if (storedGeminiKey) {
+      setGeminiApiKey(storedGeminiKey);
+    }
+    if (storedGroqKey) {
+      setGroqApiKey(storedGroqKey);
     }
   }, []);
 
   const handleSave = () => {
-    if (provider === 'gemini') {
-      localStorage.setItem('gemini-api-key', apiKey);
-      toast.success("API Key Saved", {
-        description: "Your Gemini API key has been saved successfully.",
-      });
-    }
+    localStorage.setItem('gemini-api-key', geminiApiKey);
+    localStorage.setItem('groq-api-key', groqApiKey);
+    toast.success("API Keys Saved", {
+      description: "Your API keys have been saved successfully.",
+    });
   };
 
   return (
@@ -53,18 +57,29 @@ export const SettingsPopover = () => {
           </Select>
         </div>
         <div className="grid grid-cols-3 items-center gap-4">
-          <Label htmlFor="api-key">API Key</Label>
+          <Label htmlFor="gemini-api-key">Gemini API</Label>
           <Input
-            id="api-key"
+            id="gemini-api-key"
             type="password"
-            value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
+            value={geminiApiKey}
+            onChange={(e) => setGeminiApiKey(e.target.value)}
             className="col-span-2 h-8"
-            placeholder="Enter your API key"
+            placeholder="Enter Gemini API key"
+          />
+        </div>
+        <div className="grid grid-cols-3 items-center gap-4">
+          <Label htmlFor="groq-api-key">Groq API</Label>
+          <Input
+            id="groq-api-key"
+            type="password"
+            value={groqApiKey}
+            onChange={(e) => setGroqApiKey(e.target.value)}
+            className="col-span-2 h-8"
+            placeholder="Enter Groq API key"
           />
         </div>
       </div>
-      <Button onClick={handleSave} size="sm" className="w-full">Save Key</Button>
+      <Button onClick={handleSave} size="sm" className="w-full">Save Keys</Button>
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 export interface VideoNode {
   id: string;
   x: number;
@@ -66,7 +67,23 @@ export interface WebsiteNode {
   websites: WebsiteData[];
 }
 
-export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode;
+export interface AudioRecording {
+  id: string;
+  blob: Blob;
+  duration: number;
+  transcript?: string;
+  recordedAt: string;
+}
+
+export interface AudioNode {
+  id: string;
+  x: number;
+  y: number;
+  type: 'audio';
+  recordings: AudioRecording[];
+}
+
+export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode | AudioNode;
 
 export interface Connection {
   id: string;
