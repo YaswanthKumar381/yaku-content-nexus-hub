@@ -8,11 +8,13 @@ import { TranscriptModal } from './TranscriptModal';
 import type { useCanvasState } from '@/hooks/useCanvasState';
 import type { useCanvasEvents } from '@/hooks/useCanvasEvents';
 import type { useVideoNodes } from '@/hooks/useVideoNodes';
+import type { useDocumentNodes } from '@/hooks/useDocumentNodes';
 
 interface CanvasModalsProps {
   canvasState: ReturnType<typeof useCanvasState>;
   eventsResult: ReturnType<typeof useCanvasEvents>;
   videoNodesResult: ReturnType<typeof useVideoNodes>;
+  documentNodesResult: ReturnType<typeof useDocumentNodes>;
   uploadTargetNodeId: string | null;
   onDocumentModalClose: () => void;
   onTranscriptModalClose: () => void;
@@ -22,10 +24,14 @@ export const CanvasModals: React.FC<CanvasModalsProps> = ({
   canvasState,
   eventsResult,
   videoNodesResult,
+  documentNodesResult,
   uploadTargetNodeId,
   onDocumentModalClose,
   onTranscriptModalClose,
 }) => {
+  const targetNode = uploadTargetNodeId ? documentNodesResult.documentNodes.find(n => n.id === uploadTargetNodeId) : null;
+  const existingFiles = targetNode ? targetNode.documents : [];
+
   return (
     <>
       <VideoInputModal
@@ -43,6 +49,7 @@ export const CanvasModals: React.FC<CanvasModalsProps> = ({
         onSubmit={eventsResult.handleDocumentUploadSubmit}
         onClose={onDocumentModalClose}
         mode={uploadTargetNodeId ? 'update' : 'create'}
+        existingFiles={existingFiles}
       />
 
       <TranscriptModal

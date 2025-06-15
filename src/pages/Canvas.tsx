@@ -59,6 +59,7 @@ const CanvasContent = () => {
         canvasState={canvasState}
         eventsResult={eventsResult}
         videoNodesResult={videoNodesResult}
+        documentNodesResult={documentNodesResult}
         uploadTargetNodeId={uploadTargetNodeId}
         onDocumentModalClose={onDocumentModalClose}
         onTranscriptModalClose={onTranscriptModalClose}

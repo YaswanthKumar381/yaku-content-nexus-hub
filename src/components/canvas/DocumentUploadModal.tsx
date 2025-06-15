@@ -1,8 +1,10 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { UploadCloud, Trash2 } from 'lucide-react';
+import { DocumentFile } from '@/types/canvas';
 
 interface DocumentUploadModalProps {
   isOpen: boolean;
@@ -10,6 +12,7 @@ interface DocumentUploadModalProps {
   onSubmit: (files: File[]) => void;
   isUploading: boolean;
   mode: 'create' | 'update';
+  existingFiles?: DocumentFile[];
 }
 
 export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
@@ -18,6 +21,7 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
   onSubmit,
   isUploading,
   mode,
+  existingFiles = [],
 }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
@@ -54,34 +58,54 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
           <DialogTitle>{mode === 'create' ? 'Upload Document(s)' : 'Add More Documents'}</DialogTitle>
         </DialogHeader>
         
-        <label
-          htmlFor="dropzone-file"
-          className="flex flex-col items-center justify-center w-full h-40 border-2 border-blue-300 border-dashed rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-colors"
-        >
-          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-            <UploadCloud className="w-8 h-8 mb-3 text-blue-500 dark:text-gray-400" />
-            <p className="mb-2 text-sm text-blue-700 dark:text-gray-300">
-              <span className="font-semibold">Click to upload</span> or drag and drop
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">PDF, CSV, TXT, etc.</p>
-          </div>
-          <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} multiple />
-        </label>
-        {selectedFiles.length > 0 && (
-          <div className="w-full space-y-2">
-            <p className="font-semibold text-xs text-gray-500 dark:text-gray-400">Selected files:</p>
-            <div className="max-h-40 overflow-y-auto space-y-1 pr-1">
-              {selectedFiles.map((file) => (
-                <div key={`${file.name}-${file.lastModified}`} className="flex justify-between items-center text-sm p-2 rounded-md bg-gray-50 dark:bg-zinc-800">
-                  <span className="truncate pr-2" title={file.name}>{file.name}</span>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeFile(file)}>
-                    <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600"/>
-                  </Button>
-                </div>
-              ))}
+        <div className="grid gap-4 py-4">
+          <label
+            htmlFor="dropzone-file"
+            className="flex flex-col items-center justify-center w-full h-40 border-2 border-blue-300 border-dashed rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-colors"
+          >
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              <UploadCloud className="w-8 h-8 mb-3 text-blue-500 dark:text-gray-400" />
+              <p className="mb-2 text-sm text-blue-700 dark:text-gray-300">
+                <span className="font-semibold">Click to upload</span> or drag and drop
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">PDF, CSV, TXT, etc.</p>
             </div>
-          </div>
-        )}
+            <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} multiple />
+          </label>
+          
+          {(existingFiles.length > 0 || selectedFiles.length > 0) && (
+            <div className="w-full space-y-4">
+              {existingFiles.length > 0 && (
+                <div className="space-y-2">
+                  <p className="font-semibold text-xs text-gray-500 dark:text-gray-400">Existing files:</p>
+                  <div className="max-h-24 overflow-y-auto space-y-1 pr-1 bg-gray-100 dark:bg-zinc-900 rounded-md p-2">
+                    {existingFiles.map((file) => (
+                      <div key={file.id} className="flex justify-between items-center text-sm p-2 rounded-md bg-gray-200 dark:bg-zinc-800">
+                        <span className="truncate pr-2" title={file.fileName}>{file.fileName}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <p className="font-semibold text-xs text-gray-500 dark:text-gray-400">New files to upload:</p>
+                  <div className="max-h-24 overflow-y-auto space-y-1 pr-1">
+                    {selectedFiles.map((file) => (
+                      <div key={`${file.name}-${file.lastModified}`} className="flex justify-between items-center text-sm p-2 rounded-md bg-gray-50 dark:bg-zinc-800">
+                        <span className="truncate pr-2" title={file.name}>{file.name}</span>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => removeFile(file)}>
+                          <Trash2 className="w-4 h-4 text-red-500 hover:text-red-600"/>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         <DialogFooter>
           <Button variant="ghost" onClick={handleModalClose}>Cancel</Button>
