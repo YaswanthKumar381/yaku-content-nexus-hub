@@ -49,6 +49,19 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
     return `${diffInDays}d ago`;
   };
 
+  const getPreviewContent = (html: string) => {
+    if (html.includes('Failed to fetch')) {
+      return html;
+    }
+
+    return html
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove scripts
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')   // Remove styles
+      .replace(/<[^>]*>/g, ' ')                         // Remove HTML tags
+      .replace(/\s+/g, ' ')                           // Normalize whitespace
+      .trim();
+  };
+
   const scrollbarStyles = {
     width: '4px',
     background: 'transparent',
@@ -124,7 +137,9 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
           </CardHeader>
           
           <CardContent className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-            {node.websites.map((website, index) => (
+            {node.websites.map((website, index) => {
+              const previewContent = getPreviewContent(website.content);
+              return (
               <div
                 key={index}
                 className={`p-4 rounded-xl border transition-all duration-200 hover:shadow-lg ${
@@ -159,8 +174,8 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
                 <p className={`text-xs leading-relaxed line-clamp-4 mb-3 ${
                   isDarkMode ? 'text-gray-300' : 'text-gray-600'
                 }`}>
-                  {website.content.substring(0, 300)}
-                  {website.content.length > 300 && '...'}
+                  {previewContent.substring(0, 300)}
+                  {previewContent.length > 300 && '...'}
                 </p>
                 
                 <div className="flex items-center justify-between">
@@ -184,7 +199,7 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
                   />
                 </div>
               </div>
-            ))}
+            )})}
             
             {node.websites.length === 0 && (
               <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>

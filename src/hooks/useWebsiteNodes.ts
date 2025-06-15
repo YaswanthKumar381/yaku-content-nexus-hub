@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { WebsiteNode, WebsiteData, Transform } from "@/types/canvas";
 import { v4 as uuidv4 } from 'uuid';
@@ -12,7 +11,6 @@ export const useWebsiteNodes = () => {
     try {
       console.log(`🌐 Fetching content for: ${url}`);
       
-      // Use the correct GET request format with URL as query parameter
       const webhookUrl = `https://n8n-anrqdske.ap-southeast-1.clawcloudrun.com/webhook/website?url=${encodeURIComponent(url)}`;
       const response = await fetch(webhookUrl, {
         method: 'GET',
@@ -28,29 +26,13 @@ export const useWebsiteNodes = () => {
       const htmlContent = await response.text();
       console.log(`✅ Successfully fetched content for: ${url}`);
       
-      // Extract title from the HTML content
       const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)<\/title>/i);
       const title = titleMatch ? titleMatch[1].trim() : new URL(url).hostname;
-      
-      // Extract meta description
-      const descMatch = htmlContent.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-      const metaDescription = descMatch ? descMatch[1] : '';
-      
-      // Remove HTML tags and get text content
-      let textContent = htmlContent
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove scripts
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove styles
-        .replace(/<[^>]*>/g, ' ') // Remove HTML tags
-        .replace(/\s+/g, ' ') // Normalize whitespace
-        .trim();
-      
-      // Prioritize meta description, then first paragraph of content
-      const finalContent = metaDescription || textContent.substring(0, 2000);
       
       return {
         url,
         title,
-        content: finalContent,
+        content: htmlContent,
         fetchedAt: new Date().toISOString(),
       };
     } catch (error) {
@@ -134,7 +116,7 @@ export const useWebsiteNodes = () => {
     setWebsiteNodes(prev => prev.map(node =>
       node.id === nodeId ? { ...node, x, y } : node
     ));
-  }, [dragOffset]);
+  }, [dragOffset, transform.x, transform.y, transform.scale]);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
     console.log("🌐 Website node pointer up");
