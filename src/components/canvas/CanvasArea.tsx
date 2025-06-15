@@ -16,6 +16,7 @@ import type { useDocumentNodes } from '@/hooks/useDocumentNodes';
 import type { useChatNodes } from '@/hooks/useChatNodes';
 import type { useTextNodes } from '@/hooks/useTextNodes';
 import type { useWebsiteNodes } from '@/hooks/useWebsiteNodes';
+import type { useAudioNodes } from '@/hooks/useAudioNodes';
 
 interface CanvasAreaProps {
   transformResult: ReturnType<typeof useCanvasTransform>;
@@ -27,6 +28,7 @@ interface CanvasAreaProps {
   chatNodesResult: ReturnType<typeof useChatNodes>;
   textNodesResult: ReturnType<typeof useTextNodes>;
   websiteNodesResult: ReturnType<typeof useWebsiteNodes>;
+  audioNodesResult: ReturnType<typeof useAudioNodes>;
   allNodesMap: Map<string, CanvasNode>;
   onDeleteVideoNode: (nodeId: string) => void;
   onDeleteDocumentNode: (nodeId: string) => void;
@@ -34,6 +36,7 @@ interface CanvasAreaProps {
   onDocumentNodeUploadClick: (nodeId: string) => void;
   onDeleteTextNode: (nodeId: string) => void;
   onDeleteWebsiteNode: (nodeId: string) => void;
+  onDeleteAudioNode: (nodeId: string) => void;
   onSendMessage: (nodeId: string, message: string) => void;
 }
 
@@ -47,6 +50,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   chatNodesResult,
   textNodesResult,
   websiteNodesResult,
+  audioNodesResult,
   allNodesMap,
   onDeleteVideoNode,
   onDeleteDocumentNode,
@@ -54,6 +58,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   onDocumentNodeUploadClick,
   onDeleteTextNode,
   onDeleteWebsiteNode,
+  onDeleteAudioNode,
   onSendMessage,
 }) => {
   const { isDarkMode } = useTheme();
@@ -95,11 +100,13 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         chatNodes={chatNodesResult.chatNodes}
         textNodes={textNodesResult.textNodes}
         websiteNodes={websiteNodesResult.websiteNodes}
+        audioNodes={audioNodesResult.audioNodes}
         onVideoNodePointerDown={videoNodesResult.handleNodePointerDown}
         onDocumentNodePointerDown={documentNodesResult.handleNodePointerDown}
         onChatNodePointerDown={chatNodesResult.handleNodePointerDown}
         onTextNodePointerDown={textNodesResult.handleNodePointerDown}
         onWebsiteNodePointerDown={websiteNodesResult.handleNodePointerDown}
+        onAudioNodePointerDown={audioNodesResult.handleNodePointerDown}
         onChatNodeResize={chatNodesResult.updateChatNodeHeight}
         onTranscriptClick={handleTranscriptClick}
         onStartConnection={connectionsResult.startConnection}
@@ -110,10 +117,13 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         onDocumentNodeUploadClick={onDocumentNodeUploadClick}
         onDeleteTextNode={onDeleteTextNode}
         onDeleteWebsiteNode={onDeleteWebsiteNode}
+        onDeleteAudioNode={onDeleteAudioNode}
         onUpdateTextNode={textNodesResult.updateTextNode}
         onSendMessage={onSendMessage}
         isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
         connections={connectionsResult.connections}
+        onAddRecordingToNode={audioNodesResult.addRecordingToNode}
+        onDeleteRecording={audioNodesResult.deleteRecording}
       />
     </div>
   );
