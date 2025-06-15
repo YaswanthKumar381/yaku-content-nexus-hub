@@ -1,36 +1,43 @@
 
-import { useCallback, useState } from "react";
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
-import { useVideoNodes } from "@/hooks/useVideoNodes";
-import { useDocumentNodes } from "@/hooks/useDocumentNodes";
-import { useChatNodes } from "@/hooks/useChatNodes";
-import { useTextNodes } from "@/hooks/useTextNodes";
-import { useWebsiteNodes } from "@/hooks/useWebsiteNodes";
-import { useAudioNodes } from "@/hooks/useAudioNodes";
-import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
-import { useContextUsage } from "@/hooks/useContextUsage";
-import { VideoNode, DocumentNode, TextNode, WebsiteNode, AudioNode } from "@/types/canvas";
+import { useCanvasNodes } from "@/hooks/useCanvasNodes";
+import { useCanvasHandlers } from "@/hooks/useCanvasHandlers";
 
 export const useCanvasOrchestration = () => {
   const canvasState = useCanvasState();
   const transformResult = useCanvasTransform();
-  const videoNodesResult = useVideoNodes();
-  const documentNodesResult = useDocumentNodes();
-  const chatNodesResult = useChatNodes();
-  const textNodesResult = useTextNodes();
-  const websiteNodesResult = useWebsiteNodes();
-  const audioNodesResult = useAudioNodes();
+  const nodesResult = useCanvasNodes();
+  const handlersResult = useCanvasHandlers({ nodesResult, canvasState });
 
-  const [uploadTargetNodeId, setUploadTargetNodeId] = useState<string | null>(null);
+  const {
+    videoNodesResult,
+    documentNodesResult,
+    chatNodesResult,
+    textNodesResult,
+    websiteNodesResult,
+    audioNodesResult,
+    connectionsResult,
+    contextUsage,
+    allNodesMap,
+    uploadTargetNodeId,
+  } = nodesResult;
 
-  const allNodes = [...videoNodesResult.videoNodes, ...documentNodesResult.documentNodes, ...chatNodesResult.chatNodes, ...textNodesResult.textNodes, ...websiteNodesResult.websiteNodes, ...audioNodesResult.audioNodes];
-  const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
-
-  const connectionsResult = useConnections(allNodesMap);
-  const contextUsage = useContextUsage(allNodesMap, connectionsResult.connections, chatNodesResult.chatNodes);
+  const {
+    forceResetAllDragState,
+    handleDeleteVideoNode,
+    handleDeleteDocumentNode,
+    handleDeleteDocumentFile,
+    handleDeleteTextNode,
+    handleDeleteWebsiteNode,
+    handleDeleteAudioNode,
+    handleDocumentNodeUploadClick,
+    handleDocumentModalClose,
+    handleSendMessage,
+    handleTranscriptModalClose,
+  } = handlersResult;
 
   const interactionResult = useCanvasInteraction({
     connectionsResult,
@@ -42,60 +49,6 @@ export const useCanvasOrchestration = () => {
     audioNodesResult,
     transformResult,
   });
-  
-  const forceResetAllDragState = useCallback(() => {
-    videoNodesResult.forceResetDragState();
-    documentNodesResult.forceResetDragState();
-    chatNodesResult.forceResetDragState();
-    textNodesResult.forceResetDragState();
-    websiteNodesResult.forceResetDragState();
-    audioNodesResult.forceResetDragState();
-  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult, audioNodesResult]);
-
-  const handleDeleteVideoNode = useCallback((nodeId: string) => {
-    videoNodesResult.deleteVideoNode(nodeId);
-    connectionsResult.removeConnectionsForNode(nodeId);
-  }, [videoNodesResult, connectionsResult]);
-
-  const handleDeleteDocumentNode = useCallback((nodeId: string) => {
-    documentNodesResult.deleteDocumentNode(nodeId);
-    connectionsResult.removeConnectionsForNode(nodeId);
-  }, [documentNodesResult, connectionsResult]);
-
-  const handleDeleteDocumentFile = useCallback((nodeId: string, fileId: string) => {
-    const node = documentNodesResult.documentNodes.find(n => n.id === nodeId);
-    if (node && node.documents.length === 1 && node.documents[0].id === fileId) {
-        connectionsResult.removeConnectionsForNode(nodeId);
-    }
-    documentNodesResult.deleteDocumentFromFileNode(nodeId, fileId);
-  }, [documentNodesResult, connectionsResult]);
-
-  const handleDeleteTextNode = useCallback((nodeId: string) => {
-    textNodesResult.deleteTextNode(nodeId);
-    connectionsResult.removeConnectionsForNode(nodeId);
-  }, [textNodesResult, connectionsResult]);
-
-  const handleDeleteWebsiteNode = useCallback((nodeId: string) => {
-    websiteNodesResult.deleteWebsiteNode(nodeId);
-    connectionsResult.removeConnectionsForNode(nodeId);
-  }, [websiteNodesResult, connectionsResult]);
-
-  const handleDeleteAudioNode = useCallback((nodeId: string) => {
-    audioNodesResult.deleteAudioNode(nodeId);
-    connectionsResult.removeConnectionsForNode(nodeId);
-  }, [audioNodesResult, connectionsResult]);
-
-  const handleDocumentNodeUploadClick = useCallback((nodeId: string) => {
-    setUploadTargetNodeId(nodeId);
-    canvasState.setShowDocumentUpload(true);
-  }, [canvasState]);
-
-  const { resetDocumentUpload, resetTranscriptModal } = canvasState;
-
-  const handleDocumentModalClose = useCallback(() => {
-    resetDocumentUpload();
-    setUploadTargetNodeId(null);
-  }, [resetDocumentUpload]);
   
   const eventsResult = useCanvasEvents({
     isDraggingVideo: canvasState.isDraggingVideo,
@@ -142,38 +95,6 @@ export const useCanvasOrchestration = () => {
     addVideoNode: videoNodesResult.addVideoNode,
     forceResetDragState: forceResetAllDragState,
   });
-
-  const handleSendMessage = useCallback((nodeId: string, message: string) => {
-    const connectedNodes = connectionsResult.connections
-        .filter(conn => conn.targetId === nodeId)
-        .map(conn => allNodesMap.get(conn.sourceId))
-        .filter((node): node is VideoNode | DocumentNode | TextNode | WebsiteNode | AudioNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website' || node.type === 'audio'));
-    
-    const context = connectedNodes.map(node => {
-        if(node.type === 'video') return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
-        if(node.type === 'document') {
-          const docContent = node.documents.map(d => `Document: ${d.fileName}\nContent: ${d.content || 'Content not available'}`).join('\n\n');
-          return `Document Node Content:\n${docContent}`;
-        }
-        if(node.type === 'text') return `Text Note:\n${node.content || 'Not available'}`;
-        if(node.type === 'website') {
-          const websiteContent = node.websites.map(w => `Website: ${w.title}\nURL: ${w.url}\nContent: ${w.content || 'Content not available'}`).join('\n\n');
-          return `Website Node Content:\n${websiteContent}`;
-        }
-        if(node.type === 'audio') {
-          const audioContent = node.recordings.map(r => `Audio Recording:\nTranscript: ${r.transcript || 'Transcript not available'}`).join('\n\n');
-          return `Audio Node Content:\n${audioContent}`;
-        }
-        return '';
-    }).join('\n\n---\n\n');
-
-    chatNodesResult.sendMessage(nodeId, message, context);
-  }, [connectionsResult.connections, allNodesMap, chatNodesResult]);
-
-  const handleTranscriptModalClose = useCallback(() => {
-    resetTranscriptModal();
-    forceResetAllDragState();
-  }, [resetTranscriptModal, forceResetAllDragState]);
 
   return {
     canvasState,
