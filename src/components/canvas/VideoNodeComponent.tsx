@@ -1,4 +1,3 @@
-
 import React from "react";
 import { VideoNode } from "@/types/canvas";
 import { getVideoThumbnail, getYouTubeEmbedUrl } from "@/utils/videoUtils";
@@ -98,7 +97,6 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
         </div>
         <div className="p-4">
           <h3 className="font-medium text-gray-900 text-sm mb-2 leading-tight">{node.title}</h3>
-          <p className="text-xs text-gray-500 truncate mb-2">{node.url}</p>
           {!node.context && (
             <p className="text-xs text-amber-600 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />

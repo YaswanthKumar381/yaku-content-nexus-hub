@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Video, Archive, History, Bell } from "lucide-react";
+import { Archive, History, Bell } from "lucide-react";
 import { VideoNode, SidebarTool } from "@/types/canvas";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useVideoNodes } from "@/hooks/useVideoNodes";
@@ -13,6 +13,7 @@ import { CanvasNavigation } from "@/components/canvas/CanvasNavigation";
 import { CanvasBackground } from "@/components/canvas/CanvasBackground";
 import { ZoomIndicator } from "@/components/canvas/ZoomIndicator";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
+import { YoutubeIcon } from "@/components/canvas/YoutubeIcon";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
@@ -90,7 +91,7 @@ const CanvasContent = () => {
   });
 
   const sidebarTools: SidebarTool[] = [
-    { id: "video", icon: Video, label: "Video" },
+    { id: "video", icon: YoutubeIcon, label: "Video" },
     { id: "filter", icon: Archive, label: "Filter" },
     { id: "history", icon: History, label: "History" },
     { id: "folder", icon: Archive, label: "Folder" },
