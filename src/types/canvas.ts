@@ -32,6 +32,7 @@ export interface ChatNode {
   y: number;
   type: 'chat';
   messages: ChatMessage[];
+  height: number;
 }
 
 export type CanvasNode = VideoNode | DocumentNode | ChatNode;

@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ChatNode, ChatMessage } from "@/types/canvas";
@@ -15,6 +14,7 @@ export const useChatNodes = () => {
       x,
       y,
       type: "chat",
+      height: 400, // Default height
       messages: [
         { id: uuidv4(), role: 'system', content: 'You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.' },
         { id: uuidv4(), role: 'model', content: 'Hello! How can I help you today? Connect some video or document nodes to me and ask a question.' }
@@ -40,8 +40,16 @@ export const useChatNodes = () => {
     setIsSendingMessageNodeId(nodeId);
     updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'user', content: userMessage });
 
+    const apiKey = localStorage.getItem('gemini_api_key');
+
+    if (!apiKey) {
+        updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: "Please provide your Gemini API key to continue." });
+        setIsSendingMessageNodeId(null);
+        return;
+    }
+
     try {
-      const modelResponse = await generateContent(userMessage, context, chatNode.messages);
+      const modelResponse = await generateContent(userMessage, context, chatNode.messages, apiKey);
       updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: modelResponse });
     } catch (error) {
       console.error("Failed to get response from Gemini:", error);
@@ -63,6 +71,12 @@ export const useChatNodes = () => {
     },
     []
   );
+
+  const updateChatNodeHeight = useCallback((nodeId: string, height: number) => {
+    setChatNodes(prev => prev.map(node => 
+        node.id === nodeId ? { ...node, height } : node
+    ));
+  }, []);
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     e.stopPropagation();
@@ -90,6 +104,7 @@ export const useChatNodes = () => {
     addChatNode,
     moveChatNode,
     sendMessage,
+    updateChatNodeHeight,
     handleNodePointerDown,
     handleNodePointerUp,
     forceResetDragState,

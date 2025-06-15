@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasState } from "@/hooks/useCanvasState";
@@ -65,6 +64,7 @@ const CanvasContent = () => {
     addChatNode,
     moveChatNode,
     sendMessage,
+    updateChatNodeHeight,
     handleNodePointerDown: handleChatNodePointerDown,
     handleNodePointerUp: handleChatNodePointerUp,
     forceResetDragState: forceResetChatDragState,
@@ -154,9 +154,9 @@ const CanvasContent = () => {
         });
       }
     } else if (draggingVideoNodeId) {
-      moveVideoNode(draggingVideoNodeId, e.clientX, e.clientY, transform);
+      moveVideoNode(draggingVideoNodeId, e, transform);
     } else if (draggingDocumentNodeId) {
-      moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
+      moveDocumentNode(draggingDocumentNodeId, e, transform);
     } else if (draggingChatNodeId) {
       moveChatNode(draggingChatNodeId, e, transform);
     } else {
@@ -215,6 +215,7 @@ const CanvasContent = () => {
           onVideoNodePointerDown={handleVideoNodePointerDown}
           onDocumentNodePointerDown={handleDocumentNodePointerDown}
           onChatNodePointerDown={handleChatNodePointerDown}
+          onChatNodeResize={updateChatNodeHeight}
           onTranscriptClick={canvasEvents.handleTranscriptClick}
           onStartConnection={startConnection}
           onEndConnection={endConnection}
@@ -250,10 +251,15 @@ const CanvasContent = () => {
         onClose={handleTranscriptModalClose}
         onTranscriptChange={canvasState.setCurrentTranscript}
         onSave={() => {
-          updateVideoNode(
-            videoNodes.find(node => node.url === canvasState.currentVideoUrl)?.id || '',
-            { context: canvasState.currentTranscript }
-          );
+          if (canvasState.currentVideoUrl) {
+            const nodeToUpdate = videoNodes.find(node => node.url === canvasState.currentVideoUrl);
+            if (nodeToUpdate) {
+              updateVideoNode(
+                nodeToUpdate.id,
+                { context: canvasState.currentTranscript }
+              );
+            }
+          }
           handleTranscriptModalClose();
         }}
       />

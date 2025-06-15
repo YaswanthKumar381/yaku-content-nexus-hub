@@ -1,13 +1,11 @@
-
-import { GEMINI_API_KEY } from "@/config/api";
 import { ChatMessage } from "@/types/canvas";
 
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
-
-export const generateContent = async (userPrompt: string, context: string, history: ChatMessage[]): Promise<string> => {
-  if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-    return "Please provide a valid Gemini API key in `src/config/api.ts` to use the chat feature.";
+export const generateContent = async (userPrompt: string, context: string, history: ChatMessage[], apiKey: string): Promise<string> => {
+  if (!apiKey) {
+    return "Please provide your Gemini API key to continue.";
   }
+
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
   const systemInstruction = {
     role: "system",
@@ -19,7 +17,7 @@ export const generateContent = async (userPrompt: string, context: string, histo
     .map(message => ({
       role: message.role,
       parts: [{ text: message.content }],
-  }));
+    }));
 
   const fullPrompt = context
     ? `Here is some context from connected nodes:\n\n---\n${context}\n---\n\nMy question is: ${userPrompt}`
@@ -58,10 +56,14 @@ export const generateContent = async (userPrompt: string, context: string, histo
 
     const data = await response.json();
     
-    if (data.candidates && data.candidates.length > 0) {
+    if (data.candidates && data.candidates.length > 0 && data.candidates[0].content.parts) {
       return data.candidates[0].content.parts[0].text;
     } else {
       console.warn("No content generated, or response format is unexpected.", data);
+      const finishReason = data.candidates?.[0]?.finishReason;
+      if (finishReason === 'SAFETY') {
+        return "I'm sorry, the response was blocked due to safety settings. Please try rephrasing your prompt.";
+      }
       return "I'm sorry, I couldn't generate a response. Please check the console for more details.";
     }
   } catch (error) {

@@ -12,6 +12,7 @@ interface NodeLayerProps {
   onVideoNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onDocumentNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
+  onChatNodeResize: (nodeId: string, height: number) => void;
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
   onEndConnection: (nodeId:string) => void;
@@ -26,6 +27,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onVideoNodePointerDown,
   onDocumentNodePointerDown,
   onChatNodePointerDown,
+  onChatNodeResize,
   onTranscriptClick,
   onStartConnection,
   onEndConnection,
@@ -64,6 +66,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
           onEndConnection={onEndConnection}
           onSendMessage={onSendMessage}
           isSendingMessage={isSendingMessageNodeId === node.id}
+          onResize={onChatNodeResize}
         />
       ))}
     </>
