@@ -83,7 +83,8 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
       <div className="flex flex-col bg-zinc-800/80 backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-700/50 shadow-2xl shadow-black/30">
         <ScrollArea 
             onWheel={(e) => e.stopPropagation()}
-            className="flex-grow pr-2"
+            onPointerDown={(e) => e.stopPropagation()}
+            className="flex-grow pr-2 cursor-auto"
             style={{ height: `${node.height}px` }}
             data-scroll-area
         >
