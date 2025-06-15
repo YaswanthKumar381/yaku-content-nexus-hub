@@ -22,7 +22,8 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
       style={{ left: node.x, top: node.y, transform: 'translate(-50%, -50%)' }}
       onPointerDown={handleNodePointerDown}
     >
-      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-64 border border-blue-200 hover:shadow-xl transition-shadow">
+      <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-64 border border-blue-200 hover:shadow-xl transition-shadow">
+        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-blue-500 rounded-full border-2 border-blue-100 z-10" />
         <div className="p-4">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
