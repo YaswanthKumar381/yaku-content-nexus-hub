@@ -10,6 +10,34 @@ interface ContextUsageIndicatorProps {
   limit: number;
 }
 
+const EmojiIcon = ({ percentage }: { percentage: number }) => {
+  let emoji = '😤'; // annoyed - default for 0%
+  
+  if (percentage > 90) {
+    emoji = '☹️'; // frown - red
+  } else if (percentage > 80) {
+    emoji = '😑'; // meh - orange
+  } else if (percentage > 60) {
+    emoji = '😊'; // smile - yellow
+  } else if (percentage > 40) {
+    emoji = '😂'; // laugh - light green
+  } else if (percentage > 0) {
+    emoji = '😄'; // smile-plus - dark green
+  }
+
+  return (
+    <span 
+      className="text-lg animate-pulse relative z-10 drop-shadow-sm"
+      style={{
+        animationDuration: '2s',
+        filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
+      }}
+    >
+      {emoji}
+    </span>
+  );
+};
+
 export const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({ percentage, totalTokens, limit }) => {
   const { isDarkMode } = useTheme();
   const radius = 18;
@@ -45,8 +73,10 @@ export const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({ pe
   const formattedTotal = totalTokens.toLocaleString();
   const formattedLimit = (limit / 1000).toLocaleString() + 'k';
 
-  // Calculate wave height based on percentage
-  const waveHeight = Math.max(2, (percentage / 100) * 16);
+  // Fix wave physics - calculate proper wave height based on percentage
+  // The wave should fill from bottom to top, representing the actual percentage
+  const waveHeightFromBottom = (percentage / 100) * 28; // 28 is the viewBox height for proper filling
+  const waveY = 32 - waveHeightFromBottom; // Start from bottom (32) and go up
 
   return (
     <Popover>
@@ -69,11 +99,11 @@ export const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({ pe
                         </clipPath>
                       </defs>
                       
-                      {/* Wave layers for depth */}
+                      {/* Wave layers for depth with corrected physics */}
                       <g clipPath="url(#circle-clip)">
                         {/* Bottom wave layer */}
                         <path
-                          d={`M0,${32 - waveHeight * 0.8} Q8,${32 - waveHeight * 1.2} 16,${32 - waveHeight * 0.8} T32,${32 - waveHeight * 0.8} V32 H0 Z`}
+                          d={`M0,${waveY + 1} Q8,${waveY - 1} 16,${waveY + 1} T32,${waveY + 1} V32 H0 Z`}
                           fill={waveColor}
                           opacity="0.6"
                         >
@@ -88,7 +118,7 @@ export const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({ pe
                         
                         {/* Middle wave layer */}
                         <path
-                          d={`M0,${32 - waveHeight} Q8,${32 - waveHeight * 1.4} 16,${32 - waveHeight} T32,${32 - waveHeight} V32 H0 Z`}
+                          d={`M0,${waveY} Q8,${waveY - 2} 16,${waveY} T32,${waveY} V32 H0 Z`}
                           fill={waveColor}
                           opacity="0.8"
                         >
@@ -103,7 +133,7 @@ export const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({ pe
                         
                         {/* Top wave layer */}
                         <path
-                          d={`M0,${32 - waveHeight * 1.2} Q8,${32 - waveHeight * 1.6} 16,${32 - waveHeight * 1.2} T32,${32 - waveHeight * 1.2} V32 H0 Z`}
+                          d={`M0,${waveY - 1} Q8,${waveY - 3} 16,${waveY - 1} T32,${waveY - 1} V32 H0 Z`}
                           fill={waveColor}
                           opacity="1"
                         >
@@ -145,12 +175,8 @@ export const ContextUsageIndicator: React.FC<ContextUsageIndicatorProps> = ({ pe
                     }
                 </svg>
                 
-                {/* Percentage text */}
-                {percentage > 0 &&
-                  <span className={`relative z-10 text-xs font-bold ${isDarkMode ? 'text-white' : 'text-zinc-800'} drop-shadow-sm`}>
-                      {Math.round(percentage)}%
-                  </span>
-                }
+                {/* Animated Emoji Icon */}
+                <EmojiIcon percentage={percentage} />
             </button>
         </PopoverTrigger>
         <PopoverContent align="end" className="w-64 text-sm">
