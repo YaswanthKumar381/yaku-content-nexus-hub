@@ -60,6 +60,21 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
     return `data:${fileType};base64,${base64}`;
   };
 
+  const handleNodePointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation(); // Prevent canvas drag
+    onPointerDown(e, node.id);
+  };
+
+  const handleConnectionClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent any bubbling
+    onStartConnection(node.id);
+  };
+
+  const handleButtonClick = (e: React.MouseEvent, callback: () => void) => {
+    e.stopPropagation(); // Prevent canvas interaction
+    callback();
+  };
+
   return (
     <div
       className={`absolute select-none ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
@@ -91,7 +106,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onUploadClick(node.id)}
+                onClick={(e) => handleButtonClick(e, () => onUploadClick(node.id))}
                 className={`h-8 w-8 p-0 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
               >
                 <Upload className="w-3 h-3" />
@@ -99,7 +114,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onDelete(node.id)}
+                onClick={(e) => handleButtonClick(e, () => onDelete(node.id))}
                 className={`h-8 w-8 p-0 ${isDarkMode ? 'hover:bg-red-900/50 text-red-400' : 'hover:bg-red-100 text-red-600'}`}
               >
                 <Trash2 className="w-3 h-3" />
@@ -110,7 +125,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
 
         <CardContent 
           className="space-y-3 cursor-move"
-          onPointerDown={(e) => onPointerDown(e, node.id)}
+          onPointerDown={handleNodePointerDown}
         >
           {node.images.length === 0 ? (
             <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
@@ -119,7 +134,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onUploadClick(node.id)}
+                onClick={(e) => handleButtonClick(e, () => onUploadClick(node.id))}
                 className="mt-2"
               >
                 <Upload className="w-4 h-4 mr-2" />
@@ -134,7 +149,10 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
                     src={getImageDataUrl(image.base64, image.fileType)}
                     alt={image.fileName}
                     className="w-full h-24 object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => setShowImageViewer(image.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowImageViewer(image.id);
+                    }}
                   />
                   
                   <div className="absolute top-1 right-1 flex gap-1">
@@ -143,6 +161,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
                         <Button
                           variant="ghost"
                           size="sm"
+                          onClick={(e) => e.stopPropagation()}
                           className={`h-6 w-6 p-0 ${isDarkMode ? 'bg-gray-800/80 hover:bg-gray-700' : 'bg-white/80 hover:bg-gray-100'}`}
                         >
                           {analyzingImageId === image.id ? (
@@ -190,7 +209,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onDeleteImage(node.id, image.id)}
+                      onClick={(e) => handleButtonClick(e, () => onDeleteImage(node.id, image.id))}
                       className={`h-6 w-6 p-0 ${isDarkMode ? 'bg-red-900/80 hover:bg-red-800 text-red-300' : 'bg-red-100/80 hover:bg-red-200 text-red-600'}`}
                     >
                       <Trash2 className="w-3 h-3" />
@@ -229,9 +248,9 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
           )}
         </CardContent>
 
-        {/* Connection handle */}
+        {/* Connection handle - positioned outside the card */}
         <div
-          className={`absolute right-0 top-1/2 transform translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-2 cursor-pointer ${
+          className={`absolute top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full border-2 cursor-pointer ${
             isConnected
               ? isDarkMode 
                 ? 'bg-indigo-500 border-indigo-400' 
@@ -240,15 +259,21 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
                 ? 'bg-gray-600 border-gray-500 hover:bg-indigo-500 hover:border-indigo-400' 
                 : 'bg-gray-300 border-gray-400 hover:bg-indigo-600 hover:border-indigo-500'
           } transition-colors`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onStartConnection(node.id);
+          style={{
+            right: '-8px', // Position outside the card
           }}
+          onClick={handleConnectionClick}
         />
 
         {/* Image viewer modal */}
         {showImageViewer && (
-          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" onClick={() => setShowImageViewer(null)}>
+          <div 
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50" 
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowImageViewer(null);
+            }}
+          >
             <div className="max-w-4xl max-h-4xl p-4">
               {(() => {
                 const image = node.images.find(img => img.id === showImageViewer);

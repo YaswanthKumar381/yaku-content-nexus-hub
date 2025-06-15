@@ -95,10 +95,12 @@ export const useImageNodes = () => {
   }, [imageNodes]);
 
   const deleteImageNode = useCallback((nodeId: string) => {
+    console.log("🗑️ Deleting image node:", nodeId);
     setImageNodes(prev => prev.filter(node => node.id !== nodeId));
   }, []);
 
   const deleteImageFromNode = useCallback((nodeId: string, imageId: string) => {
+    console.log("🗑️ Deleting image from node:", nodeId, imageId);
     setImageNodes(prev => prev.map(node => 
       node.id === nodeId 
         ? { ...node, images: node.images.filter(img => img.id !== imageId) }
@@ -107,6 +109,7 @@ export const useImageNodes = () => {
   }, []);
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
+    console.log("🖱️ Image node pointer down:", nodeId);
     e.stopPropagation();
     const node = imageNodes.find(n => n.id === nodeId);
     if (!node) return;
@@ -127,18 +130,22 @@ export const useImageNodes = () => {
     const x = (clientX - canvasRect.left - transform.x - dragOffset.x) / transform.scale;
     const y = (clientY - canvasRect.top - transform.y - dragOffset.y) / transform.scale;
 
+    console.log("🔄 Moving image node:", nodeId, "to:", x, y);
+
     setImageNodes(prev => prev.map(node =>
       node.id === nodeId ? { ...node, x, y } : node
     ));
   }, [dragOffset]);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
+    console.log("🖱️ Image node pointer up");
     setDraggingNodeId(null);
     setDragOffset({ x: 0, y: 0 });
     (e.target as HTMLElement).releasePointerCapture(e.pointerId);
   }, []);
 
   const forceResetDragState = useCallback(() => {
+    console.log("🔄 Force resetting image node drag state");
     setDraggingNodeId(null);
     setDragOffset({ x: 0, y: 0 });
   }, []);

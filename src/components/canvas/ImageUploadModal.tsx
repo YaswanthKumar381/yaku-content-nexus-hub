@@ -1,78 +1,58 @@
 
 import React, { useState, useRef } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ImageIcon, Upload, X, FileImage } from 'lucide-react';
-import { ImageData } from '@/types/canvas';
+import { Upload, File, X } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ImageUploadModalProps {
   isOpen: boolean;
-  isUploading: boolean;
-  onSubmit: (files: File[]) => Promise<void>;
   onClose: () => void;
-  mode: 'create' | 'update';
-  existingImages?: ImageData[];
+  onUpload: (files: File[]) => void;
+  isUploading?: boolean;
 }
 
 export const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
   isOpen,
-  isUploading,
-  onSubmit,
   onClose,
-  mode,
-  existingImages = [],
+  onUpload,
+  isUploading = false,
 }) => {
+  const { isDarkMode } = useTheme();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    
-    if (imageFiles.length !== files.length) {
-      alert('Only image files are allowed');
-    }
-    
     setSelectedFiles(prev => [...prev, ...imageFiles]);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
-    
-    if (imageFiles.length !== files.length) {
-      alert('Only image files are allowed');
-    }
-    
-    setSelectedFiles(prev => [...prev, ...imageFiles]);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const removeFile = (index: number) => {
+  const handleRemoveFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async () => {
-    if (selectedFiles.length === 0) return;
-    
-    try {
-      await onSubmit(selectedFiles);
+  const handleUpload = () => {
+    if (selectedFiles.length > 0) {
+      onUpload(selectedFiles);
       setSelectedFiles([]);
-      onClose();
-    } catch (error) {
-      console.error('Upload failed:', error);
     }
   };
 
   const handleClose = () => {
     setSelectedFiles([]);
     onClose();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    setSelectedFiles(prev => [...prev, ...imageFiles]);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
   };
 
   const formatFileSize = (bytes: number) => {
@@ -85,73 +65,74 @@ export const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={`max-w-md ${isDarkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-300'}`}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ImageIcon className="w-5 h-5" />
-            {mode === 'create' ? 'Upload Images to New Node' : 'Add Images to Node'}
+          <DialogTitle className={isDarkMode ? 'text-white' : 'text-gray-900'}>
+            Upload Images
           </DialogTitle>
+          <DialogDescription className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
+            Select images to upload to this image node. Supported formats: JPEG, PNG, WebP, and other common image formats.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {existingImages.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2">Existing Images</h4>
-              <div className="flex flex-wrap gap-2">
-                {existingImages.map((image) => (
-                  <Badge key={image.id} variant="secondary" className="text-xs">
-                    <FileImage className="w-3 h-3 mr-1" />
-                    {image.fileName}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
+          {/* Drop zone */}
           <div
-            className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
+            className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+              isDarkMode 
+                ? 'border-gray-600 hover:border-gray-500 bg-gray-700/50' 
+                : 'border-gray-300 hover:border-gray-400 bg-gray-50'
+            }`}
+            onClick={() => fileInputRef.current?.click()}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            onClick={() => fileInputRef.current?.click()}
           >
-            <ImageIcon className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-            <p className="text-sm text-gray-600 mb-2">
-              Drop images here or click to browse
+            <Upload className={`w-8 h-8 mx-auto mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+            <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Click to select images or drag and drop
             </p>
-            <p className="text-xs text-gray-500">
-              Supports JPG, PNG, GIF, WebP (max 4MB for base64 encoding)
+            <p className={`text-xs mt-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Maximum 4MB per image
             </p>
           </div>
 
-          <Input
+          <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
             multiple
+            accept="image/*"
             onChange={handleFileSelect}
             className="hidden"
           />
 
+          {/* Selected files */}
           {selectedFiles.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium mb-2">Selected Images ({selectedFiles.length})</h4>
-              <div className="space-y-2 max-h-32 overflow-y-auto">
+            <div className="space-y-2">
+              <h4 className={`text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Selected Images ({selectedFiles.length})
+              </h4>
+              <div className="max-h-32 overflow-y-auto space-y-1">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div
+                    key={index}
+                    className={`flex items-center justify-between p-2 rounded text-sm ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+                    }`}
+                  >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <FileImage className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{file.name}</p>
-                        <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
-                      </div>
+                      <File className="w-4 h-4 flex-shrink-0" />
+                      <span className="truncate">{file.name}</span>
+                      <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        ({formatFileSize(file.size)})
+                      </span>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => removeFile(index)}
-                      className="h-8 w-8 p-0 text-gray-500 hover:text-red-600"
+                      onClick={() => handleRemoveFile(index)}
+                      className="h-6 w-6 p-0 flex-shrink-0"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3 h-3" />
                     </Button>
                   </div>
                 ))}
@@ -159,25 +140,17 @@ export const ImageUploadModal: React.FC<ImageUploadModalProps> = ({
             </div>
           )}
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleClose} disabled={isUploading}>
+          {/* Action buttons */}
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
-            <Button 
-              onClick={handleSubmit} 
+            <Button
+              onClick={handleUpload}
               disabled={selectedFiles.length === 0 || isUploading}
+              className="flex-1"
             >
-              {isUploading ? (
-                <>
-                  <Upload className="w-4 h-4 mr-2 animate-pulse" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload {selectedFiles.length} Image{selectedFiles.length !== 1 ? 's' : ''}
-                </>
-              )}
+              {isUploading ? 'Uploading...' : `Upload ${selectedFiles.length} Image${selectedFiles.length !== 1 ? 's' : ''}`}
             </Button>
           </div>
         </div>
