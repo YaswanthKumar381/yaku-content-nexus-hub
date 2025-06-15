@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { VideoNode, DocumentNode, ChatNode } from '@/types/canvas';
+import { VideoNode, DocumentNode, ChatNode, CanvasNode } from '@/types/canvas';
 import { VideoNodeComponent } from './VideoNodeComponent';
 import { DocumentNodeComponent } from './DocumentNodeComponent';
 import { ChatNodeComponent } from './ChatNodeComponent';
@@ -18,6 +18,7 @@ interface NodeLayerProps {
   onEndConnection: (nodeId:string) => void;
   onSendMessage: (nodeId: string, message: string) => void;
   isSendingMessageNodeId: string | null;
+  onNodeDoubleClick: (node: CanvasNode, e: React.MouseEvent) => void;
 }
 
 export const NodeLayer: React.FC<NodeLayerProps> = ({
@@ -33,6 +34,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onEndConnection,
   onSendMessage,
   isSendingMessageNodeId,
+  onNodeDoubleClick,
 }) => {
   return (
     <>
@@ -44,6 +46,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
           onPointerDown={onVideoNodePointerDown}
           onTranscriptClick={onTranscriptClick}
           onStartConnection={onStartConnection}
+          onDoubleClick={(e) => onNodeDoubleClick(node, e)}
         />
       ))}
 
@@ -54,6 +57,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
           node={node}
           onPointerDown={onDocumentNodePointerDown}
           onStartConnection={onStartConnection}
+          onDoubleClick={(e) => onNodeDoubleClick(node, e)}
         />
       ))}
 
@@ -67,6 +71,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
           onSendMessage={onSendMessage}
           isSendingMessage={isSendingMessageNodeId === node.id}
           onResize={onChatNodeResize}
+          onDoubleClick={(e) => onNodeDoubleClick(node, e)}
         />
       ))}
     </>

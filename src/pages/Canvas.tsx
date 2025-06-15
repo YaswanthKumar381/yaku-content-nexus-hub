@@ -1,5 +1,4 @@
-
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
@@ -10,7 +9,8 @@ import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { sidebarTools } from "@/config/sidebar";
-import { VideoNode, DocumentNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, CanvasNode, Connection } from "@/types/canvas";
+import { useToast } from "@/hooks/use-toast";
 
 import { VideoInputModal } from "@/components/canvas/VideoInputModal";
 import { TranscriptModal } from "@/components/canvas/TranscriptModal";
@@ -21,9 +21,23 @@ import { CanvasBackground } from "@/components/canvas/CanvasBackground";
 import { ZoomIndicator } from "@/components/canvas/ZoomIndicator";
 import { NodeLayer } from "@/components/canvas/NodeLayer";
 import { ConnectionLayer } from "@/components/canvas/ConnectionLayer";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Trash2, Unlink } from "lucide-react";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
+  const { toast } = useToast();
   
   const canvasState = useCanvasState();
   const transformResult = useCanvasTransform();
@@ -35,6 +49,11 @@ const CanvasContent = () => {
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
   const connectionsResult = useConnections(allNodesMap);
+
+  const [nodeToEdit, setNodeToEdit] = useState<CanvasNode | null>(null);
+  const [popoverPosition, setPopoverPosition] = useState({ x: 0, y: 0 });
+  const [nodeToDelete, setNodeToDelete] = useState<CanvasNode | null>(null);
+  const [connectionToEdit, setConnectionToEdit] = useState<Connection | null>(null);
 
   const { draggingNodeId, handleCanvasPointerMove, handleCanvasPointerUp } = useCanvasInteraction({
     connectionsResult,
@@ -105,6 +124,56 @@ const CanvasContent = () => {
     forceResetAllDragState();
   }, [canvasState.resetTranscriptModal, forceResetAllDragState]);
 
+  const handleNodeDoubleClick = (node: CanvasNode, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = canvasContainerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setNodeToEdit(node);
+    setPopoverPosition({ x: e.clientX, y: e.clientY });
+  };
+  
+  const handleConnectionDoubleClick = (connection: Connection, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = canvasContainerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setConnectionToEdit(connection);
+    setPopoverPosition({ x: e.clientX, y: e.clientY });
+  };
+  
+  const handleDeleteNodeRequest = () => {
+    if (nodeToEdit) {
+      setNodeToDelete(nodeToEdit);
+      setNodeToEdit(null);
+    }
+  };
+
+  const handleConfirmDeleteNode = () => {
+    if (!nodeToDelete) return;
+    
+    connectionsResult.removeConnectionsForNode(nodeToDelete.id);
+
+    if (nodeToDelete.type === 'chat') {
+        chatNodesResult.deleteChatNode(nodeToDelete.id);
+        toast({ title: "Node deleted", description: "The chat node and its connections have been deleted." });
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Action not supported",
+            description: `Deleting ${nodeToDelete.type} nodes is not yet supported.`,
+        });
+    }
+    setNodeToDelete(null);
+  };
+  
+  const handleDisconnect = () => {
+      if (!connectionToEdit) return;
+      connectionsResult.removeConnection(connectionToEdit.id);
+      setConnectionToEdit(null);
+      toast({ title: "Connection removed" });
+  };
+
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
       <div 
@@ -131,6 +200,7 @@ const CanvasContent = () => {
           connectingInfo={connectionsResult.connectingInfo}
           liveEndPoint={connectionsResult.liveEndPoint}
           isDarkMode={isDarkMode}
+          onConnectionDoubleClick={handleConnectionDoubleClick}
         />
         
         <NodeLayer
@@ -146,8 +216,42 @@ const CanvasContent = () => {
           onEndConnection={connectionsResult.endConnection}
           onSendMessage={handleSendMessage}
           isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
+          onNodeDoubleClick={handleNodeDoubleClick}
         />
       </div>
+
+      <Popover open={!!nodeToEdit || !!connectionToEdit} onOpenChange={() => { setNodeToEdit(null); setConnectionToEdit(null); }}>
+        <PopoverTrigger asChild>
+          <div className="absolute" style={{ top: popoverPosition.y, left: popoverPosition.x }} />
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-1">
+          {nodeToEdit && (
+            <Button variant="destructive" onClick={handleDeleteNodeRequest} size="sm" className="w-full">
+              <Trash2 className="h-4 w-4 mr-2" /> Delete Node
+            </Button>
+          )}
+          {connectionToEdit && (
+            <Button variant="destructive" onClick={handleDisconnect} size="sm" className="w-full">
+              <Unlink className="h-4 w-4 mr-2" /> Disconnect
+            </Button>
+          )}
+        </PopoverContent>
+      </Popover>
+
+      <AlertDialog open={!!nodeToDelete} onOpenChange={(open) => !open && setNodeToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the node and all its connections.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDeleteNode}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <VideoInputModal
         isOpen={canvasState.showVideoInput}

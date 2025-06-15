@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Connection, CanvasNode } from '@/types/canvas';
 import { ConnectionLine } from './ConnectionLine';
@@ -10,6 +9,7 @@ interface ConnectionLayerProps {
   connectingInfo: { startNodeId: string; startX: number; startY: number; } | null;
   liveEndPoint: { x: number; y: number; } | null;
   isDarkMode: boolean;
+  onConnectionDoubleClick: (connection: Connection, e: React.MouseEvent) => void;
 }
 
 export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
@@ -17,7 +17,8 @@ export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
   allNodesMap,
   connectingInfo,
   liveEndPoint,
-  isDarkMode
+  isDarkMode,
+  onConnectionDoubleClick,
 }) => {
   return (
     <>
@@ -38,6 +39,7 @@ export const ConnectionLayer: React.FC<ConnectionLayerProps> = ({
             targetX={targetPos.x}
             targetY={targetPos.y}
             isDarkMode={isDarkMode}
+            onDoubleClick={(e) => onConnectionDoubleClick(conn, e)}
           />
         );
       })}

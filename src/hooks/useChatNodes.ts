@@ -24,6 +24,10 @@ export const useChatNodes = () => {
     return newNode;
   }, []);
 
+  const deleteChatNode = useCallback((nodeId: string) => {
+    setChatNodes((prev) => prev.filter((node) => node.id !== nodeId));
+  }, []);
+
   const updateChatNodeMessages = useCallback((nodeId: string, newMessage: ChatMessage) => {
     setChatNodes(prev => prev.map(node => {
       if (node.id === nodeId) {
@@ -102,6 +106,7 @@ export const useChatNodes = () => {
     draggingNodeId,
     isSendingMessageNodeId,
     addChatNode,
+    deleteChatNode,
     moveChatNode,
     sendMessage,
     updateChatNodeHeight,

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ChatNode } from '@/types/canvas';
 import { PromptInputBox } from './PromptInputBox';
@@ -13,9 +12,10 @@ interface ChatNodeComponentProps {
   onSendMessage: (nodeId: string, message: string) => void;
   isSendingMessage: boolean;
   onResize: (nodeId: string, height: number) => void;
+  onDoubleClick: (e: React.MouseEvent) => void;
 }
 
-export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPointerDown, onEndConnection, onSendMessage, isSendingMessage, onResize }) => {
+export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPointerDown, onEndConnection, onSendMessage, isSendingMessage, onResize, onDoubleClick }) => {
   const { isDarkMode } = useTheme();
   const scrollAreaViewportRef = useRef<HTMLDivElement>(null);
   const resizerRef = useRef<HTMLDivElement>(null);
@@ -28,7 +28,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
   
   const handlePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button, input, textarea, a, [data-resizer]')) {
+    if (target.closest('button, input, textarea, a, [data-resizer]') || target.closest('.pr-2')) {
       return;
     }
     onPointerDown(e, node.id);
@@ -70,6 +70,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
         width: '600px',
       }}
       onPointerDown={handlePointerDown}
+      onDoubleClick={onDoubleClick}
     >
       {/* Left handle */}
       <div 
