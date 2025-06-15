@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -11,8 +12,17 @@ import { SettingsPopover } from "./SettingsPopover";
 import { HomeIcon } from "../icons/animated/HomeIcon";
 import { ArrowLeftIcon } from "../icons/animated/ArrowLeftIcon";
 import { ArrowRightIcon } from "../icons/animated/ArrowRightIcon";
+import { ContextUsageIndicator } from "./ContextUsageIndicator";
 
-export const CanvasNavigation: React.FC = () => {
+interface CanvasNavigationProps {
+  contextUsage: {
+    percentage: number;
+    totalTokens: number;
+    limit: number;
+  }
+}
+
+export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({ contextUsage }) => {
   const { isDarkMode, toggleTheme } = useTheme();
   
   const iconButtonClass = `w-6 h-6 rounded-full ${
@@ -63,9 +73,7 @@ export const CanvasNavigation: React.FC = () => {
           >
             {isDarkMode ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
           </Button>
-          <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
-            <div className="w-6 h-6 bg-green-400 rounded-full"></div>
-          </div>
+          <ContextUsageIndicator {...contextUsage} />
         </div>
       </div>
     </>

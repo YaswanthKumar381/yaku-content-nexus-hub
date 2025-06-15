@@ -1,3 +1,4 @@
+
 import { ChatMessage } from "@/types/canvas";
 
 export const generateContent = async (userPrompt: string, context: string, history: ChatMessage[], apiKey: string): Promise<string> => {
@@ -7,10 +8,8 @@ export const generateContent = async (userPrompt: string, context: string, histo
 
   const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
-  const systemInstruction = {
-    role: "system",
-    parts: [{ text: "You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions." }],
-  };
+  const systemMessage = history.find(m => m.role === 'system');
+  const systemInstructionText = systemMessage?.content || "You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.";
 
   const formattedHistory = history
     .filter(m => m.role === 'user' || m.role === 'model')
@@ -39,6 +38,9 @@ export const generateContent = async (userPrompt: string, context: string, histo
       },
       body: JSON.stringify({
         contents: contents,
+        system_instruction: {
+          parts: [{ text: systemInstructionText }],
+        },
         safetySettings: [
             { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
             { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },

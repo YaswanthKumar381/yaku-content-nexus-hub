@@ -10,6 +10,7 @@ import { useTextNodes } from "@/hooks/useTextNodes";
 import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
+import { useContextUsage } from "@/hooks/useContextUsage";
 import { sidebarTools } from "@/config/sidebar";
 import { VideoNode, DocumentNode, TextNode } from "@/types/canvas";
 
@@ -35,6 +36,7 @@ const CanvasContent = () => {
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
   const connectionsResult = useConnections(allNodesMap);
+  const contextUsage = useContextUsage(allNodesMap, connectionsResult.connections, chatNodesResult.chatNodes);
 
   const interactionResult = useCanvasInteraction({
     connectionsResult,
@@ -186,7 +188,7 @@ const CanvasContent = () => {
         onTextDragStart={eventsResult.handleTextIconDragStart}
       />
 
-      <CanvasNavigation />
+      <CanvasNavigation contextUsage={contextUsage} />
 
       <ZoomIndicator scale={transformResult.transform.scale} />
     </div>
