@@ -15,6 +15,7 @@ import type { useVideoNodes } from '@/hooks/useVideoNodes';
 import type { useDocumentNodes } from '@/hooks/useDocumentNodes';
 import type { useChatNodes } from '@/hooks/useChatNodes';
 import type { useTextNodes } from '@/hooks/useTextNodes';
+import type { useWebsiteNodes } from '@/hooks/useWebsiteNodes';
 
 interface CanvasAreaProps {
   transformResult: ReturnType<typeof useCanvasTransform>;
@@ -25,12 +26,14 @@ interface CanvasAreaProps {
   documentNodesResult: ReturnType<typeof useDocumentNodes>;
   chatNodesResult: ReturnType<typeof useChatNodes>;
   textNodesResult: ReturnType<typeof useTextNodes>;
+  websiteNodesResult: ReturnType<typeof useWebsiteNodes>;
   allNodesMap: Map<string, CanvasNode>;
   onDeleteVideoNode: (nodeId: string) => void;
   onDeleteDocumentNode: (nodeId: string) => void;
   onDeleteDocumentFile: (nodeId: string, fileId: string) => void;
   onDocumentNodeUploadClick: (nodeId: string) => void;
   onDeleteTextNode: (nodeId: string) => void;
+  onDeleteWebsiteNode: (nodeId: string) => void;
   onSendMessage: (nodeId: string, message: string) => void;
 }
 
@@ -43,12 +46,14 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   documentNodesResult,
   chatNodesResult,
   textNodesResult,
+  websiteNodesResult,
   allNodesMap,
   onDeleteVideoNode,
   onDeleteDocumentNode,
   onDeleteDocumentFile,
   onDocumentNodeUploadClick,
   onDeleteTextNode,
+  onDeleteWebsiteNode,
   onSendMessage,
 }) => {
   const { isDarkMode } = useTheme();
@@ -89,10 +94,12 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         documentNodes={documentNodesResult.documentNodes}
         chatNodes={chatNodesResult.chatNodes}
         textNodes={textNodesResult.textNodes}
+        websiteNodes={websiteNodesResult.websiteNodes}
         onVideoNodePointerDown={videoNodesResult.handleNodePointerDown}
         onDocumentNodePointerDown={documentNodesResult.handleNodePointerDown}
         onChatNodePointerDown={chatNodesResult.handleNodePointerDown}
         onTextNodePointerDown={textNodesResult.handleNodePointerDown}
+        onWebsiteNodePointerDown={websiteNodesResult.handleNodePointerDown}
         onChatNodeResize={chatNodesResult.updateChatNodeHeight}
         onTranscriptClick={handleTranscriptClick}
         onStartConnection={connectionsResult.startConnection}
@@ -102,6 +109,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         onDeleteDocumentFile={onDeleteDocumentFile}
         onDocumentNodeUploadClick={onDocumentNodeUploadClick}
         onDeleteTextNode={onDeleteTextNode}
+        onDeleteWebsiteNode={onDeleteWebsiteNode}
         onUpdateTextNode={textNodesResult.updateTextNode}
         onSendMessage={onSendMessage}
         isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}

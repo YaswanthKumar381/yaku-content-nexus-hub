@@ -3,18 +3,21 @@ import React from 'react';
 import { VideoInputModal } from './VideoInputModal';
 import { DocumentUploadModal } from './DocumentUploadModal';
 import { TranscriptModal } from './TranscriptModal';
+import { WebsiteInputModal } from './WebsiteInputModal';
 
 // Import hook return types
 import type { useCanvasState } from '@/hooks/useCanvasState';
 import type { useCanvasEvents } from '@/hooks/useCanvasEvents';
 import type { useVideoNodes } from '@/hooks/useVideoNodes';
 import type { useDocumentNodes } from '@/hooks/useDocumentNodes';
+import type { useWebsiteNodes } from '@/hooks/useWebsiteNodes';
 
 interface CanvasModalsProps {
   canvasState: ReturnType<typeof useCanvasState>;
   eventsResult: ReturnType<typeof useCanvasEvents>;
   videoNodesResult: ReturnType<typeof useVideoNodes>;
   documentNodesResult: ReturnType<typeof useDocumentNodes>;
+  websiteNodesResult: ReturnType<typeof useWebsiteNodes>;
   uploadTargetNodeId: string | null;
   onDocumentModalClose: () => void;
   onTranscriptModalClose: () => void;
@@ -25,6 +28,7 @@ export const CanvasModals: React.FC<CanvasModalsProps> = ({
   eventsResult,
   videoNodesResult,
   documentNodesResult,
+  websiteNodesResult,
   uploadTargetNodeId,
   onDocumentModalClose,
   onTranscriptModalClose,
@@ -50,6 +54,13 @@ export const CanvasModals: React.FC<CanvasModalsProps> = ({
         onClose={onDocumentModalClose}
         mode={uploadTargetNodeId ? 'update' : 'create'}
         existingFiles={existingFiles}
+      />
+
+      <WebsiteInputModal
+        isOpen={canvasState.showWebsiteInput}
+        onClose={canvasState.resetWebsiteInput}
+        onSubmit={eventsResult.handleWebsiteUrlSubmit}
+        isLoading={canvasState.isScrapingWebsites}
       />
 
       <TranscriptModal

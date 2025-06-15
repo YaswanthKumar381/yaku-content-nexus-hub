@@ -80,11 +80,23 @@ export const useWebsiteNodes = () => {
     ));
   }, []);
 
+  const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
+    e.stopPropagation();
+    // Handle pointer down for website nodes
+  }, []);
+
+  const forceResetDragState = useCallback(() => {
+    // Reset any dragging state for website nodes
+    console.log("🔄 Resetting website node drag state");
+  }, []);
+
   return {
     websiteNodes,
     addWebsiteNode,
     addWebsitesToNode,
     deleteWebsiteNode,
     deleteWebsite,
+    handleNodePointerDown,
+    forceResetDragState,
   };
 };
