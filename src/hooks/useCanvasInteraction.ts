@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import type { useConnections } from '@/hooks/useConnections';
 import type { useVideoNodes } from '@/hooks/useVideoNodes';
@@ -74,7 +73,7 @@ export const useCanvasInteraction = ({
     }
     handlePointerUp(e);
 
-    if (connectingInfo && e.target === canvasContainerRef.current) {
+    if (connectingInfo) {
       clearConnectionState();
     }
   }, [
@@ -82,7 +81,7 @@ export const useCanvasInteraction = ({
       draggingDocumentNodeId, handleDocumentNodePointerUp,
       draggingChatNodeId, handleChatNodePointerUp,
       draggingTextNodeId, handleTextNodePointerUp,
-      handlePointerUp, connectingInfo, clearConnectionState, canvasContainerRef
+      handlePointerUp, connectingInfo, clearConnectionState
   ]);
 
   return { handleCanvasPointerMove, handleCanvasPointerUp, draggingNodeId };

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { TextNode } from '@/types/canvas';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -90,7 +89,7 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
               e.stopPropagation();
               onStartConnection(node.id);
             }}
-            className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-orange-400/80 hover:border-orange-500/80 z-10 cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-orange-400 hover:border-orange-500 z-10 cursor-pointer flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
           >
             {isConnected && <div className="w-2 h-2 bg-orange-500 rounded-full" />}
           </div>
