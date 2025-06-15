@@ -74,7 +74,12 @@ export const useCanvasInteraction = ({
     handlePointerUp(e);
 
     if (connectingInfo) {
-      clearConnectionState();
+      const targetNodeElement = (e.target as HTMLElement).closest('[data-node-id]');
+      // If we are connecting but don't land on a node, cancel the connection.
+      // If we do land on a node, its own pointerup handler (onEndConnection) will manage the state.
+      if (!targetNodeElement) {
+        clearConnectionState();
+      }
     }
   }, [
       draggingVideoNodeId, handleVideoNodePointerUp,
