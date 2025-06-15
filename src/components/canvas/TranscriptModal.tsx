@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, Loader2, CheckCircle } from "lucide-react";
-import { getYouTubeVideoId } from "@/utils/videoUtils";
 import { fetchYouTubeTranscript, formatTranscriptText } from "@/services/transcriptService";
 
 interface TranscriptModalProps {
@@ -35,13 +33,12 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
   }, [isOpen, videoUrl]);
 
   const fetchTranscript = async () => {
-    const videoId = getYouTubeVideoId(videoUrl);
-    if (!videoId) return;
+    if (!videoUrl) return;
 
     setIsLoading(true);
     try {
-      console.log("🔍 Fetching transcript for video ID:", videoId);
-      const response = await fetchYouTubeTranscript(videoId);
+      console.log("🔍 Fetching transcript for video URL:", videoUrl);
+      const response = await fetchYouTubeTranscript(videoUrl); // Pass original URL
       
       if (response.code === 100000) {
         setVideoTitle(response.data.videoInfo.name);

@@ -5,7 +5,7 @@ export const getVideoTitle = async (url: string): Promise<string> => {
   const videoId = getYouTubeVideoId(url);
   if (videoId) {
     try {
-      const transcriptData = await fetchYouTubeTranscript(videoId);
+      const transcriptData = await fetchYouTubeTranscript(url); // Pass original URL
       return transcriptData.data.videoInfo.name || "YouTube Video";
     } catch (error) {
       console.error("Failed to fetch video title:", error);
@@ -20,27 +20,22 @@ export const getVideoTitle = async (url: string): Promise<string> => {
 };
 
 export const getVideoThumbnail = (url: string): string => {
-  if (url.includes('youtube.com/watch?v=')) {
-    const videoId = url.split('v=')[1]?.split('&')[0];
-    if (videoId) {
-      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-    }
-  } else if (url.includes('youtu.be/')) {
-    const videoId = url.split('youtu.be/')[1]?.split('?')[0];
-    if (videoId) {
-      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-    }
-  } else if (url.includes('youtube.com/embed/')) {
-    const videoId = url.split('embed/')[1]?.split('?')[0];
-    if (videoId) {
-      return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-    }
+  const videoId = getYouTubeVideoId(url);
+  if (videoId) {
+    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
   }
   
   return "/placeholder.svg";
 };
 
 export const getYouTubeVideoId = (url: string): string => {
+  // Handle YouTube Shorts URLs
+  if (url.includes('/shorts/')) {
+    const match = url.match(/\/shorts\/([^?&/]+)/);
+    return match ? match[1] : '';
+  }
+  
+  // Handle regular YouTube URLs
   if (url.includes('youtube.com/watch?v=')) {
     return url.split('v=')[1]?.split('&')[0] || '';
   } else if (url.includes('youtu.be/')) {
@@ -48,5 +43,6 @@ export const getYouTubeVideoId = (url: string): string => {
   } else if (url.includes('youtube.com/embed/')) {
     return url.split('embed/')[1]?.split('?')[0] || '';
   }
+  
   return '';
 };

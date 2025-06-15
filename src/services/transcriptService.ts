@@ -1,4 +1,3 @@
-
 export interface TranscriptSegment {
   start: string;
   end: string;
@@ -52,43 +51,55 @@ export interface TranscriptResponse {
   };
 }
 
-export const fetchYouTubeTranscript = async (videoId: string): Promise<TranscriptResponse> => {
-  const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+export const fetchYouTubeTranscript = async (videoUrl: string): Promise<TranscriptResponse> => {
   const url = 'https://kome.ai/api/transcript';
   
   console.log("📡 Fetching transcript from kome.ai for video:", videoUrl);
   
+  const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json, text/plain, */*",
+    "Origin": "https://kome.ai",
+    "Referer": "https://kome.ai/tools/youtube-transcript-generator"
+  };
+  
+  const data = {
+    video_id: videoUrl, // Use original URL format
+    format: true
+  };
+  
+  console.log("📤 Sending request data:", data);
+  
   const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json, text/plain, */*',
-      'Origin': 'https://kome.ai',
-      'Referer': 'https://kome.ai/tools/youtube-transcript-generator'
-    },
-    body: JSON.stringify({
-      video_id: videoUrl,
-      format: true
-    })
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(data)
   });
   
-  const data: KomeTranscriptResponse = await response.json();
-  console.log("📋 Transcript API Response:", data);
+  const responseData: KomeTranscriptResponse = await response.json();
+  console.log("📋 Transcript API Response:", responseData);
   
   if (!response.ok) {
+    console.error("❌ HTTP Error:", response.status, response.statusText);
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
   
-  if (!data.success) {
-    throw new Error(data.error || data.message || 'Failed to fetch transcript');
+  if (!responseData.success) {
+    console.error("❌ API Error:", responseData.error || responseData.message);
+    throw new Error(responseData.error || responseData.message || 'Failed to fetch transcript');
   }
   
   // Convert segments from kome.ai format
-  const segments: TranscriptSegment[] = data.segments?.map(segment => ({
+  const segments: TranscriptSegment[] = responseData.segments?.map(segment => ({
     start: segment.start.toString(),
     end: segment.end.toString(),
     text: segment.text
   })) || [];
+  
+  console.log("✅ Processed segments count:", segments.length);
+  
+  // Extract video ID for thumbnail generation
+  const videoId = getYouTubeVideoId(videoUrl);
   
   // Create response matching our interface
   const transcriptResponse: TranscriptResponse = {
@@ -124,6 +135,26 @@ export const fetchYouTubeTranscript = async (videoId: string): Promise<Transcrip
   };
   
   return transcriptResponse;
+};
+
+// Helper function to extract video ID from URL
+const getYouTubeVideoId = (url: string): string => {
+  // Handle YouTube Shorts URLs
+  if (url.includes('/shorts/')) {
+    const match = url.match(/\/shorts\/([^?&/]+)/);
+    return match ? match[1] : '';
+  }
+  
+  // Handle regular YouTube URLs
+  if (url.includes('youtube.com/watch?v=')) {
+    return url.split('v=')[1]?.split('&')[0] || '';
+  } else if (url.includes('youtu.be/')) {
+    return url.split('youtu.be/')[1]?.split('?')[0] || '';
+  } else if (url.includes('youtube.com/embed/')) {
+    return url.split('embed/')[1]?.split('?')[0] || '';
+  }
+  
+  return '';
 };
 
 export const formatTranscriptText = (segments: TranscriptSegment[]): string => {
