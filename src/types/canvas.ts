@@ -1,4 +1,3 @@
-
 export interface VideoNode {
   id: string;
   x: number;
@@ -101,7 +100,18 @@ export interface ImageNode {
   images: ImageData[];
 }
 
-export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode | AudioNode | ImageNode;
+export interface GroupNode {
+  id: string;
+  x: number;
+  y: number;
+  type: 'group';
+  title: string;
+  width: number;
+  height: number;
+  containedNodes: string[]; // IDs of nodes inside this group
+}
+
+export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode | AudioNode | ImageNode | GroupNode;
 
 export interface Connection {
   id: string;

@@ -1,7 +1,7 @@
 
-import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode, AudioNode, ImageNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode, AudioNode, ImageNode, GroupNode } from "@/types/canvas";
 
-export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode | AudioNode | ImageNode) => {
+export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode | AudioNode | ImageNode | GroupNode) => {
   switch (node.type) {
     case 'chat':
       // The handle is on the left of the 600px wide component.
@@ -34,6 +34,10 @@ export const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode | Te
       // Handle is positioned at right: -16px, so it's completely outside
       // Center of handle is (node.x + 160) + 16 = node.x + 176
       return { x: node.x + 176, y: node.y };
+    case 'group':
+      // The handle is on the right of the group node
+      // Center of handle is (node.x + node.width/2) + 16 = node.x + node.width/2 + 16
+      return { x: node.x + node.width/2 + 16, y: node.y };
     default: {
       const _exhaustiveCheck: never = node;
       throw new Error(`Unhandled node type: ${(_exhaustiveCheck as any)?.type}`);
