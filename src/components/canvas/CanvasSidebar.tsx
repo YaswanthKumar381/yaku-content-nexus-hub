@@ -1,9 +1,9 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
 import { SidebarTool } from "@/types/canvas";
 import { useTheme } from "@/contexts/ThemeContext";
+import { MessageCircleMoreIcon } from "../icons/MessageCircleMoreIcon";
 
 interface CanvasSidebarProps {
   tools: SidebarTool[];
@@ -61,7 +61,7 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
             size="icon"
             className={`w-10 h-10 rounded-full ${isDarkMode ? 'bg-zinc-700 hover:bg-zinc-600' : 'bg-gray-100 hover:bg-gray-200'}`}
           >
-            <User className={`w-5 h-5 ${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`} />
+            <MessageCircleMoreIcon size={20} className={`${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`} />
           </Button>
         </div>
       </div>
