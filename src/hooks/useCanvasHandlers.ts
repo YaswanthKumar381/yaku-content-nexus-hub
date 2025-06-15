@@ -1,3 +1,4 @@
+
 import { useCallback } from "react";
 import { VideoNode, DocumentNode, TextNode, WebsiteNode, AudioNode, ImageNode } from "@/types/canvas";
 import type { useCanvasNodes } from "@/hooks/useCanvasNodes";
@@ -17,6 +18,7 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     websiteNodesResult,
     audioNodesResult,
     imageNodesResult,
+    groupNodesResult,
     connectionsResult,
     allNodesMap,
     setUploadTargetNodeId,
@@ -30,7 +32,8 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     websiteNodesResult.forceResetDragState();
     audioNodesResult.forceResetDragState();
     imageNodesResult.forceResetDragState();
-  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult, audioNodesResult, imageNodesResult]);
+    groupNodesResult.forceResetDragState();
+  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult, audioNodesResult, imageNodesResult, groupNodesResult]);
 
   const handleDeleteVideoNode = useCallback((nodeId: string) => {
     videoNodesResult.deleteVideoNode(nodeId);
@@ -77,6 +80,19 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     }
     imageNodesResult.deleteImageFromNode(nodeId, imageId);
   }, [imageNodesResult, connectionsResult]);
+
+  const handleDeleteGroupNode = useCallback((nodeId: string) => {
+    groupNodesResult.deleteGroupNode(nodeId);
+    connectionsResult.removeConnectionsForNode(nodeId);
+  }, [groupNodesResult, connectionsResult]);
+
+  const handleUpdateGroupNode = useCallback((nodeId: string, updates: Partial<Omit<import('@/types/canvas').GroupNode, 'id' | 'type'>>) => {
+    groupNodesResult.updateGroupNode(nodeId, updates);
+    // Update contained nodes after resizing
+    if (updates.width || updates.height) {
+      groupNodesResult.updateContainedNodes(nodeId, allNodesMap);
+    }
+  }, [groupNodesResult, allNodesMap]);
 
   const handleDocumentNodeUploadClick = useCallback((nodeId: string) => {
     setUploadTargetNodeId(nodeId);
@@ -132,8 +148,8 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     const connectedNodes = connectionsResult.connections
         .filter(conn => conn.targetId === nodeId)
         .map(conn => allNodesMap.get(conn.sourceId))
-        .filter((node): node is VideoNode | DocumentNode | TextNode | WebsiteNode | AudioNode | ImageNode => 
-          !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website' || node.type === 'audio' || node.type === 'image'));
+        .filter((node): node is VideoNode | DocumentNode | TextNode | WebsiteNode | AudioNode | ImageNode | import('@/types/canvas').GroupNode => 
+          !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website' || node.type === 'audio' || node.type === 'image' || node.type === 'group'));
     
     const context = connectedNodes.map(node => {
         if(node.type === 'video') return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
@@ -154,11 +170,14 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
           const imageContent = node.images.map(img => `Image: ${img.fileName}\nAnalysis: ${img.analysis || 'Image analysis not available'}`).join('\n\n');
           return `Image Node Content:\n${imageContent}`;
         }
+        if(node.type === 'group') {
+          return groupNodesResult.getGroupContext(node.id, allNodesMap);
+        }
         return '';
     }).join('\n\n---\n\n');
 
     chatNodesResult.sendMessage(nodeId, message, context);
-  }, [connectionsResult.connections, allNodesMap, chatNodesResult]);
+  }, [connectionsResult.connections, allNodesMap, chatNodesResult, groupNodesResult]);
 
   const handleTranscriptModalClose = useCallback(() => {
     canvasState.resetTranscriptModal();
@@ -175,6 +194,8 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     handleDeleteAudioNode,
     handleDeleteImageNode,
     handleDeleteImageFile,
+    handleDeleteGroupNode,
+    handleUpdateGroupNode,
     handleDocumentNodeUploadClick,
     handleImageNodeUploadClick,
     handleImageModalClose,

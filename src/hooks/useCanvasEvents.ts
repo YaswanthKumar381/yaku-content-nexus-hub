@@ -55,6 +55,10 @@ interface UseCanvasEventsProps {
   setIsUploadingImages: (value: boolean) => void;
   resetImageUpload: () => void;
   addImagesToNode: (nodeId: string, files: File[]) => Promise<void>;
+  // Group related props
+  isDraggingGroup: boolean;
+  setIsDraggingGroup: (value: boolean) => void;
+  addGroupNode: (x: number, y: number) => import('@/types/canvas').GroupNode;
 }
 
 export const useCanvasEvents = ({
@@ -111,6 +115,10 @@ export const useCanvasEvents = ({
   setIsUploadingImages,
   resetImageUpload,
   addImagesToNode,
+  // Group props
+  isDraggingGroup,
+  setIsDraggingGroup,
+  addGroupNode,
 }: UseCanvasEventsProps) => {
   const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
     setIsDraggingVideo(true);
@@ -146,6 +154,11 @@ export const useCanvasEvents = ({
     setIsDraggingImage(true);
     e.dataTransfer.setData("text/plain", "image");
   }, [setIsDraggingImage]);
+
+  const handleGroupDragStart = useCallback((e: React.DragEvent) => {
+    setIsDraggingGroup(true);
+    e.dataTransfer.setData("text/plain", "group");
+  }, [setIsDraggingGroup]);
 
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -183,8 +196,11 @@ export const useCanvasEvents = ({
     } else if (dragType === 'audio' && isDraggingAudio) {
       addAudioNode(x, y);
       setIsDraggingAudio(false);
+    } else if (dragType === 'group' && isDraggingGroup) {
+      addGroupNode(x, y);
+      setIsDraggingGroup(false);
     }
-  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, isDraggingText, isDraggingWebsite, isDraggingImage, isDraggingAudio, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat, addTextNode, setIsDraggingText, setPendingWebsiteNode, setShowWebsiteInput, setIsDraggingWebsite, setPendingImageNode, setShowImageUpload, setIsDraggingImage, addAudioNode, setIsDraggingAudio]);
+  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, isDraggingText, isDraggingWebsite, isDraggingImage, isDraggingAudio, isDraggingGroup, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat, addTextNode, setIsDraggingText, setPendingWebsiteNode, setShowWebsiteInput, setIsDraggingWebsite, setPendingImageNode, setShowImageUpload, setIsDraggingImage, addAudioNode, setIsDraggingAudio, addGroupNode, setIsDraggingGroup]);
 
   const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -288,5 +304,6 @@ export const useCanvasEvents = ({
     handleAudioDragStart,
     handleImageDragStart,
     handleImageUploadSubmit,
+    handleGroupDragStart,
   };
 };

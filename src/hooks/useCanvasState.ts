@@ -1,74 +1,86 @@
-import { useState, useCallback } from "react";
-import { VideoNode } from "@/types/canvas";
+import { useState } from "react";
 
 export const useCanvasState = () => {
-  const [selectedTool, setSelectedTool] = useState<string>("select");
+  const [selectedTool, setSelectedTool] = useState<string>('video');
+  
+  // Video state
   const [isDraggingVideo, setIsDraggingVideo] = useState(false);
   const [showVideoInput, setShowVideoInput] = useState(false);
   const [pendingVideoNode, setPendingVideoNode] = useState<{ x: number; y: number } | null>(null);
-  const [videoUrl, setVideoUrl] = useState("");
-  const [showTranscriptPopup, setShowTranscriptPopup] = useState(false);
-  const [currentTranscript, setCurrentTranscript] = useState("");
-  const [transcriptError, setTranscriptError] = useState("");
+  const [videoUrl, setVideoUrl] = useState('');
   const [isCreatingNode, setIsCreatingNode] = useState(false);
-  const [currentVideoUrl, setCurrentVideoUrl] = useState("");
+  const [showTranscriptPopup, setShowTranscriptPopup] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState('');
+  const [currentTranscript, setCurrentTranscript] = useState('');
+  const [transcriptError, setTranscriptError] = useState('');
 
-  // New state for documents
+  // Document state
   const [isDraggingDocument, setIsDraggingDocument] = useState(false);
   const [showDocumentUpload, setShowDocumentUpload] = useState(false);
   const [pendingDocumentNode, setPendingDocumentNode] = useState<{ x: number; y: number } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Chat state
   const [isDraggingChat, setIsDraggingChat] = useState(false);
+
+  // Text state
   const [isDraggingText, setIsDraggingText] = useState(false);
 
+  // Website state
   const [isDraggingWebsite, setIsDraggingWebsite] = useState(false);
   const [showWebsiteInput, setShowWebsiteInput] = useState(false);
   const [pendingWebsiteNode, setPendingWebsiteNode] = useState<{ x: number; y: number } | null>(null);
   const [isScrapingWebsites, setIsScrapingWebsites] = useState(false);
 
+  // Audio state
   const [isDraggingAudio, setIsDraggingAudio] = useState(false);
 
+  // Image state
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [pendingImageNode, setPendingImageNode] = useState<{ x: number; y: number } | null>(null);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
 
-  const resetVideoInput = useCallback(() => {
+  // Group state
+  const [isDraggingGroup, setIsDraggingGroup] = useState(false);
+
+  const resetVideoInput = () => {
     setShowVideoInput(false);
     setPendingVideoNode(null);
-    setVideoUrl("");
-    setCurrentVideoUrl("");
-  }, []);
+    setVideoUrl('');
+    setIsCreatingNode(false);
+  };
 
-  const resetDocumentUpload = useCallback(() => {
+  const resetDocumentUpload = () => {
     setShowDocumentUpload(false);
     setPendingDocumentNode(null);
     setIsUploading(false);
-  }, []);
+  };
 
-  const resetTranscriptModal = useCallback(() => {
-    setShowTranscriptPopup(false);
-    setCurrentTranscript("");
-    setTranscriptError("");
-    setCurrentVideoUrl("");
-  }, []);
-
-  const resetWebsiteInput = useCallback(() => {
+  const resetWebsiteInput = () => {
     setShowWebsiteInput(false);
     setPendingWebsiteNode(null);
     setIsScrapingWebsites(false);
-  }, []);
+  };
 
-  const resetImageUpload = useCallback(() => {
+  const resetImageUpload = () => {
     setShowImageUpload(false);
     setPendingImageNode(null);
     setIsUploadingImages(false);
-  }, []);
+  };
+
+  const resetTranscriptModal = () => {
+    setShowTranscriptPopup(false);
+    setCurrentVideoUrl('');
+    setCurrentTranscript('');
+    setTranscriptError('');
+  };
 
   return {
     selectedTool,
     setSelectedTool,
+    
+    // Video
     isDraggingVideo,
     setIsDraggingVideo,
     showVideoInput,
@@ -77,19 +89,20 @@ export const useCanvasState = () => {
     setPendingVideoNode,
     videoUrl,
     setVideoUrl,
+    isCreatingNode,
+    setIsCreatingNode,
+    resetVideoInput,
     showTranscriptPopup,
     setShowTranscriptPopup,
+    currentVideoUrl,
+    setCurrentVideoUrl,
     currentTranscript,
     setCurrentTranscript,
     transcriptError,
     setTranscriptError,
-    isCreatingNode,
-    setIsCreatingNode,
-    currentVideoUrl,
-    setCurrentVideoUrl,
-    resetVideoInput,
     resetTranscriptModal,
-    // New state and resetter for documents
+
+    // Document
     isDraggingDocument,
     setIsDraggingDocument,
     showDocumentUpload,
@@ -99,10 +112,16 @@ export const useCanvasState = () => {
     isUploading,
     setIsUploading,
     resetDocumentUpload,
+
+    // Chat
     isDraggingChat,
     setIsDraggingChat,
+
+    // Text
     isDraggingText,
     setIsDraggingText,
+
+    // Website
     isDraggingWebsite,
     setIsDraggingWebsite,
     showWebsiteInput,
@@ -112,8 +131,12 @@ export const useCanvasState = () => {
     isScrapingWebsites,
     setIsScrapingWebsites,
     resetWebsiteInput,
+
+    // Audio
     isDraggingAudio,
     setIsDraggingAudio,
+
+    // Image
     isDraggingImage,
     setIsDraggingImage,
     showImageUpload,
@@ -123,5 +146,9 @@ export const useCanvasState = () => {
     isUploadingImages,
     setIsUploadingImages,
     resetImageUpload,
+
+    // Group
+    isDraggingGroup,
+    setIsDraggingGroup,
   };
 };

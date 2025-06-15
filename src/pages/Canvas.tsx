@@ -22,6 +22,7 @@ const CanvasContent = () => {
     websiteNodesResult,
     audioNodesResult,
     imageNodesResult,
+    groupNodesResult,
     connectionsResult,
     contextUsage,
     interactionResult,
@@ -36,6 +37,8 @@ const CanvasContent = () => {
     onDeleteAudioNode,
     onDeleteImageNode,
     onDeleteImageFile,
+    onDeleteGroupNode,
+    onUpdateGroupNode,
     onDocumentNodeUploadClick,
     onDocumentModalClose,
     onImageNodeUploadClick,
@@ -59,6 +62,7 @@ const CanvasContent = () => {
         websiteNodesResult={websiteNodesResult}
         audioNodesResult={audioNodesResult}
         imageNodesResult={imageNodesResult}
+        groupNodesResult={groupNodesResult}
         allNodesMap={allNodesMap}
         onDeleteVideoNode={onDeleteVideoNode}
         onDeleteDocumentNode={onDeleteDocumentNode}
@@ -72,6 +76,8 @@ const CanvasContent = () => {
         onImageNodeUploadClick={onImageNodeUploadClick}
         onAnalyzeImage={onAnalyzeImage}
         onSendMessage={onSendMessage}
+        onDeleteGroupNode={onDeleteGroupNode}
+        onUpdateGroupNode={onUpdateGroupNode}
       />
 
       <CanvasModals
@@ -98,6 +104,7 @@ const CanvasContent = () => {
         onWebsiteDragStart={eventsResult.handleWebsiteDragStart}
         onAudioDragStart={eventsResult.handleAudioDragStart}
         onImageDragStart={eventsResult.handleImageDragStart}
+        onGroupDragStart={eventsResult.handleGroupDragStart}
       />
 
       <CanvasNavigation contextUsage={contextUsage} />

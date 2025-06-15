@@ -62,7 +62,7 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
     });
     
     if (startNode && endNode && 
-        (startNode.type === 'video' || startNode.type === 'document' || startNode.type === 'text' || startNode.type === 'website' || startNode.type === 'audio' || startNode.type === 'image') && 
+        (startNode.type === 'video' || startNode.type === 'document' || startNode.type === 'text' || startNode.type === 'website' || startNode.type === 'audio' || startNode.type === 'image' || startNode.type === 'group') && 
         endNode.type === 'chat') {
       console.log('✅ Connection allowed, adding connection');
       addConnection(connectingInfo.startNodeId, nodeId);

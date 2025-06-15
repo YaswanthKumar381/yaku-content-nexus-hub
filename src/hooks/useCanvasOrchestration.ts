@@ -1,3 +1,4 @@
+
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
@@ -36,6 +37,8 @@ export const useCanvasOrchestration = () => {
     handleDeleteAudioNode,
     handleDeleteImageNode,
     handleDeleteImageFile,
+    handleDeleteGroupNode,
+    handleUpdateGroupNode,
     handleDocumentNodeUploadClick,
     handleDocumentModalClose,
     handleImageNodeUploadClick,
@@ -107,6 +110,9 @@ export const useCanvasOrchestration = () => {
     setIsUploadingImages: canvasState.setIsUploadingImages,
     resetImageUpload: canvasState.resetImageUpload,
     addImagesToNode: imageNodesResult.addImagesToNode,
+    isDraggingGroup: canvasState.isDraggingGroup,
+    setIsDraggingGroup: canvasState.setIsDraggingGroup,
+    addGroupNode: groupNodesResult.addGroupNode,
     canvasContainerRef: transformResult.canvasContainerRef,
     transform: transformResult.transform,
     addVideoNode: videoNodesResult.addVideoNode,
@@ -138,6 +144,8 @@ export const useCanvasOrchestration = () => {
     onDeleteAudioNode: handleDeleteAudioNode,
     onDeleteImageNode: handleDeleteImageNode,
     onDeleteImageFile: handleDeleteImageFile,
+    onDeleteGroupNode: handleDeleteGroupNode,
+    onUpdateGroupNode: handleUpdateGroupNode,
     onDocumentNodeUploadClick: handleDocumentNodeUploadClick,
     onDocumentModalClose: handleDocumentModalClose,
     onImageNodeUploadClick: handleImageNodeUploadClick,

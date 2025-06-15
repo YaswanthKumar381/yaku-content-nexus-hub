@@ -15,6 +15,22 @@ const getNodeContent = (node: CanvasNode): string => {
       return `Document Node Content:\n${docContent}`;
     case 'text':
       return `Text Note:\n${node.content || 'Not available'}`;
+    case 'website':
+      const websiteContent = node.websites.map(w => `Website: ${w.title}\nURL: ${w.url}\nContent: ${w.content || 'Content not available'}`).join('\n\n');
+      return `Website Node Content:\n${websiteContent}`;
+    case 'audio':
+      const audioContent = node.recordings.map(r => `Audio Recording:\nTranscript: ${r.transcript || 'Transcript not available'}`).join('\n\n');
+      return `Audio Node Content:\n${audioContent}`;
+    case 'image':
+      const imageContent = node.images.map(img => `Image: ${img.fileName}\nAnalysis: ${img.analysis || 'Image analysis not available'}`).join('\n\n');
+      return `Image Node Content:\n${imageContent}`;
+    case 'group':
+      // For group nodes, we need to get the context of all contained nodes
+      const groupContext = node.containedNodes.map(nodeId => {
+        const containedNode = allNodesMap.get(nodeId);
+        return containedNode ? getNodeContent(containedNode) : '';
+      }).filter(Boolean).join('\n\n');
+      return `Group "${node.title}" Content:\n${groupContext || 'No content available'}`;
     case 'chat':
         return '';
     default:
@@ -47,7 +63,7 @@ export const useContextUsage = (
             const connectedNodes = connections
                 .filter(conn => conn.targetId === chatNode.id)
                 .map(conn => allNodesMap.get(conn.sourceId))
-                .filter((node): node is VideoNode | DocumentNode | TextNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text'));
+                .filter((node): node is VideoNode | DocumentNode | TextNode | import('@/types/canvas').WebsiteNode | import('@/types/canvas').AudioNode | import('@/types/canvas').ImageNode | import('@/types/canvas').GroupNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website' || node.type === 'audio' || node.type === 'image' || node.type === 'group'));
             
             if (connectedNodes.length > 0) {
               const contextText = connectedNodes.map(getNodeContent).join('\n\n---\n\n');

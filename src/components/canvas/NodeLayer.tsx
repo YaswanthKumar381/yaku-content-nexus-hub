@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { VideoNode, DocumentNode, ChatNode, Connection, TextNode, WebsiteNode, AudioNode, ImageNode } from '@/types/canvas';
+import { VideoNode, DocumentNode, ChatNode, Connection, TextNode, WebsiteNode, AudioNode, ImageNode, GroupNode } from '@/types/canvas';
 import { VideoNodeComponent } from './VideoNodeComponent';
 import { DocumentNodeComponent } from './DocumentNodeComponent';
 import { ChatNodeComponent } from './ChatNodeComponent';
@@ -7,6 +8,7 @@ import { TextNodeComponent } from './TextNodeComponent';
 import { WebsiteNodeComponent } from './WebsiteNodeComponent';
 import { AudioNodeComponent } from './AudioNodeComponent';
 import { ImageNodeComponent } from './ImageNodeComponent';
+import { GroupNodeComponent } from './GroupNodeComponent';
 
 interface NodeLayerProps {
   videoNodes: VideoNode[];
@@ -16,6 +18,7 @@ interface NodeLayerProps {
   websiteNodes: WebsiteNode[];
   audioNodes: AudioNode[];
   imageNodes: ImageNode[];
+  groupNodes: GroupNode[];
   onVideoNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onDocumentNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
@@ -23,6 +26,7 @@ interface NodeLayerProps {
   onWebsiteNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onAudioNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onImageNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
+  onGroupNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodeResize: (nodeId: string, height: number) => void;
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
@@ -40,6 +44,8 @@ interface NodeLayerProps {
   onAnalyzeImage: (nodeId: string, imageId: string, prompt?: string) => Promise<void>;
   onUpdateTextNode: (nodeId: string, data: Partial<Omit<TextNode, 'id'|'type'>>) => void;
   onSendMessage: (nodeId: string, message: string) => void;
+  onDeleteGroupNode: (nodeId: string) => void;
+  onUpdateGroupNode: (nodeId: string, updates: Partial<Omit<GroupNode, 'id' | 'type'>>) => void;
   isSendingMessageNodeId: string | null;
   connections: Connection[];
   onAddRecordingToNode: (nodeId: string, audioBlob: Blob, duration: number) => Promise<void>;
@@ -54,6 +60,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   websiteNodes,
   audioNodes,
   imageNodes,
+  groupNodes,
   onVideoNodePointerDown,
   onDocumentNodePointerDown,
   onChatNodePointerDown,
@@ -61,6 +68,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onWebsiteNodePointerDown,
   onAudioNodePointerDown,
   onImageNodePointerDown,
+  onGroupNodePointerDown,
   onChatNodeResize,
   onTranscriptClick,
   onStartConnection,
@@ -78,6 +86,8 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   onAnalyzeImage,
   onUpdateTextNode,
   onSendMessage,
+  onDeleteGroupNode,
+  onUpdateGroupNode,
   isSendingMessageNodeId,
   connections,
   onAddRecordingToNode,
@@ -85,6 +95,23 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
 }) => {
   return (
     <>
+      {/* Group Nodes - Rendered first so they appear behind other nodes */}
+      {groupNodes.map((node) => {
+        const isConnected = connections.some(c => c.sourceId === node.id);
+        return (
+          <GroupNodeComponent
+            key={node.id}
+            node={node}
+            onPointerDown={onGroupNodePointerDown}
+            onStartConnection={onStartConnection}
+            onDelete={onDeleteGroupNode}
+            onUpdate={onUpdateGroupNode}
+            isConnected={isConnected}
+            containedNodesCount={node.containedNodes.length}
+          />
+        );
+      })}
+
       {/* Video Nodes */}
       {videoNodes.map((node) => {
         const isConnected = connections.some(c => c.sourceId === node.id);

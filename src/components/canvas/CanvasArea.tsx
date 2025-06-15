@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CanvasNode } from '@/types/canvas';
 import { CanvasBackground } from './CanvasBackground';
@@ -17,6 +18,7 @@ import type { useTextNodes } from '@/hooks/useTextNodes';
 import type { useWebsiteNodes } from '@/hooks/useWebsiteNodes';
 import type { useAudioNodes } from '@/hooks/useAudioNodes';
 import type { useImageNodes } from '@/hooks/useImageNodes';
+import type { useGroupNodes } from '@/hooks/useGroupNodes';
 
 interface CanvasAreaProps {
   transformResult: ReturnType<typeof useCanvasTransform>;
@@ -30,6 +32,7 @@ interface CanvasAreaProps {
   websiteNodesResult: ReturnType<typeof useWebsiteNodes>;
   audioNodesResult: ReturnType<typeof useAudioNodes>;
   imageNodesResult: ReturnType<typeof useImageNodes>;
+  groupNodesResult: ReturnType<typeof useGroupNodes>;
   allNodesMap: Map<string, CanvasNode>;
   onDeleteVideoNode: (nodeId: string) => void;
   onDeleteDocumentNode: (nodeId: string) => void;
@@ -43,6 +46,8 @@ interface CanvasAreaProps {
   onImageNodeUploadClick: (nodeId: string) => void;
   onAnalyzeImage: (nodeId: string, imageId: string, prompt?: string) => Promise<void>;
   onSendMessage: (nodeId: string, message: string) => void;
+  onDeleteGroupNode: (nodeId: string) => void;
+  onUpdateGroupNode: (nodeId: string, updates: Partial<Omit<import('@/types/canvas').GroupNode, 'id' | 'type'>>) => void;
 }
 
 export const CanvasArea: React.FC<CanvasAreaProps> = ({
@@ -57,6 +62,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   websiteNodesResult,
   audioNodesResult,
   imageNodesResult,
+  groupNodesResult,
   allNodesMap,
   onDeleteVideoNode,
   onDeleteDocumentNode,
@@ -70,6 +76,8 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   onImageNodeUploadClick,
   onAnalyzeImage,
   onSendMessage,
+  onDeleteGroupNode,
+  onUpdateGroupNode,
 }) => {
   const { isDarkMode } = useTheme();
   const { transform, canvasContainerRef, handlePointerDown, handleTouchStart, handleTouchMove, handleTouchEnd } = transformResult;
@@ -112,6 +120,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         websiteNodes={websiteNodesResult.websiteNodes}
         audioNodes={audioNodesResult.audioNodes}
         imageNodes={imageNodesResult.imageNodes}
+        groupNodes={groupNodesResult.groupNodes}
         onVideoNodePointerDown={videoNodesResult.handleNodePointerDown}
         onDocumentNodePointerDown={documentNodesResult.handleNodePointerDown}
         onChatNodePointerDown={chatNodesResult.handleNodePointerDown}
@@ -119,6 +128,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         onWebsiteNodePointerDown={websiteNodesResult.handleNodePointerDown}
         onAudioNodePointerDown={audioNodesResult.handleNodePointerDown}
         onImageNodePointerDown={imageNodesResult.handleNodePointerDown}
+        onGroupNodePointerDown={groupNodesResult.handleNodePointerDown}
         onChatNodeResize={chatNodesResult.updateChatNodeHeight}
         onTranscriptClick={handleTranscriptClick}
         onStartConnection={connectionsResult.startConnection}
@@ -136,6 +146,8 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         onAnalyzeImage={onAnalyzeImage}
         onUpdateTextNode={textNodesResult.updateTextNode}
         onSendMessage={onSendMessage}
+        onDeleteGroupNode={onDeleteGroupNode}
+        onUpdateGroupNode={onUpdateGroupNode}
         isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
         connections={connectionsResult.connections}
         onAddRecordingToNode={audioNodesResult.addRecordingToNode}
