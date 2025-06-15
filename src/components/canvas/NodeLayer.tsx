@@ -1,23 +1,27 @@
-
 import React from 'react';
-import { VideoNode, DocumentNode, ChatNode, Connection } from '@/types/canvas';
+import { VideoNode, DocumentNode, ChatNode, Connection, TextNode } from '@/types/canvas';
 import { VideoNodeComponent } from './VideoNodeComponent';
 import { DocumentNodeComponent } from './DocumentNodeComponent';
 import { ChatNodeComponent } from './ChatNodeComponent';
+import { TextNodeComponent } from './TextNodeComponent';
 
 interface NodeLayerProps {
   videoNodes: VideoNode[];
   documentNodes: DocumentNode[];
   chatNodes: ChatNode[];
+  textNodes: TextNode[];
   onVideoNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onDocumentNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
+  onTextNodePointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onChatNodeResize: (nodeId: string, height: number) => void;
   onTranscriptClick: (e: React.MouseEvent, node: VideoNode) => void;
   onStartConnection: (nodeId: string) => void;
   onEndConnection: (nodeId:string) => void;
   onDeleteVideoNode: (nodeId: string) => void;
   onDeleteDocumentNode: (nodeId: string) => void;
+  onDeleteTextNode: (nodeId: string) => void;
+  onUpdateTextNode: (nodeId: string, data: Partial<Omit<TextNode, 'id'|'type'>>) => void;
   onSendMessage: (nodeId: string, message: string) => void;
   isSendingMessageNodeId: string | null;
   connections: Connection[];
@@ -27,15 +31,19 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   videoNodes,
   documentNodes,
   chatNodes,
+  textNodes,
   onVideoNodePointerDown,
   onDocumentNodePointerDown,
   onChatNodePointerDown,
+  onTextNodePointerDown,
   onChatNodeResize,
   onTranscriptClick,
   onStartConnection,
   onEndConnection,
   onDeleteVideoNode,
   onDeleteDocumentNode,
+  onDeleteTextNode,
+  onUpdateTextNode,
   onSendMessage,
   isSendingMessageNodeId,
   connections,
@@ -85,6 +93,22 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onSendMessage={onSendMessage}
             isSendingMessage={isSendingMessageNodeId === node.id}
             onResize={onChatNodeResize}
+            isConnected={isConnected}
+          />
+        );
+      })}
+
+      {/* Text Nodes */}
+      {textNodes.map((node) => {
+        const isConnected = connections.some(c => c.sourceId === node.id);
+        return (
+          <TextNodeComponent
+            key={node.id}
+            node={node}
+            onPointerDown={onTextNodePointerDown}
+            onStartConnection={onStartConnection}
+            onDelete={onDeleteTextNode}
+            onUpdate={onUpdateTextNode}
             isConnected={isConnected}
           />
         );

@@ -5,11 +5,12 @@ import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useVideoNodes } from "@/hooks/useVideoNodes";
 import { useDocumentNodes } from "@/hooks/useDocumentNodes";
 import { useChatNodes } from "@/hooks/useChatNodes";
+import { useTextNodes } from "@/hooks/useTextNodes";
 import { useConnections } from "@/hooks/useConnections";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { sidebarTools } from "@/config/sidebar";
-import { VideoNode, DocumentNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, TextNode } from "@/types/canvas";
 
 import { VideoInputModal } from "@/components/canvas/VideoInputModal";
 import { TranscriptModal } from "@/components/canvas/TranscriptModal";
@@ -29,8 +30,9 @@ const CanvasContent = () => {
   const videoNodesResult = useVideoNodes();
   const documentNodesResult = useDocumentNodes();
   const chatNodesResult = useChatNodes();
+  const textNodesResult = useTextNodes();
 
-  const allNodes = [...videoNodesResult.videoNodes, ...documentNodesResult.documentNodes, ...chatNodesResult.chatNodes];
+  const allNodes = [...videoNodesResult.videoNodes, ...documentNodesResult.documentNodes, ...chatNodesResult.chatNodes, ...textNodesResult.textNodes];
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
   const connectionsResult = useConnections(allNodesMap);
@@ -40,6 +42,7 @@ const CanvasContent = () => {
     videoNodesResult,
     documentNodesResult,
     chatNodesResult,
+    textNodesResult,
     transformResult,
   });
   
@@ -49,7 +52,8 @@ const CanvasContent = () => {
     videoNodesResult.forceResetDragState();
     documentNodesResult.forceResetDragState();
     chatNodesResult.forceResetDragState();
-  }, [videoNodesResult, documentNodesResult, chatNodesResult]);
+    textNodesResult.forceResetDragState();
+  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult]);
 
   const handleDeleteVideoNode = useCallback((nodeId: string) => {
     videoNodesResult.deleteVideoNode(nodeId);
@@ -60,6 +64,11 @@ const CanvasContent = () => {
     documentNodesResult.deleteDocumentNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
   }, [documentNodesResult, connectionsResult]);
+
+  const handleDeleteTextNode = useCallback((nodeId: string) => {
+    textNodesResult.deleteTextNode(nodeId);
+    connectionsResult.removeConnectionsForNode(nodeId);
+  }, [textNodesResult, connectionsResult]);
   
   const canvasEvents = useCanvasEvents({
     isDraggingVideo: canvasState.isDraggingVideo,
@@ -85,6 +94,9 @@ const CanvasContent = () => {
     isDraggingChat: canvasState.isDraggingChat,
     setIsDraggingChat: canvasState.setIsDraggingChat,
     addChatNode: chatNodesResult.addChatNode,
+    isDraggingText: canvasState.isDraggingText,
+    setIsDraggingText: canvasState.setIsDraggingText,
+    addTextNode: textNodesResult.addTextNode,
     canvasContainerRef,
     transform,
     addVideoNode: videoNodesResult.addVideoNode,
@@ -95,11 +107,12 @@ const CanvasContent = () => {
     const connectedNodes = connectionsResult.connections
         .filter(conn => conn.targetId === nodeId)
         .map(conn => allNodesMap.get(conn.sourceId))
-        .filter((node): node is VideoNode | DocumentNode => !!node && (node.type === 'video' || node.type === 'document'));
+        .filter((node): node is VideoNode | DocumentNode | TextNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text'));
     
     const context = connectedNodes.map(node => {
         if(node.type === 'video') return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
         if(node.type === 'document') return `Document Name: ${node.fileName}\nContent: ${node.content || 'Not available'}`;
+        if(node.type === 'text') return `Text Note:\n${node.content || 'Not available'}`;
         return '';
     }).join('\n\n---\n\n');
 
@@ -147,15 +160,19 @@ const CanvasContent = () => {
           videoNodes={videoNodesResult.videoNodes}
           documentNodes={documentNodesResult.documentNodes}
           chatNodes={chatNodesResult.chatNodes}
+          textNodes={textNodesResult.textNodes}
           onVideoNodePointerDown={videoNodesResult.handleNodePointerDown}
           onDocumentNodePointerDown={documentNodesResult.handleNodePointerDown}
           onChatNodePointerDown={chatNodesResult.handleNodePointerDown}
+          onTextNodePointerDown={textNodesResult.handleNodePointerDown}
           onChatNodeResize={chatNodesResult.updateChatNodeHeight}
           onTranscriptClick={canvasEvents.handleTranscriptClick}
           onStartConnection={connectionsResult.startConnection}
           onEndConnection={connectionsResult.endConnection}
           onDeleteVideoNode={handleDeleteVideoNode}
           onDeleteDocumentNode={handleDeleteDocumentNode}
+          onDeleteTextNode={handleDeleteTextNode}
+          onUpdateTextNode={textNodesResult.updateTextNode}
           onSendMessage={handleSendMessage}
           isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
           connections={connectionsResult.connections}
@@ -206,6 +223,7 @@ const CanvasContent = () => {
         onVideoDragStart={canvasEvents.handleVideoIconDragStart}
         onDocumentDragStart={canvasEvents.handleDocumentIconDragStart}
         onChatDragStart={canvasEvents.handleChatIconDragStart}
+        onTextDragStart={canvasEvents.handleTextIconDragStart}
       />
 
       <CanvasNavigation />

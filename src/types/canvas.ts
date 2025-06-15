@@ -1,3 +1,4 @@
+
 export interface VideoNode {
   id: string;
   x: number;
@@ -20,6 +21,16 @@ export interface DocumentNode {
   type: 'document';
 }
 
+export interface TextNode {
+  id: string;
+  x: number;
+  y: number;
+  type: 'text';
+  content: string;
+  width: number;
+  height: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model' | 'system';
@@ -35,7 +46,7 @@ export interface ChatNode {
   height: number;
 }
 
-export type CanvasNode = VideoNode | DocumentNode | ChatNode;
+export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode;
 
 export interface Connection {
   id: string;

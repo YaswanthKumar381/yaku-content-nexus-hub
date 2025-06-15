@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { VideoNode } from "@/types/canvas";
 
@@ -21,11 +20,13 @@ export const useCanvasState = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   const [isDraggingChat, setIsDraggingChat] = useState(false);
+  const [isDraggingText, setIsDraggingText] = useState(false);
 
   const resetVideoInput = useCallback(() => {
     setShowVideoInput(false);
     setPendingVideoNode(null);
     setVideoUrl("");
+    setCurrentVideoUrl("");
   }, []);
 
   const resetDocumentUpload = useCallback(() => {
@@ -76,5 +77,7 @@ export const useCanvasState = () => {
     resetDocumentUpload,
     isDraggingChat,
     setIsDraggingChat,
+    isDraggingText,
+    setIsDraggingText,
   };
 };
