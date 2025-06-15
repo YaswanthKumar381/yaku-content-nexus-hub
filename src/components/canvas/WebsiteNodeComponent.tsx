@@ -9,18 +9,18 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 interface WebsiteNodeComponentProps {
   node: WebsiteNode;
-  isSelected: boolean;
+  onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
+  onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
-  onDeleteWebsite: (nodeId: string, websiteUrl: string) => void;
-  onAddWebsites: (nodeId: string) => void;
+  isConnected: boolean;
 }
 
 export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
   node,
-  isSelected,
+  onPointerDown,
+  onStartConnection,
   onDelete,
-  onDeleteWebsite,
-  onAddWebsites,
+  isConnected,
 }) => {
   const { isDarkMode } = useTheme();
 
@@ -32,12 +32,9 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
         top: node.y, 
         transform: 'translate(-50%, -50%)' 
       }}
+      onPointerDown={(e) => onPointerDown(e, node.id)}
     >
       <Card className={`w-80 max-h-96 overflow-hidden ${
-        isSelected 
-          ? 'ring-2 ring-purple-500' 
-          : ''
-      } ${
         isDarkMode 
           ? 'bg-zinc-800/95 border-zinc-700' 
           : 'bg-white/95 border-gray-200'
@@ -49,14 +46,16 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
               <span>Websites ({node.websites.length})</span>
             </div>
             <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onAddWebsites(node.id)}
-                className="h-6 w-6 p-0"
-              >
-                <Plus className="w-3 h-3" />
-              </Button>
+              {isConnected && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onStartConnection(node.id)}
+                  className="h-6 w-6 p-0"
+                >
+                  <div className="w-4 h-4 rounded-full bg-blue-500" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -96,14 +95,6 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
                     </a>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDeleteWebsite(node.id, website.url)}
-                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700 ml-2"
-                >
-                  <Trash2 className="w-3 h-3" />
-                </Button>
               </div>
               
               <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
