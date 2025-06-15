@@ -69,14 +69,13 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
         width: '600px',
       }}
       onPointerDown={handlePointerDown}
+      onPointerUp={() => {
+        onEndConnection(node.id);
+      }}
     >
       {/* Left handle */}
       <div 
-        onPointerUp={(e) => {
-          e.stopPropagation();
-          onEndConnection(node.id);
-        }}
-        className={`absolute top-1/2 left-[-16px] transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 ${isDarkMode ? 'border-purple-400' : 'border-purple-600'} z-20 cursor-pointer`}
+        className={`absolute top-1/2 left-[-16px] transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 ${isDarkMode ? 'border-purple-400' : 'border-purple-600'} z-20 pointer-events-none`}
       />
       
       <div className="flex flex-col bg-zinc-800/80 backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-700/50 shadow-2xl shadow-black/30">
@@ -110,12 +109,12 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
         </ScrollArea>
 
         <div className="cursor-default border-t border-zinc-700/50">
-            <PromptInputBox 
+          <PromptInputBox 
                 onSend={(message) => onSendMessage(node.id, message)}
                 isLoading={isSendingMessage}
                 placeholder="Ask about the connected content..."
                 className="bg-transparent border-none shadow-none rounded-none"
-            />
+          />
         </div>
       </div>
       <div 
