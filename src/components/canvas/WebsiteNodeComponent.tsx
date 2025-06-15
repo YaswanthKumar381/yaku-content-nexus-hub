@@ -63,6 +63,7 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
         transform: 'translate(-50%, -50%)' 
       }}
       onPointerDown={(e) => onPointerDown(e, node.id)}
+      data-node-id={node.id}
     >
       <Card className={`w-96 max-h-[500px] overflow-hidden transition-all duration-300 hover:shadow-2xl ${
         isDarkMode 
@@ -91,21 +92,13 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
               </div>
             </div>
             <div className="flex gap-2">
-              {isConnected && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onStartConnection(node.id)}
-                  className="h-8 w-8 p-0 rounded-full hover:bg-blue-500/20 transition-colors"
-                  title="Create connection"
-                >
-                  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-pulse" />
-                </Button>
-              )}
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => onDelete(node.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(node.id);
+                }}
                 className="h-8 w-8 p-0 rounded-full text-red-500 hover:text-red-400 hover:bg-red-500/20 transition-colors"
                 title="Delete node"
               >
@@ -186,6 +179,22 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Connection Handle - positioned completely outside on the right */}
+      {isConnected && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onStartConnection(node.id);
+          }}
+          className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-blue-500/20 transition-colors z-10"
+          title="Create connection"
+        >
+          <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-pulse" />
+        </Button>
+      )}
       
       <style>
         {`

@@ -12,10 +12,14 @@ export const useWebsiteNodes = () => {
     try {
       console.log(`🌐 Fetching content for: ${url}`);
       
-      // Use the allorigins proxy service
-      const encodedURL = encodeURIComponent(url);
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodedURL}`;
-      const response = await fetch(proxyUrl);
+      // Use the new webhook API
+      const response = await fetch('https://n8n-anrqdske.ap-southeast-1.clawcloudrun.com/webhook/website', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -104,40 +108,43 @@ export const useWebsiteNodes = () => {
   }, []);
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
+    console.log("🌐 Website node pointer down:", nodeId);
     e.stopPropagation();
     const node = websiteNodes.find(n => n.id === nodeId);
     if (!node) return;
 
-    setDraggingNodeId(nodeId);
+    const rect = e.currentTarget.getBoundingClientRect();
     setDragOffset({
-      x: e.clientX - node.x,
-      y: e.clientY - node.y
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
     });
-    console.log("🌐 Started dragging website node:", nodeId);
+    setDraggingNodeId(nodeId);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }, [websiteNodes]);
 
   const moveWebsiteNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: Transform) => {
-    const rect = document.querySelector('[data-canvas-container]')?.getBoundingClientRect();
-    if (!rect) return;
+    const canvasRect = document.querySelector('.absolute.inset-0')?.getBoundingClientRect();
+    if (!canvasRect) return;
 
-    const x = (clientX - rect.left - transform.x - dragOffset.x) / transform.scale;
-    const y = (clientY - rect.top - transform.y - dragOffset.y) / transform.scale;
+    const x = (clientX - canvasRect.left - transform.x - dragOffset.x) / transform.scale;
+    const y = (clientY - canvasRect.top - transform.y - dragOffset.y) / transform.scale;
 
-    setWebsiteNodes(prev => prev.map(node => 
+    console.log("🔄 Moving website node:", nodeId, "to:", x, y);
+
+    setWebsiteNodes(prev => prev.map(node =>
       node.id === nodeId ? { ...node, x, y } : node
     ));
   }, [dragOffset]);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
-    if (draggingNodeId) {
-      console.log("🌐 Stopped dragging website node:", draggingNodeId);
-      setDraggingNodeId(null);
-      setDragOffset({ x: 0, y: 0 });
-    }
-  }, [draggingNodeId]);
+    console.log("🌐 Website node pointer up");
+    setDraggingNodeId(null);
+    setDragOffset({ x: 0, y: 0 });
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  }, []);
 
   const forceResetDragState = useCallback(() => {
-    console.log("🔄 Resetting website node drag state");
+    console.log("🔄 Force resetting website node drag state");
     setDraggingNodeId(null);
     setDragOffset({ x: 0, y: 0 });
   }, []);
