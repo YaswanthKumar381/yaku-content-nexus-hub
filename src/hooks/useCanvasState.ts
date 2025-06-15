@@ -22,6 +22,11 @@ export const useCanvasState = () => {
   const [isDraggingChat, setIsDraggingChat] = useState(false);
   const [isDraggingText, setIsDraggingText] = useState(false);
 
+  const [isDraggingWebsite, setIsDraggingWebsite] = useState(false);
+  const [showWebsiteInput, setShowWebsiteInput] = useState(false);
+  const [pendingWebsiteNode, setPendingWebsiteNode] = useState<{ x: number; y: number } | null>(null);
+  const [isScrapingWebsites, setIsScrapingWebsites] = useState(false);
+
   const resetVideoInput = useCallback(() => {
     setShowVideoInput(false);
     setPendingVideoNode(null);
@@ -40,6 +45,12 @@ export const useCanvasState = () => {
     setCurrentTranscript("");
     setTranscriptError("");
     setCurrentVideoUrl("");
+  }, []);
+
+  const resetWebsiteInput = useCallback(() => {
+    setShowWebsiteInput(false);
+    setPendingWebsiteNode(null);
+    setIsScrapingWebsites(false);
   }, []);
 
   return {
@@ -79,5 +90,14 @@ export const useCanvasState = () => {
     setIsDraggingChat,
     isDraggingText,
     setIsDraggingText,
+    isDraggingWebsite,
+    setIsDraggingWebsite,
+    showWebsiteInput,
+    setShowWebsiteInput,
+    pendingWebsiteNode,
+    setPendingWebsiteNode,
+    isScrapingWebsites,
+    setIsScrapingWebsites,
+    resetWebsiteInput,
   };
 };

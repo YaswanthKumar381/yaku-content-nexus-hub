@@ -13,6 +13,7 @@ interface CanvasSidebarProps {
   onDocumentDragStart: (e: React.DragEvent) => void;
   onChatDragStart: (e: React.DragEvent) => void;
   onTextDragStart: (e: React.DragEvent) => void;
+  onWebsiteDragStart: (e: React.DragEvent) => void;
 }
 
 export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
@@ -23,6 +24,7 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
   onDocumentDragStart,
   onChatDragStart,
   onTextDragStart,
+  onWebsiteDragStart,
 }) => {
   const { isDarkMode } = useTheme();
   
@@ -44,7 +46,7 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
                     : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               }`}
               onClick={() => onToolSelect(tool.id)}
-              draggable={tool.id === "video" || tool.id === "file-text" || tool.id === "text"}
+              draggable={tool.id === "video" || tool.id === "file-text" || tool.id === "text" || tool.id === "website"}
               onDragStart={
                 tool.id === "video"
                   ? onVideoDragStart
@@ -52,6 +54,8 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
                   ? onDocumentDragStart
                   : tool.id === "text"
                   ? onTextDragStart
+                  : tool.id === "website"
+                  ? onWebsiteDragStart
                   : undefined
               }
             >

@@ -1,6 +1,5 @@
-
 import { useCallback } from "react";
-import { VideoNode, DocumentNode, ChatNode, TextNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, ChatNode, TextNode, WebsiteNode } from "@/types/canvas";
 
 interface UseCanvasEventsProps {
   isDraggingVideo: boolean;
@@ -36,6 +35,14 @@ interface UseCanvasEventsProps {
   isDraggingText: boolean;
   setIsDraggingText: (value: boolean) => void;
   addTextNode: (x: number, y: number) => TextNode;
+  isDraggingWebsite: boolean;
+  setIsDraggingWebsite: (value: boolean) => void;
+  addWebsiteNode: (x: number, y: number, urls: string[]) => Promise<WebsiteNode>;
+  setPendingWebsiteNode: (value: { x: number; y: number } | null) => void;
+  setShowWebsiteInput: (value: boolean) => void;
+  pendingWebsiteNode: { x: number; y: number } | null;
+  setIsScrapingWebsites: (value: boolean) => void;
+  resetWebsiteInput: () => void;
 }
 
 export const useCanvasEvents = ({
@@ -72,6 +79,14 @@ export const useCanvasEvents = ({
   isDraggingText,
   setIsDraggingText,
   addTextNode,
+  isDraggingWebsite,
+  setIsDraggingWebsite,
+  addWebsiteNode,
+  setPendingWebsiteNode,
+  setShowWebsiteInput,
+  pendingWebsiteNode,
+  setIsScrapingWebsites,
+  resetWebsiteInput,
 }: UseCanvasEventsProps) => {
   const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
     setIsDraggingVideo(true);
@@ -92,6 +107,11 @@ export const useCanvasEvents = ({
     setIsDraggingText(true);
     e.dataTransfer.setData("text/plain", "text");
   }, [setIsDraggingText]);
+
+  const handleWebsiteDragStart = useCallback((e: React.DragEvent) => {
+    setIsDraggingWebsite(true);
+    e.dataTransfer.setData("text/plain", "website");
+  }, [setIsDraggingWebsite]);
 
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -118,8 +138,12 @@ export const useCanvasEvents = ({
     } else if (dragType === 'text' && isDraggingText) {
       addTextNode(x, y);
       setIsDraggingText(false);
+    } else if (dragType === 'website' && isDraggingWebsite) {
+      setPendingWebsiteNode({ x, y });
+      setShowWebsiteInput(true);
+      setIsDraggingWebsite(false);
     }
-  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, isDraggingText, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat, addTextNode, setIsDraggingText]);
+  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, isDraggingText, isDraggingWebsite, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat, addTextNode, setIsDraggingText, setPendingWebsiteNode, setShowWebsiteInput, setIsDraggingWebsite]);
 
   const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -159,6 +183,23 @@ export const useCanvasEvents = ({
     }
   }, [pendingDocumentNode, addDocumentNode, resetDocumentUpload, setIsUploading, uploadTargetNodeId, addDocumentsToNode]);
 
+  const handleWebsiteUrlSubmit = useCallback(async (urls: string[]) => {
+    if (!pendingWebsiteNode || urls.length === 0) return;
+
+    setIsScrapingWebsites(true);
+    console.log("🌐 Creating website node with URLs:", urls);
+
+    try {
+      await addWebsiteNode(pendingWebsiteNode.x, pendingWebsiteNode.y, urls);
+      resetWebsiteInput();
+      console.log("✅ Website node created successfully");
+    } catch (error) {
+      console.error("❌ Error creating website node:", error);
+    } finally {
+      setIsScrapingWebsites(false);
+    }
+  }, [pendingWebsiteNode, addWebsiteNode, setIsScrapingWebsites, resetWebsiteInput]);
+
   const handleTranscriptClick = useCallback(async (e: React.MouseEvent, node: VideoNode) => {
     console.log("🎯 Transcript button clicked for:", node.url);
     e.stopPropagation();
@@ -183,6 +224,8 @@ export const useCanvasEvents = ({
     handleCanvasDragOver,
     handleVideoUrlSubmit,
     handleDocumentUploadSubmit,
-    handleTranscriptClick
+    handleTranscriptClick,
+    handleWebsiteDragStart,
+    handleWebsiteUrlSubmit,
   };
 };

@@ -51,7 +51,22 @@ export interface ChatNode {
   height: number;
 }
 
-export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode;
+export interface WebsiteData {
+  url: string;
+  title: string;
+  content: string;
+  fetchedAt: string;
+}
+
+export interface WebsiteNode {
+  id: string;
+  x: number;
+  y: number;
+  type: 'website';
+  websites: WebsiteData[];
+}
+
+export type CanvasNode = VideoNode | DocumentNode | ChatNode | TextNode | WebsiteNode;
 
 export interface Connection {
   id: string;
