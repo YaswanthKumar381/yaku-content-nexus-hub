@@ -50,31 +50,30 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleModalClose()}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>{mode === 'create' ? 'Upload Document(s)' : 'Add More Documents'}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="flex flex-col items-center justify-center w-full">
+        <div className="flex flex-col gap-4 py-4">
             <label
               htmlFor="dropzone-file"
-              className="flex flex-col items-center justify-center w-full h-48 border-2 border-blue-300 border-dashed rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100"
+              className="flex flex-col items-center justify-center w-full h-40 border-2 border-blue-300 border-dashed rounded-lg cursor-pointer bg-blue-50 hover:bg-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-colors"
             >
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <UploadCloud className="w-10 h-10 mb-3 text-blue-500" />
-                <p className="mb-2 text-sm text-blue-700">
+                <UploadCloud className="w-8 h-8 mb-3 text-blue-500 dark:text-gray-400" />
+                <p className="mb-2 text-sm text-blue-700 dark:text-gray-300">
                   <span className="font-semibold">Click to upload</span> or drag and drop
                 </p>
-                <p className="text-xs text-gray-500">PDF, CSV, TXT, etc.</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">PDF, CSV, TXT, etc.</p>
               </div>
               <Input id="dropzone-file" type="file" className="hidden" onChange={handleFileChange} multiple />
             </label>
             {selectedFiles.length > 0 && (
-              <div className="mt-4 w-full text-sm">
-                <p className="font-semibold mb-2 text-xs text-gray-500">Selected files:</p>
-                <div className="max-h-40 overflow-y-auto space-y-2 pr-2">
+              <div className="w-full text-sm space-y-2">
+                <p className="font-semibold text-xs text-gray-500 dark:text-gray-400">Selected files:</p>
+                <div className="max-h-40 overflow-y-auto space-y-2 pr-2 border rounded-md p-2 bg-gray-50 dark:bg-gray-800/50 dark:border-gray-700">
                   {selectedFiles.map((file) => (
-                    <div key={`${file.name}-${file.lastModified}`} className="flex justify-between items-center text-xs bg-gray-50 hover:bg-gray-100 p-2 rounded-md border border-gray-200">
+                    <div key={`${file.name}-${file.lastModified}`} className="flex justify-between items-center text-xs bg-white dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 rounded-md border border-gray-200 dark:border-gray-600">
                       <span className="truncate pr-2" title={file.name}>{file.name}</span>
                       <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => removeFile(file)}>
                         <Trash2 className="w-3.5 h-3.5 text-red-500"/>
@@ -84,7 +83,6 @@ export const DocumentUploadModal: React.FC<DocumentUploadModalProps> = ({
                 </div>
               </div>
             )}
-          </div>
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={handleModalClose}>Cancel</Button>
