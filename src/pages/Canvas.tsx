@@ -19,6 +19,8 @@ import { FileTextIcon } from "@/components/canvas/FileTextIcon";
 import { useDocumentNodes } from "@/hooks/useDocumentNodes";
 import { DocumentNodeComponent } from "@/components/canvas/DocumentNodeComponent";
 import { DocumentUploadModal } from "@/components/canvas/DocumentUploadModal";
+import { useChatNodes } from "@/hooks/useChatNodes";
+import { ChatNodeComponent } from "@/components/canvas/ChatNodeComponent";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
@@ -54,7 +56,9 @@ const CanvasContent = () => {
     setPendingDocumentNode,
     isUploading,
     setIsUploading,
-    resetDocumentUpload
+    resetDocumentUpload,
+    isDraggingChat,
+    setIsDraggingChat,
   } = useCanvasState();
 
   const {
@@ -89,11 +93,22 @@ const CanvasContent = () => {
     forceResetDragState: forceResetDocumentDragState
   } = useDocumentNodes();
 
-  const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId;
+  const {
+    chatNodes,
+    draggingNodeId: draggingChatNodeId,
+    addChatNode,
+    moveChatNode,
+    handleNodePointerDown: handleChatNodePointerDown,
+    handleNodePointerUp: handleChatNodePointerUp,
+    forceResetDragState: forceResetChatDragState,
+  } = useChatNodes();
+
+  const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId;
 
   const {
     handleVideoIconDragStart,
     handleDocumentIconDragStart,
+    handleChatIconDragStart,
     handleCanvasDrop,
     handleCanvasDragOver,
     handleVideoUrlSubmit,
@@ -118,6 +133,7 @@ const CanvasContent = () => {
     forceResetDragState: () => {
       forceResetVideoDragState();
       forceResetDocumentDragState();
+      forceResetChatDragState();
     },
     isDraggingDocument,
     setIsDraggingDocument,
@@ -127,6 +143,9 @@ const CanvasContent = () => {
     pendingDocumentNode,
     setIsUploading,
     resetDocumentUpload,
+    isDraggingChat,
+    setIsDraggingChat,
+    addChatNode,
   });
 
   const sidebarTools: SidebarTool[] = [
@@ -147,26 +166,31 @@ const CanvasContent = () => {
     console.log("🔄 Force resetting drag state on modal close");
     forceResetVideoDragState();
     forceResetDocumentDragState();
-  }, [resetTranscriptModal, forceResetVideoDragState, forceResetDocumentDragState]);
+    forceResetChatDragState();
+  }, [resetTranscriptModal, forceResetVideoDragState, forceResetDocumentDragState, forceResetChatDragState]);
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
     if (draggingVideoNodeId) {
       moveVideoNode(draggingVideoNodeId, e.clientX, e.clientY, transform);
     } else if (draggingDocumentNodeId) {
       moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
+    } else if (draggingChatNodeId) {
+      moveChatNode(draggingChatNodeId, e, transform);
     } else {
       handlePointerMove(e, draggingNodeId, () => {});
     }
-  }, [handlePointerMove, draggingVideoNodeId, moveVideoNode, draggingDocumentNodeId, moveDocumentNode, transform]);
+  }, [handlePointerMove, draggingVideoNodeId, moveVideoNode, draggingDocumentNodeId, moveDocumentNode, transform, draggingChatNodeId, moveChatNode]);
 
   const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => {
     if (draggingVideoNodeId) {
       handleVideoNodePointerUp(e);
     } else if (draggingDocumentNodeId) {
       handleDocumentNodePointerUp(e);
+    } else if (draggingChatNodeId) {
+      handleChatNodePointerUp(e);
     }
     handlePointerUp(e);
-  }, [draggingVideoNodeId, handleVideoNodePointerUp, handleDocumentNodePointerUp, draggingDocumentNodeId, handlePointerUp]);
+  }, [draggingVideoNodeId, handleVideoNodePointerUp, handleDocumentNodePointerUp, draggingDocumentNodeId, handleChatNodePointerUp, draggingChatNodeId, handlePointerUp]);
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
@@ -205,6 +229,15 @@ const CanvasContent = () => {
             key={node.id}
             node={node}
             onPointerDown={handleDocumentNodePointerDown}
+          />
+        ))}
+
+        {/* Chat Nodes */}
+        {chatNodes.map((node) => (
+          <ChatNodeComponent
+            key={node.id}
+            node={node}
+            onPointerDown={handleChatNodePointerDown}
           />
         ))}
       </div>
@@ -251,6 +284,7 @@ const CanvasContent = () => {
         onToolSelect={setSelectedTool}
         onVideoDragStart={handleVideoIconDragStart}
         onDocumentDragStart={handleDocumentIconDragStart}
+        onChatDragStart={handleChatIconDragStart}
       />
 
       {/* Navigation */}

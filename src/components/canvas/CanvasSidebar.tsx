@@ -11,6 +11,7 @@ interface CanvasSidebarProps {
   onToolSelect: (toolId: string) => void;
   onVideoDragStart: (e: React.DragEvent) => void;
   onDocumentDragStart: (e: React.DragEvent) => void;
+  onChatDragStart: (e: React.DragEvent) => void;
 }
 
 export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
@@ -18,7 +19,8 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
   selectedTool,
   onToolSelect,
   onVideoDragStart,
-  onDocumentDragStart
+  onDocumentDragStart,
+  onChatDragStart,
 }) => {
   const { isDarkMode } = useTheme();
   
@@ -60,6 +62,8 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
             variant="ghost"
             size="icon"
             className={`w-10 h-10 rounded-full ${isDarkMode ? 'bg-zinc-700 hover:bg-zinc-600' : 'bg-gray-100 hover:bg-gray-200'}`}
+            draggable={true}
+            onDragStart={onChatDragStart}
           >
             <MessageCircleMoreIcon size={20} className={`${isDarkMode ? 'text-zinc-300' : 'text-gray-600'}`} />
           </Button>

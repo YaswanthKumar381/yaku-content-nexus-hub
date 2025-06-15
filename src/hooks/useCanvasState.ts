@@ -20,6 +20,8 @@ export const useCanvasState = () => {
   const [pendingDocumentNode, setPendingDocumentNode] = useState<{ x: number; y: number } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  const [isDraggingChat, setIsDraggingChat] = useState(false);
+
   const resetVideoInput = useCallback(() => {
     setShowVideoInput(false);
     setPendingVideoNode(null);
@@ -71,6 +73,8 @@ export const useCanvasState = () => {
     setPendingDocumentNode,
     isUploading,
     setIsUploading,
-    resetDocumentUpload
+    resetDocumentUpload,
+    isDraggingChat,
+    setIsDraggingChat,
   };
 };

@@ -21,7 +21,14 @@ export interface DocumentNode {
   type: 'document';
 }
 
-export type CanvasNode = VideoNode | DocumentNode;
+export interface ChatNode {
+  id: string;
+  x: number;
+  y: number;
+  type: 'chat';
+}
+
+export type CanvasNode = VideoNode | DocumentNode | ChatNode;
 
 export interface Transform {
   x: number;

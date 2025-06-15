@@ -1,6 +1,6 @@
 
 import { useCallback } from "react";
-import { VideoNode, DocumentNode } from "@/types/canvas";
+import { VideoNode, DocumentNode, ChatNode } from "@/types/canvas";
 
 interface UseCanvasEventsProps {
   isDraggingVideo: boolean;
@@ -28,6 +28,9 @@ interface UseCanvasEventsProps {
   pendingDocumentNode: { x: number; y: number } | null;
   setIsUploading: (value: boolean) => void;
   resetDocumentUpload: () => void;
+  isDraggingChat: boolean;
+  setIsDraggingChat: (value: boolean) => void;
+  addChatNode: (x: number, y: number) => ChatNode;
 }
 
 export const useCanvasEvents = ({
@@ -56,6 +59,9 @@ export const useCanvasEvents = ({
   pendingDocumentNode,
   setIsUploading,
   resetDocumentUpload,
+  isDraggingChat,
+  setIsDraggingChat,
+  addChatNode,
 }: UseCanvasEventsProps) => {
   const handleVideoIconDragStart = useCallback((e: React.DragEvent) => {
     setIsDraggingVideo(true);
@@ -66,6 +72,11 @@ export const useCanvasEvents = ({
     setIsDraggingDocument(true);
     e.dataTransfer.setData("text/plain", "document");
   }, [setIsDraggingDocument]);
+
+  const handleChatIconDragStart = useCallback((e: React.DragEvent) => {
+    setIsDraggingChat(true);
+    e.dataTransfer.setData("text/plain", "chat");
+  }, [setIsDraggingChat]);
 
   const handleCanvasDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -86,8 +97,11 @@ export const useCanvasEvents = ({
       setPendingDocumentNode({ x, y });
       setShowDocumentUpload(true);
       setIsDraggingDocument(false);
+    } else if (dragType === 'chat' && isDraggingChat) {
+      addChatNode(x, y);
+      setIsDraggingChat(false);
     }
-  }, [isDraggingVideo, isDraggingDocument, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument]);
+  }, [isDraggingVideo, isDraggingDocument, isDraggingChat, transform, canvasContainerRef, setPendingVideoNode, setShowVideoInput, setIsDraggingVideo, setPendingDocumentNode, setShowDocumentUpload, setIsDraggingDocument, addChatNode, setIsDraggingChat]);
 
   const handleCanvasDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -141,6 +155,7 @@ export const useCanvasEvents = ({
   return {
     handleVideoIconDragStart,
     handleDocumentIconDragStart,
+    handleChatIconDragStart,
     handleCanvasDrop,
     handleCanvasDragOver,
     handleVideoUrlSubmit,
