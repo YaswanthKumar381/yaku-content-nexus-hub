@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -26,20 +25,16 @@ export const CanvasNavigation: React.FC = () => {
     <>
       {/* Floating Top Navigation Bar */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20">
-        <div className={`${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50' : 'bg-white/90 border-gray-200/50'} backdrop-blur-md border rounded-full px-8 py-4 shadow-2xl`}>
-          <div className="flex items-center justify-center">
-            <div className={`flex items-center space-x-2 ${isDarkMode ? 'bg-zinc-700/50' : 'bg-gray-100/50'} rounded-full px-4 py-2`}>
-              <Button variant="ghost" size="icon" className={iconButtonClass}>
-                <HomeIcon size={16} />
-              </Button>
-              <Button variant="ghost" size="icon" className={iconButtonClass}>
-                <ArrowLeftIcon size={16} />
-              </Button>
-              <Button variant="ghost" size="icon" className={iconButtonClass}>
-                <ArrowRightIcon size={16} />
-              </Button>
-            </div>
-          </div>
+        <div className={`flex items-center space-x-3 ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50' : 'bg-white/90 border-gray-200/50'} backdrop-blur-md border rounded-full px-6 py-3 shadow-lg`}>
+          <Button variant="ghost" size="icon" className={iconButtonClass}>
+            <HomeIcon size={16} />
+          </Button>
+          <Button variant="ghost" size="icon" className={iconButtonClass}>
+            <ArrowLeftIcon size={16} />
+          </Button>
+          <Button variant="ghost" size="icon" className={iconButtonClass}>
+            <ArrowRightIcon size={16} />
+          </Button>
         </div>
       </div>
 
