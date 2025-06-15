@@ -1,22 +1,11 @@
 import { ChatMessage } from "@/types/canvas";
 
 export const generateContent = async (userPrompt: string, context: string, history: ChatMessage[], apiKey: string): Promise<string> => {
-  let effectiveApiKey = apiKey;
-  if (!effectiveApiKey) {
-    try {
-      if (typeof window !== 'undefined') {
-        effectiveApiKey = localStorage.getItem('gemini-api-key') || '';
-      }
-    } catch (e) {
-      console.warn('Could not access localStorage to get API key.');
-    }
-  }
-
-  if (!effectiveApiKey) {
+  if (!apiKey) {
     return "Please provide your Gemini API key in the settings (top-right gear icon).";
   }
 
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${effectiveApiKey}`;
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
   const systemInstruction = {
     role: "system",

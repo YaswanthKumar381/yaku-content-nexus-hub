@@ -40,10 +40,10 @@ export const useChatNodes = () => {
     setIsSendingMessageNodeId(nodeId);
     updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'user', content: userMessage });
 
-    const apiKey = localStorage.getItem('gemini_api_key');
+    const apiKey = localStorage.getItem('gemini-api-key');
 
     if (!apiKey) {
-        updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: "Please provide your Gemini API key to continue." });
+        updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: "Please provide your Gemini API key in the settings (top-right gear icon)." });
         setIsSendingMessageNodeId(null);
         return;
     }
