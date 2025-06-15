@@ -4,13 +4,12 @@ import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import { SidebarTool } from "@/types/canvas";
 import { useTheme } from "@/contexts/ThemeContext";
-import { VideoDropdown } from "./VideoDropdown";
 
 interface CanvasSidebarProps {
   tools: SidebarTool[];
   selectedTool: string;
   onToolSelect: (toolId: string) => void;
-  onVideoDragStart: (e: React.DragEvent, platform?: string) => void;
+  onVideoDragStart: (e: React.DragEvent) => void;
 }
 
 export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
@@ -27,31 +26,23 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
         {/* Top Tools */}
         <div className="flex flex-col space-y-3 mb-6">
           {tools.map((tool) => (
-            tool.id === "video" ? (
-              <VideoDropdown
-                key={tool.id}
-                selectedTool={selectedTool}
-                onToolSelect={onToolSelect}
-                onVideoDragStart={onVideoDragStart}
-                isDarkMode={isDarkMode}
-              />
-            ) : (
-              <Button
-                key={tool.id}
-                variant={selectedTool === tool.id ? "default" : "ghost"}
-                size="icon"
-                className={`w-10 h-10 rounded-full ${
-                  selectedTool === tool.id 
-                    ? "bg-purple-600 hover:bg-purple-700 text-white" 
-                    : isDarkMode 
-                      ? "text-zinc-400 hover:text-white hover:bg-zinc-700" 
-                      : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-                }`}
-                onClick={() => onToolSelect(tool.id)}
-              >
-                <tool.icon className="w-5 h-5" />
-              </Button>
-            )
+            <Button
+              key={tool.id}
+              variant={selectedTool === tool.id ? "default" : "ghost"}
+              size="icon"
+              className={`w-10 h-10 rounded-full ${
+                selectedTool === tool.id 
+                  ? "bg-purple-600 hover:bg-purple-700 text-white" 
+                  : isDarkMode 
+                    ? "text-zinc-400 hover:text-white hover:bg-zinc-700" 
+                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              }`}
+              onClick={() => onToolSelect(tool.id)}
+              draggable={tool.id === "video"}
+              onDragStart={tool.id === "video" ? onVideoDragStart : undefined}
+            >
+              <tool.icon className="w-5 h-5" />
+            </Button>
           ))}
         </div>
 
