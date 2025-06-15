@@ -2,9 +2,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { 
-  Home, 
-  ArrowLeft, 
-  ArrowRight, 
   Moon,
   Sun,
   Settings
@@ -12,6 +9,9 @@ import {
 import { useTheme } from "@/contexts/ThemeContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SettingsPopover } from "./SettingsPopover";
+import { HomeIcon } from "../icons/animated/HomeIcon";
+import { ArrowLeftIcon } from "../icons/animated/ArrowLeftIcon";
+import { ArrowRightIcon } from "../icons/animated/ArrowRightIcon";
 
 export const CanvasNavigation: React.FC = () => {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -24,13 +24,13 @@ export const CanvasNavigation: React.FC = () => {
           <div className="flex items-center justify-center">
             <div className={`flex items-center space-x-2 ${isDarkMode ? 'bg-zinc-700/50' : 'bg-gray-100/50'} rounded-full px-4 py-2`}>
               <Button variant="ghost" size="icon" className={`w-6 h-6 rounded-full ${isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
-                <Home className="w-4 h-4" />
+                <HomeIcon size={16} />
               </Button>
               <Button variant="ghost" size="icon" className={`w-6 h-6 rounded-full ${isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeftIcon size={16} />
               </Button>
               <Button variant="ghost" size="icon" className={`w-6 h-6 rounded-full ${isDarkMode ? 'text-zinc-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRightIcon size={16} />
               </Button>
             </div>
           </div>
