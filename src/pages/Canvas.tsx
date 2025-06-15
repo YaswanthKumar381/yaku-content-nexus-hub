@@ -1,3 +1,4 @@
+
 import { useCallback, useState } from "react";
 import { Archive, History, Bell } from "lucide-react";
 import { SidebarTool, VideoNode, DocumentNode, ChatNode } from "@/types/canvas";
@@ -161,14 +162,32 @@ const CanvasContent = () => {
   });
 
   const getHandlePosition = (node: VideoNode | DocumentNode | ChatNode) => {
-    if (node.type === 'chat') {
-      return { x: node.x - 258, y: node.y };
-    } else if (node.type === 'video') {
-      return { x: node.x + 160, y: node.y };
-    } else if (node.type === 'document') {
-      return { x: node.x + 128, y: node.y };
+    switch (node.type) {
+      case 'chat':
+        // The handle is on the left of the 500px wide component.
+        // Center of component is node.x. Left edge is node.x - 250.
+        // Handle is 16px wide, and its left edge is 16px from the component's left edge.
+        // So center of handle is (node.x - 250) - 16 + 8 = node.x - 258
+        return { x: node.x - 258, y: node.y };
+      case 'video':
+        // The handle is on the right of the 320px (w-80) wide component.
+        // Center of component is node.x. Right edge is node.x + 160.
+        // Handle is 16px wide, and its left edge is at the component's right edge.
+        // So center of handle is (node.x + 160) + 8 = node.x + 168
+        return { x: node.x + 168, y: node.y };
+      case 'document':
+        // The handle is on the right of the 256px (w-64) wide component.
+        // Center of component is node.x. Right edge is node.x + 128.
+        // Handle is 16px wide, and its left edge is at the component's right edge.
+        // So center of handle is (node.x + 128) + 8 = node.x + 136
+        return { x: node.x + 136, y: node.y };
+      default: {
+        // This ensures exhaustiveness. If a new node type is added,
+        // this will cause a compile-time error.
+        const _exhaustiveCheck: never = node;
+        throw new Error(`Unhandled node type: ${(_exhaustiveCheck as any)?.type}`);
+      }
     }
-    return { x: node.x, y: node.y };
   };
 
   const handleStartConnection = (nodeId: string) => {
