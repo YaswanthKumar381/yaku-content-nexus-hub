@@ -6,7 +6,7 @@ import { estimateTokenCount, GEMINI_1_5_FLASH_CONTEXT_LIMIT } from '@/utils/toke
 const SYSTEM_PROMPT_TEXT = 'You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.';
 const CONTEXT_WRAPPER_TEXT = "Here is some context from connected nodes:\n\n---\n\n---\n\nMy question is: ";
 
-const getNodeContent = (node: CanvasNode): string => {
+const getNodeContent = (node: CanvasNode, allNodesMap: Map<string, CanvasNode>): string => {
   switch (node.type) {
     case 'video':
       return `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
@@ -28,7 +28,7 @@ const getNodeContent = (node: CanvasNode): string => {
       // For group nodes, we need to get the context of all contained nodes
       const groupContext = node.containedNodes.map(nodeId => {
         const containedNode = allNodesMap.get(nodeId);
-        return containedNode ? getNodeContent(containedNode) : '';
+        return containedNode ? getNodeContent(containedNode, allNodesMap) : '';
       }).filter(Boolean).join('\n\n');
       return `Group "${node.title}" Content:\n${groupContext || 'No content available'}`;
     case 'chat':
@@ -66,7 +66,7 @@ export const useContextUsage = (
                 .filter((node): node is VideoNode | DocumentNode | TextNode | import('@/types/canvas').WebsiteNode | import('@/types/canvas').AudioNode | import('@/types/canvas').ImageNode | import('@/types/canvas').GroupNode => !!node && (node.type === 'video' || node.type === 'document' || node.type === 'text' || node.type === 'website' || node.type === 'audio' || node.type === 'image' || node.type === 'group'));
             
             if (connectedNodes.length > 0) {
-              const contextText = connectedNodes.map(getNodeContent).join('\n\n---\n\n');
+              const contextText = connectedNodes.map(node => getNodeContent(node, allNodesMap)).join('\n\n---\n\n');
               let contextTokens = estimateTokenCount(contextText);
               contextTokens += estimateTokenCount(CONTEXT_WRAPPER_TEXT);
               currentTokens += contextTokens;

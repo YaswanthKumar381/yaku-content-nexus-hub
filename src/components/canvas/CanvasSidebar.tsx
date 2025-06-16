@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { SidebarTool } from "@/types/canvas";
@@ -15,6 +16,7 @@ interface CanvasSidebarProps {
   onWebsiteDragStart: (e: React.DragEvent) => void;
   onImageDragStart: (e: React.DragEvent) => void;
   onAudioDragStart: (e: React.DragEvent) => void;
+  onGroupDragStart: (e: React.DragEvent) => void;
 }
 
 export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
@@ -28,6 +30,7 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
   onWebsiteDragStart,
   onImageDragStart,
   onAudioDragStart,
+  onGroupDragStart,
 }) => {
   const { isDarkMode } = useTheme();
   
@@ -49,7 +52,7 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
                     : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               }`}
               onClick={() => onToolSelect(tool.id)}
-              draggable={tool.id === "video" || tool.id === "file-text" || tool.id === "text" || tool.id === "website" || tool.id === "image" || tool.id === "audio"}
+              draggable={tool.id === "video" || tool.id === "file-text" || tool.id === "text" || tool.id === "website" || tool.id === "image" || tool.id === "audio" || tool.id === "group"}
               onDragStart={
                 tool.id === "video"
                   ? onVideoDragStart
@@ -63,6 +66,8 @@ export const CanvasSidebar: React.FC<CanvasSidebarProps> = ({
                   ? onImageDragStart
                   : tool.id === "audio"
                   ? onAudioDragStart
+                  : tool.id === "group"
+                  ? onGroupDragStart
                   : undefined
               }
             >
