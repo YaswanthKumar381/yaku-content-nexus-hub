@@ -107,7 +107,6 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onDelete={onDeleteGroupNode}
             onUpdate={onUpdateGroupNode}
             isConnected={isConnected}
-            containedNodesCount={node.containedNodes.length}
           />
         );
       })}

@@ -16,7 +16,8 @@ interface AudioNodeComponentProps {
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   isConnected: boolean;
-  onAddRecording: (nodeId: string, recording: AudioRecording) => void;
+  onAddRecording: (nodeId: string, audioBlob: Blob, duration: number) => Promise<void>;
+  onDeleteRecording: (nodeId: string, recordingId: string) => void;
 }
 
 export const AudioNodeComponent: React.FC<AudioNodeComponentProps> = ({
@@ -26,6 +27,7 @@ export const AudioNodeComponent: React.FC<AudioNodeComponentProps> = ({
   onDelete,
   isConnected,
   onAddRecording,
+  onDeleteRecording,
 }) => {
   const { isDarkMode } = useTheme();
   const [isRecording, setIsRecording] = useState(false);
@@ -35,13 +37,7 @@ export const AudioNodeComponent: React.FC<AudioNodeComponentProps> = ({
 
   const { startRecording, stopRecording, isRecording: hookIsRecording } = useAudioRecording({
     onRecordingComplete: (blob, duration) => {
-      const newRecording: AudioRecording = {
-        id: uuidv4(),
-        blob,
-        duration,
-        recordedAt: new Date().toISOString(),
-      };
-      onAddRecording(node.id, newRecording);
+      onAddRecording(node.id, blob, duration);
     }
   });
 
@@ -64,11 +60,7 @@ export const AudioNodeComponent: React.FC<AudioNodeComponentProps> = ({
   };
 
   const handleDeleteRecording = (recordingId: string) => {
-    const updatedRecordings = node.recordings.filter(r => r.id !== recordingId);
-    // Update the node with the new recordings array
-    // setAudioNodes(prev => prev.map(n =>
-    //   n.id === node.id ? { ...n, recordings: updatedRecordings } : n
-    // ));
+    onDeleteRecording(node.id, recordingId);
   };
 
   const formatDuration = (duration: number): string => {
@@ -125,7 +117,6 @@ export const AudioNodeComponent: React.FC<AudioNodeComponentProps> = ({
                 <div>
                   <span className="font-semibold">Audio</span>
                   <div className="flex items-center gap-1 mt-1">
-                    {/* <Sparkles className="w-3 h-3 text-amber-500" /> */}
                     <span className="text-xs text-amber-500 font-medium">{node.recordings.length} recordings</span>
                   </div>
                 </div>
