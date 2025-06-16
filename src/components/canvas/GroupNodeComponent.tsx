@@ -1,186 +1,158 @@
-
-import React, { useState, useRef, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable";
-import { Trash2, Edit3, Check, X } from "lucide-react";
+import React, { useState, useCallback } from "react";
+import { Trash2, GripVertical } from "lucide-react";
 import { GroupNode } from "@/types/canvas";
 import { useTheme } from "@/contexts/ThemeContext";
+import { Button } from "@/components/ui/button";
 
-interface GroupNodeComponentProps {
+interface GroupNodeProps {
   node: GroupNode;
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   onUpdate: (nodeId: string, updates: Partial<Omit<GroupNode, 'id' | 'type'>>) => void;
   isConnected: boolean;
-  containedNodesCount: number;
 }
 
-export const GroupNodeComponent: React.FC<GroupNodeComponentProps> = ({
+export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
   node,
   onPointerDown,
   onStartConnection,
   onDelete,
   onUpdate,
   isConnected,
-  containedNodesCount,
 }) => {
   const { isDarkMode } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(node.title);
   const [isResizing, setIsResizing] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleTitleEdit = () => {
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    onPointerDown(e, node.id);
+  }, [onPointerDown, node.id]);
+
+  const handleTitleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     setIsEditing(true);
-    setEditTitle(node.title);
-  };
+  }, [setIsEditing]);
 
-  const handleTitleSave = () => {
+  const handleTitleSave = useCallback(() => {
+    setIsEditing(false);
     onUpdate(node.id, { title: editTitle });
-    setIsEditing(false);
-  };
+  }, [setIsEditing, onUpdate, node.id, editTitle]);
 
-  const handleTitleCancel = () => {
-    setEditTitle(node.title);
-    setIsEditing(false);
-  };
+  const handleTitleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleTitleSave();
+    }
+  }, [handleTitleSave]);
 
-  const handleResize = (newWidth: number, newHeight: number) => {
+  const handleResizeStart = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  }, [setIsResizing]);
+
+  const handleResize = useCallback((e: React.PointerEvent) => {
+    if (!isResizing) return;
+
+    const newWidth = Math.max(100, node.width + e.movementX);
+    const newHeight = Math.max(80, node.height + e.movementY);
+
     onUpdate(node.id, { width: newWidth, height: newHeight });
-  };
+  }, [isResizing, onUpdate, node.id, node.width, node.height]);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (!isResizing) {
-          setIsResizing(true);
-          handleResize(width, height);
-          setTimeout(() => setIsResizing(false), 100);
-        }
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, [isResizing]);
+  const handleResizeEnd = useCallback((e: React.PointerEvent) => {
+    setIsResizing(false);
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+  }, [setIsResizing]);
 
   return (
     <div
-      className="absolute pointer-events-auto group"
+      className={`absolute pointer-events-auto group ${
+        isDarkMode ? 'text-white' : 'text-gray-900'
+      }`}
       style={{ 
-        left: node.x - node.width / 2, 
-        top: node.y - node.height / 2,
+        left: node.x, 
+        top: node.y, 
+        transform: 'translate(-50%, -50%)',
         width: node.width,
         height: node.height,
       }}
-      onPointerDown={(e) => onPointerDown(e, node.id)}
+      onPointerDown={handlePointerDown}
       data-node-id={node.id}
     >
-      <Card 
-        ref={containerRef}
-        className={`w-full h-full relative border-2 border-dashed transition-all duration-300 ${
-          isDarkMode 
-            ? 'bg-zinc-800/20 border-zinc-600/50 hover:border-zinc-500/70' 
-            : 'bg-gray-100/20 border-gray-300/50 hover:border-gray-400/70'
-        } backdrop-blur-sm resize overflow-hidden`}
-        style={{ 
-          minWidth: '200px', 
-          minHeight: '150px',
-          resize: 'both',
-        }}
-      >
-        {/* Header */}
-        <div className={`absolute top-0 left-0 right-0 p-3 border-b border-dashed ${
-          isDarkMode ? 'border-zinc-600/30 bg-zinc-800/40' : 'border-gray-300/30 bg-gray-100/40'
-        } backdrop-blur-sm`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-1">
-              {isEditing ? (
-                <div className="flex items-center gap-2 flex-1">
-                  <Input
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    className="h-6 text-sm border-none bg-transparent focus:ring-1"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleTitleSave();
-                      if (e.key === 'Escape') handleTitleCancel();
-                    }}
-                    autoFocus
-                  />
-                  <Button variant="ghost" size="sm" onClick={handleTitleSave} className="h-6 w-6 p-0">
-                    <Check className="w-3 h-3" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleTitleCancel} className="h-6 w-6 p-0">
-                    <X className="w-3 h-3" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 flex-1">
-                  <h3 className="font-medium text-sm truncate">{node.title}</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleTitleEdit}
-                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Edit3 className="w-3 h-3" />
-                  </Button>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <span className={`text-xs px-2 py-1 rounded-full ${
-                isDarkMode ? 'bg-zinc-700/50 text-zinc-300' : 'bg-gray-200/50 text-gray-600'
-              }`}>
-                {containedNodesCount} items
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(node.id);
-                }}
-                className="h-6 w-6 p-0 text-red-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
-            </div>
-          </div>
+      <div className={`w-full h-full border-2 border-dashed rounded-lg transition-all duration-300 hover:shadow-lg ${
+        isDarkMode 
+          ? 'border-gray-500/50 bg-gray-800/10 hover:border-gray-400/70' 
+          : 'border-gray-300/70 bg-gray-100/20 hover:border-gray-400/70'
+      } backdrop-blur-sm group-hover:scale-[1.01]`}>
+        
+        {/* Delete Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(node.id);
+          }}
+          className="absolute top-2 left-2 h-6 w-6 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-red-500 hover:bg-red-500/10"
+          title="Delete Group"
+        >
+          <Trash2 className="w-3 h-3" />
+        </Button>
+        
+        {/* Title */}
+        <div className="absolute -top-8 left-0 right-0">
+          {isEditing ? (
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onBlur={handleTitleSave}
+              onKeyDown={handleTitleKeyDown}
+              className={`w-full px-2 py-1 text-sm font-semibold bg-transparent border-b-2 border-gray-500 focus:outline-none focus:border-blue-500 ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+              autoFocus
+            />
+          ) : (
+            <h3 
+              onClick={handleTitleEdit}
+              className={`text-sm font-semibold cursor-pointer hover:opacity-80 transition-opacity ${
+                isDarkMode ? 'text-white' : 'text-gray-900'
+              }`}
+              title="Click to edit title"
+            >
+              {node.title}
+            </h3>
+          )}
         </div>
 
-        {/* Content Area */}
-        <div className="absolute inset-0 top-12 p-4">
-          <div className={`w-full h-full border border-dashed rounded-lg flex items-center justify-center ${
-            isDarkMode ? 'border-zinc-600/30' : 'border-gray-300/30'
-          }`}>
-            <span className={`text-sm ${isDarkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
-              Drag nodes here to group them
-            </span>
-          </div>
-        </div>
-      </Card>
+        {/* Connection Handle */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            onStartConnection(node.id);
+          }}
+          className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-transparent transition-colors z-10"
+          title="Create connection"
+        >
+          <div className="w-4 h-4 rounded-full border-2 border-violet-500 bg-transparent animate-pulse shadow-lg shadow-violet-500/30" />
+        </Button>
 
-      {/* Connection Handle */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={(e) => {
-          e.stopPropagation();
-          onStartConnection(node.id);
-        }}
-        className="absolute -right-8 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-blue-500/20 transition-colors z-10"
-        title="Create connection"
-      >
-        <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 animate-pulse" />
-      </Button>
+        {/* Resize Handles */}
+        <div 
+          className="absolute bottom-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 cursor-pointer group-hover:opacity-80 opacity-0 transition-opacity"
+          onPointerDown={handleResizeStart}
+          onPointerMove={handleResize}
+          onPointerUp={handleResizeEnd}
+        >
+          <GripVertical className="w-4 h-4" />
+        </div>
+      </div>
     </div>
   );
 };

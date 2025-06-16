@@ -32,9 +32,6 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ id, sourceX, sou
   const dx = targetX - sourceX;
   const path = `M ${sourceX},${sourceY} C ${sourceX + dx * 0.5},${sourceY} ${targetX - dx * 0.5},${targetY} ${targetX},${targetY}`;
 
-  const midX = (sourceX + targetX) / 2;
-  const midY = (sourceY + targetY) / 2;
-  
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     onDelete(id);
@@ -42,11 +39,19 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ id, sourceX, sou
 
   const sourceColor = sourceColorMap[sourceType] || sourceColorMap.chat;
   const gradientId = `grad-${id.replace(/[^a-zA-Z0-9]/g, '')}`;
+  const glowGradientId = `glow-grad-${id.replace(/[^a-zA-Z0-9]/g, '')}`;
 
   const gradient = (
     <linearGradient id={gradientId} gradientUnits="userSpaceOnUse" x1={sourceX} y1={sourceY} x2={targetX} y2={targetY}>
       <stop offset="0%" stopColor={sourceColor} />
       <stop offset="95%" stopColor={targetColor} />
+    </linearGradient>
+  );
+
+  const glowGradient = (
+    <linearGradient id={glowGradientId} gradientUnits="userSpaceOnUse" x1={sourceX} y1={sourceY} x2={targetX} y2={targetY}>
+      <stop offset="0%" stopColor={sourceColor} stopOpacity="0.8" />
+      <stop offset="95%" stopColor={targetColor} stopOpacity="0.8" />
     </linearGradient>
   );
 
@@ -69,38 +74,70 @@ export const ConnectionLine: React.FC<ConnectionLineProps> = ({ id, sourceX, sou
 
   return (
     <svg className="absolute top-0 left-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
-      <defs>{gradient}</defs>
+      <defs>
+        {gradient}
+        {glowGradient}
+        <filter id={`glow-${id}`} x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+          <feMerge> 
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
       <g 
-        className="pointer-events-auto"
+        className="pointer-events-auto cursor-pointer"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        onClick={handleDelete}
       >
-        {/* Visible path */}
+        {/* Glow effect when hovered */}
+        {isHovered && (
+          <path
+            d={path}
+            fill="none"
+            stroke={`url(#${glowGradientId})`}
+            strokeWidth="8"
+            filter={`url(#glow-${id})`}
+            opacity="0.6"
+          />
+        )}
+        
+        {/* Main visible path */}
         <path
           d={path}
           fill="none"
           stroke={`url(#${gradientId})`}
-          strokeWidth="2"
+          strokeWidth={isHovered ? "3" : "2"}
           strokeDasharray="5 5"
-          className="animated-path"
+          className="animated-path transition-all duration-200"
         />
+        
         {/* Interaction path - wider and transparent */}
         <path
           d={path}
           fill="none"
           stroke="transparent"
           strokeWidth="20"
-          className="cursor-pointer"
         />
 
-        {isHovered && (
-          <g transform={`translate(${midX}, ${midY})`} onClick={handleDelete} className="cursor-pointer">
-            <title>Delete Connection</title>
-            <circle r="12" fill="white" stroke="#E5E7EB" strokeWidth="1" />
-            <line x1="-5" y1="-5" x2="5" y2="5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
-            <line x1="-5" y1="5" x2="5" y2="-5" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
-          </g>
-        )}
+        {/* Connection dots with glow effect when hovered */}
+        <circle
+          cx={sourceX}
+          cy={sourceY}
+          r={isHovered ? "4" : "3"}
+          fill={sourceColor}
+          filter={isHovered ? `url(#glow-${id})` : undefined}
+          className="transition-all duration-200"
+        />
+        <circle
+          cx={targetX}
+          cy={targetY}
+          r={isHovered ? "4" : "3"}
+          fill={targetColor}
+          filter={isHovered ? `url(#glow-${id})` : undefined}
+          className="transition-all duration-200"
+        />
       </g>
     </svg>
   );

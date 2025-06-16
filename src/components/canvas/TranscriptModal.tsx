@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Loader2, CheckCircle } from "lucide-react";
+import { X, Loader2, CheckCircle, Upload, FileText } from "lucide-react";
 import { fetchYouTubeTranscript, formatTranscriptText } from "@/services/transcriptService";
 
 interface TranscriptModalProps {
@@ -25,6 +26,8 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [fetchedTranscript, setFetchedTranscript] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
+  const [uploadedTranscript, setUploadedTranscript] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen && videoUrl) {
@@ -38,12 +41,11 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
     setIsLoading(true);
     try {
       console.log("🔍 Fetching transcript for video URL:", videoUrl);
-      const response = await fetchYouTubeTranscript(videoUrl); // Pass original URL
+      const response = await fetchYouTubeTranscript(videoUrl);
       
       if (response.code === 100000) {
         setVideoTitle(response.data.videoInfo.name);
         
-        // Try to get the best available transcript
         const transcripts = response.data.transcripts;
         let bestTranscript = "";
         
@@ -69,7 +71,31 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
     }
   };
 
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('text/') && !file.name.endsWith('.txt')) {
+      alert('Please upload a text file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setUploadedTranscript(content);
+      onTranscriptChange(content);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   if (!isOpen) return null;
+
+  const hasTranscript = fetchedTranscript || uploadedTranscript;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
@@ -95,18 +121,20 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
               <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
               <span className="ml-2 text-gray-600">Fetching transcript...</span>
             </div>
-          ) : fetchedTranscript ? (
+          ) : hasTranscript ? (
             <div className="space-y-4">
               <div className="flex items-center space-x-2 text-green-600 mb-4">
                 <CheckCircle className="w-5 h-5" />
-                <span className="font-medium">Transcript loaded successfully!</span>
+                <span className="font-medium">
+                  {fetchedTranscript ? 'Transcript loaded successfully!' : 'Transcript uploaded successfully!'}
+                </span>
               </div>
               
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-medium text-gray-900 mb-2">Transcript:</h4>
                 <div className="bg-white border rounded p-3 max-h-64 overflow-y-auto">
                   <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {fetchedTranscript}
+                    {fetchedTranscript || uploadedTranscript}
                   </p>
                 </div>
               </div>
@@ -118,15 +146,45 @@ export const TranscriptModal: React.FC<TranscriptModalProps> = ({
               </div>
             </div>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No transcript available for this video.</p>
-              <Button 
-                onClick={fetchTranscript}
-                variant="outline"
-                className="mt-4"
-              >
-                Try Again
-              </Button>
+            <div className="text-center py-8 space-y-6">
+              <div className="text-gray-500">
+                <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium mb-2">No transcript available</p>
+                <p className="text-sm">You can try fetching the transcript again or upload your own.</p>
+              </div>
+              
+              <div className="flex flex-col gap-4 items-center">
+                <Button 
+                  onClick={fetchTranscript}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Loader2 className="w-4 h-4" />
+                  Try Fetching Again
+                </Button>
+                
+                <div className="text-gray-400 text-sm">or</div>
+                
+                <Button
+                  onClick={handleUploadClick}
+                  className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload Transcript File
+                </Button>
+                
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".txt,text/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                
+                <p className="text-xs text-gray-500">
+                  Upload a .txt file containing the video transcript
+                </p>
+              </div>
             </div>
           )}
         </div>
