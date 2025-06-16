@@ -11,8 +11,12 @@ export const useWebsiteNodes = () => {
     try {
       console.log(`🌐 Fetching content for: ${url}`);
       
-      const webhookUrl = `https://n8n-anrqdske.ap-southeast-1.clawcloudrun.com/webhook/website?url=${encodeURIComponent(url)}`;
-      const response = await fetch(webhookUrl, {
+      // Use the new curl-based approach with individual URL requests
+      const webhookUrl = "https://n8n-anrqdske.ap-southeast-1.clawcloudrun.com/webhook/website";
+      const urlParams = new URLSearchParams();
+      urlParams.append('url', url);
+      
+      const response = await fetch(`${webhookUrl}?${urlParams.toString()}`, {
         method: 'GET',
       });
       
@@ -56,32 +60,48 @@ export const useWebsiteNodes = () => {
   const addWebsiteNode = useCallback(async (x: number, y: number, urls: string[]): Promise<WebsiteNode> => {
     const nodeId = uuidv4();
     
-    // Fetch content for all URLs
-    const websiteDataPromises = urls.map(url => fetchWebsiteContent(url));
-    const websites = await Promise.all(websiteDataPromises);
-    
+    // Create the node first with empty websites array
     const newNode: WebsiteNode = {
       id: nodeId,
       x,
       y,
       type: 'website',
-      websites,
+      websites: [],
     };
 
     setWebsiteNodes(prev => [...prev, newNode]);
     console.log("✅ Website node created:", newNode);
-    return newNode;
+    
+    // Fetch content for each URL individually, one at a time
+    const websites: WebsiteData[] = [];
+    for (const url of urls) {
+      console.log(`🔄 Processing URL ${urls.indexOf(url) + 1}/${urls.length}: ${url}`);
+      const websiteData = await fetchWebsiteContent(url);
+      websites.push(websiteData);
+      
+      // Update the node with the new website data immediately
+      setWebsiteNodes(prev => prev.map(node => 
+        node.id === nodeId 
+          ? { ...node, websites: [...websites] }
+          : node
+      ));
+    }
+    
+    return { ...newNode, websites };
   }, []);
 
   const addWebsitesToNode = useCallback(async (nodeId: string, urls: string[]): Promise<void> => {
-    const websiteDataPromises = urls.map(url => fetchWebsiteContent(url));
-    const newWebsites = await Promise.all(websiteDataPromises);
-    
-    setWebsiteNodes(prev => prev.map(node => 
-      node.id === nodeId 
-        ? { ...node, websites: [...node.websites, ...newWebsites] }
-        : node
-    ));
+    // Process each URL individually, one at a time
+    for (const url of urls) {
+      console.log(`🔄 Adding URL to node ${nodeId}: ${url}`);
+      const websiteData = await fetchWebsiteContent(url);
+      
+      setWebsiteNodes(prev => prev.map(node => 
+        node.id === nodeId 
+          ? { ...node, websites: [...node.websites, websiteData] }
+          : node
+      ));
+    }
   }, []);
 
   const deleteWebsiteNode = useCallback((nodeId: string) => {
