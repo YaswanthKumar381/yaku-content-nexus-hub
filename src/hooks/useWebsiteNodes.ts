@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { WebsiteNode, WebsiteData, Transform } from "@/types/canvas";
 import { v4 as uuidv4 } from 'uuid';
@@ -57,12 +58,12 @@ export const useWebsiteNodes = () => {
     }
   };
 
-  const addWebsiteNode = useCallback(async (x: number, y: number, urls: string[]): Promise<WebsiteNode> => {
-    const nodeId = uuidv4();
+  const addWebsiteNode = useCallback(async (x: number, y: number, urls: string[], nodeId?: string): Promise<WebsiteNode> => {
+    const id = nodeId || uuidv4();
     
     // Create the node first with empty websites array
     const newNode: WebsiteNode = {
-      id: nodeId,
+      id,
       x,
       y,
       type: 'website',
@@ -81,7 +82,7 @@ export const useWebsiteNodes = () => {
       
       // Update the node with the new website data immediately
       setWebsiteNodes(prev => prev.map(node => 
-        node.id === nodeId 
+        node.id === id 
           ? { ...node, websites: [...websites] }
           : node
       ));
@@ -119,37 +120,51 @@ export const useWebsiteNodes = () => {
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     console.log("🌐 Website node pointer down:", nodeId);
     e.stopPropagation();
-    const node = websiteNodes.find(n => n.id === nodeId);
-    if (!node) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    
+    const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
+    if (node) {
+      const rect = node.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Calculate offset from cursor to node center
+      setDragOffset({
+        x: e.clientX - centerX,
+        y: e.clientY - centerY
+      });
+    } else {
+      setDragOffset({ x: 0, y: 0 });
+    }
+    
     setDraggingNodeId(nodeId);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [websiteNodes]);
+  }, []);
 
   const moveWebsiteNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: Transform) => {
-    const canvasRect = document.querySelector('.absolute.inset-0')?.getBoundingClientRect();
-    if (!canvasRect) return;
+    if (!draggingNodeId || draggingNodeId !== nodeId) return;
+    
+    // Calculate the new position accounting for canvas transform and drag offset
+    const newX = (clientX - transform.x - dragOffset.x) / transform.scale;
+    const newY = (clientY - transform.y - dragOffset.y) / transform.scale;
 
-    const x = (clientX - canvasRect.left - transform.x - dragOffset.x) / transform.scale;
-    const y = (clientY - canvasRect.top - transform.y - dragOffset.y) / transform.scale;
-
-    console.log("🔄 Moving website node:", nodeId, "to:", x, y);
+    console.log("🔄 Moving website node:", nodeId, "to:", newX, newY);
 
     setWebsiteNodes(prev => prev.map(node =>
-      node.id === nodeId ? { ...node, x, y } : node
+      node.id === nodeId ? { ...node, x: newX, y: newY } : node
     ));
-  }, [dragOffset]);
+  }, [draggingNodeId, dragOffset]);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
     console.log("🌐 Website node pointer up");
     setDraggingNodeId(null);
     setDragOffset({ x: 0, y: 0 });
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    
+    // Ensure pointer capture is released
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch (error) {
+      console.warn("Could not release pointer capture:", error);
+    }
   }, []);
 
   const forceResetDragState = useCallback(() => {

@@ -8,9 +8,10 @@ export const useVideoNodes = () => {
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  const addVideoNode = useCallback(async (x: number, y: number, url: string) => {
+  const addVideoNode = useCallback(async (x: number, y: number, url: string, nodeId?: string) => {
+    const id = nodeId || `video-${Date.now()}`;
     const newNode: VideoNode = {
-      id: `video-${Date.now()}`,
+      id,
       x,
       y,
       url,
@@ -25,12 +26,12 @@ export const useVideoNodes = () => {
     try {
       const title = await getVideoTitle(url);
       setVideoNodes(prev => prev.map(node => 
-        node.id === newNode.id ? { ...node, title } : node
+        node.id === id ? { ...node, title } : node
       ));
     } catch (error) {
       console.error("Failed to update video title:", error);
       setVideoNodes(prev => prev.map(node => 
-        node.id === newNode.id ? { ...node, title: "YouTube Video" } : node
+        node.id === id ? { ...node, title: "YouTube Video" } : node
       ));
     }
     

@@ -111,41 +111,33 @@ const CanvasContent = () => {
       // Implement redo logic based on action type
       switch (action.type) {
         case 'ADD_NODE':
-          if (action.data?.position && action.data?.nodeType) {
+          if (action.data?.position && action.data?.nodeType && action.nodeId) {
             console.log(`Redoing add ${action.data.nodeType} node at position:`, action.data.position);
-            // Re-add the node
+            // Re-add the node with the same ID
             switch (action.data.nodeType) {
               case 'video':
-                const videoNode = videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y);
-                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
+                const videoNode = videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y, action.data.url || '', action.nodeId);
                 break;
               case 'document':
-                const docNode = documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y);
-                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
+                const docNode = documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'text':
-                const textNode = textNodesResult.addTextNode(action.data.position.x, action.data.position.y);
-                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
+                const textNode = textNodesResult.addTextNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'website':
-                const websiteNode = websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y, []);
-                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
+                const websiteNode = websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y, [], action.nodeId);
                 break;
               case 'audio':
-                const audioNode = audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y);
-                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
+                const audioNode = audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'image':
-                const imageNode = imageNodesResult.addImageNode(action.data.position.x, action.data.position.y);
-                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
+                const imageNode = imageNodesResult.addImageNode(action.data.position.x, action.data.position.y, [], action.nodeId);
                 break;
               case 'group':
-                const groupNode = groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y);
-                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
+                const groupNode = groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'chat':
-                const chatNode = chatNodesResult.addChatNode(action.data.position.x, action.data.position.y);
-                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
+                const chatNode = chatNodesResult.addChatNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
             }
           }
@@ -209,6 +201,8 @@ const CanvasContent = () => {
         onSendMessage={onSendMessage}
         onDeleteGroupNode={onDeleteGroupNode}
         onUpdateGroupNode={onUpdateGroupNode}
+        trackNodeCreation={trackNodeCreation}
+        trackConnectionCreation={trackConnectionCreation}
       />
 
       <CanvasModals

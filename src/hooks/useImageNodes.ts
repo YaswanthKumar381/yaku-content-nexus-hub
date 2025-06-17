@@ -9,8 +9,8 @@ export const useImageNodes = () => {
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  const addImageNode = useCallback(async (x: number, y: number, files: File[]): Promise<ImageNode> => {
-    const nodeId = uuidv4();
+  const addImageNode = useCallback(async (x: number, y: number, files: File[], nodeId?: string): Promise<ImageNode> => {
+    const id = nodeId || uuidv4();
     console.log("🖼️ Creating image node with files:", files.length);
 
     const imageDataPromises = files.map(async (file): Promise<ImageData> => {
@@ -28,7 +28,7 @@ export const useImageNodes = () => {
     const images = await Promise.all(imageDataPromises);
 
     const newNode: ImageNode = {
-      id: nodeId,
+      id,
       x,
       y,
       type: 'image',
@@ -123,37 +123,51 @@ export const useImageNodes = () => {
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     console.log("🖱️ Image node pointer down:", nodeId);
     e.stopPropagation();
-    const node = imageNodes.find(n => n.id === nodeId);
-    if (!node) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    
+    const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
+    if (node) {
+      const rect = node.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      // Calculate offset from cursor to node center
+      setDragOffset({
+        x: e.clientX - centerX,
+        y: e.clientY - centerY
+      });
+    } else {
+      setDragOffset({ x: 0, y: 0 });
+    }
+    
     setDraggingNodeId(nodeId);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [imageNodes]);
+  }, []);
 
   const moveImageNode = useCallback((nodeId: string, clientX: number, clientY: number, transform: any) => {
-    const canvasRect = document.querySelector('.absolute.inset-0')?.getBoundingClientRect();
-    if (!canvasRect) return;
+    if (!draggingNodeId || draggingNodeId !== nodeId) return;
+    
+    // Calculate the new position accounting for canvas transform and drag offset
+    const newX = (clientX - transform.x - dragOffset.x) / transform.scale;
+    const newY = (clientY - transform.y - dragOffset.y) / transform.scale;
 
-    const x = (clientX - canvasRect.left - transform.x - dragOffset.x) / transform.scale;
-    const y = (clientY - canvasRect.top - transform.y - dragOffset.y) / transform.scale;
-
-    console.log("🔄 Moving image node:", nodeId, "to:", x, y);
+    console.log("🔄 Moving image node:", nodeId, "to:", newX, newY);
 
     setImageNodes(prev => prev.map(node =>
-      node.id === nodeId ? { ...node, x, y } : node
+      node.id === nodeId ? { ...node, x: newX, y: newY } : node
     ));
-  }, [dragOffset]);
+  }, [draggingNodeId, dragOffset]);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
     console.log("🖱️ Image node pointer up");
     setDraggingNodeId(null);
     setDragOffset({ x: 0, y: 0 });
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    
+    // Ensure pointer capture is released
+    try {
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch (error) {
+      console.warn("Could not release pointer capture:", error);
+    }
   }, []);
 
   const forceResetDragState = useCallback(() => {
