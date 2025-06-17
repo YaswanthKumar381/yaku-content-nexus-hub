@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { GroupNode, CanvasNode, Transform } from "@/types/canvas";
 import { v4 as uuidv4 } from 'uuid';
@@ -135,10 +136,14 @@ export const useGroupNodes = () => {
     const node = groupNodes.find(n => n.id === nodeId);
     if (!node) return;
 
+    // Calculate the offset from the center of the node (since transform uses translate(-50%, -50%))
     const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
     setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x: e.clientX - centerX,
+      y: e.clientY - centerY,
     });
     setDraggingNodeId(nodeId);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -148,6 +153,7 @@ export const useGroupNodes = () => {
     const canvasRect = document.querySelector('.absolute.inset-0')?.getBoundingClientRect();
     if (!canvasRect) return;
 
+    // Account for the drag offset when calculating the new position
     const x = (clientX - canvasRect.left - transform.x - dragOffset.x) / transform.scale;
     const y = (clientY - canvasRect.top - transform.y - dragOffset.y) / transform.scale;
 

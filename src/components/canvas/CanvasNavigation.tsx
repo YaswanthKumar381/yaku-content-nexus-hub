@@ -43,8 +43,8 @@ export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({
 
   const disabledIconButtonClass = `w-6 h-6 rounded-full transition-all duration-200 ${
     isDarkMode
-      ? "text-zinc-600 cursor-not-allowed"
-      : "text-gray-300 cursor-not-allowed"
+      ? "text-zinc-600 cursor-not-allowed opacity-50"
+      : "text-gray-300 cursor-not-allowed opacity-50"
   }`;
 
   const handleHomeClick = () => {
@@ -53,12 +53,14 @@ export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({
 
   const handleUndoClick = () => {
     if (canUndo && onUndo) {
+      console.log('Executing undo action');
       onUndo();
     }
   };
 
   const handleRedoClick = () => {
     if (canRedo && onRedo) {
+      console.log('Executing redo action');
       onRedo();
     }
   };
@@ -83,7 +85,7 @@ export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({
             className={canUndo ? iconButtonClass : disabledIconButtonClass}
             onClick={handleUndoClick}
             disabled={!canUndo}
-            title="Undo last action"
+            title={canUndo ? "Undo last action" : "No actions to undo"}
           >
             <ArrowLeftIcon size={16} />
           </Button>
@@ -93,7 +95,7 @@ export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({
             className={canRedo ? iconButtonClass : disabledIconButtonClass}
             onClick={handleRedoClick}
             disabled={!canRedo}
-            title="Redo last action"
+            title={canRedo ? "Redo last action" : "No actions to redo"}
           >
             <ArrowRightIcon size={16} />
           </Button>

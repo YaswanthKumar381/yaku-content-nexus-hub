@@ -128,7 +128,7 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
           )}
         </div>
 
-        {/* Connection Handle - Completely Outside */}
+        {/* Connection Handle - Positioned at the exact right edge */}
         <Button
           variant="ghost"
           size="sm"
@@ -137,10 +137,10 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
             onStartConnection(node.id);
           }}
           className="absolute top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full bg-transparent hover:bg-transparent transition-colors z-10"
-          style={{ right: '-32px' }}
+          style={{ left: '100%', marginLeft: '0px' }}
           title="Create connection"
         >
-          <div className="w-4 h-4 rounded-full border-2 border-violet-500 bg-transparent animate-pulse shadow-lg shadow-violet-500/30" />
+          <div className="w-4 h-4 rounded-full border-2 border-violet-500 bg-transparent opacity-70 hover:opacity-100 animate-pulse shadow-lg shadow-violet-500/30" />
         </Button>
 
         {/* Resize Handles */}

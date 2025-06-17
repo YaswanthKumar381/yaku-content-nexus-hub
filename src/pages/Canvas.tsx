@@ -50,12 +50,57 @@ const CanvasContent = () => {
     onTranscriptModalClose,
   } = useCanvasOrchestration();
 
-  // Handle undo/redo actions
+  // Enhanced undo/redo handlers with actual implementation
   const handleUndo = () => {
     const action = undo();
     if (action) {
       console.log('Undoing action:', action);
-      // TODO: Implement actual undo logic based on action type
+      
+      // Implement undo logic based on action type
+      switch (action.type) {
+        case 'ADD_NODE':
+          if (action.nodeId && action.data?.nodeType) {
+            console.log(`Undoing add ${action.data.nodeType} node:`, action.nodeId);
+            // Delete the node that was added
+            switch (action.data.nodeType) {
+              case 'video':
+                onDeleteVideoNode(action.nodeId);
+                break;
+              case 'document':
+                onDeleteDocumentNode(action.nodeId);
+                break;
+              case 'text':
+                onDeleteTextNode(action.nodeId);
+                break;
+              case 'website':
+                onDeleteWebsiteNode(action.nodeId);
+                break;
+              case 'audio':
+                onDeleteAudioNode(action.nodeId);
+                break;
+              case 'image':
+                onDeleteImageNode(action.nodeId);
+                break;
+              case 'group':
+                onDeleteGroupNode(action.nodeId);
+                break;
+            }
+          }
+          break;
+        case 'DELETE_NODE':
+          console.log('Cannot undo delete node - restoration not implemented yet');
+          break;
+        case 'ADD_CONNECTION':
+          if (action.connectionId) {
+            connectionsResult.removeConnection(action.connectionId);
+          }
+          break;
+        case 'DELETE_CONNECTION':
+          console.log('Cannot undo delete connection - restoration not implemented yet');
+          break;
+        default:
+          console.log('Unknown action type for undo:', action.type);
+      }
     }
   };
 
