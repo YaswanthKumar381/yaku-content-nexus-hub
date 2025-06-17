@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { GroupNode, CanvasNode, Transform } from "@/types/canvas";
 import { v4 as uuidv4 } from 'uuid';
@@ -60,47 +59,74 @@ export const useGroupNodes = () => {
         }
       });
       
+      console.log(`🔄 Group ${groupId} now contains nodes:`, containedNodes);
       return { ...groupNode, containedNodes };
     }));
   }, []);
 
   const getGroupContext = useCallback((groupId: string, allNodes: Map<string, CanvasNode>): string => {
     const groupNode = groupNodes.find(g => g.id === groupId);
-    if (!groupNode) return '';
+    if (!groupNode) {
+      console.log(`❌ Group node ${groupId} not found`);
+      return '';
+    }
 
+    console.log(`🔍 Getting context for group ${groupId} with contained nodes:`, groupNode.containedNodes);
+    
     const contexts: string[] = [];
     
     groupNode.containedNodes.forEach(nodeId => {
       const node = allNodes.get(nodeId);
-      if (!node) return;
+      if (!node) {
+        console.log(`❌ Node ${nodeId} not found in allNodes map`);
+        return;
+      }
+
+      console.log(`📄 Processing node ${nodeId} of type ${node.type}`);
 
       switch (node.type) {
         case 'video':
-          contexts.push(`Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`);
+          const videoContext = `Video Title: ${node.title}\nTranscript: ${node.context || 'Not available'}`;
+          contexts.push(videoContext);
+          console.log(`📹 Added video context: ${videoContext.substring(0, 100)}...`);
           break;
         case 'document':
           const docContent = node.documents.map(d => `Document: ${d.fileName}\nContent: ${d.content || 'Content not available'}`).join('\n\n');
-          contexts.push(`Document Node Content:\n${docContent}`);
+          const documentContext = `Document Node Content:\n${docContent}`;
+          contexts.push(documentContext);
+          console.log(`📄 Added document context: ${documentContext.substring(0, 100)}...`);
           break;
         case 'text':
-          contexts.push(`Text Note:\n${node.content || 'Not available'}`);
+          const textContext = `Text Note:\n${node.content || 'Not available'}`;
+          contexts.push(textContext);
+          console.log(`📝 Added text context: ${textContext.substring(0, 100)}...`);
           break;
         case 'website':
           const websiteContent = node.websites.map(w => `Website: ${w.title}\nURL: ${w.url}\nContent: ${w.content || 'Content not available'}`).join('\n\n');
-          contexts.push(`Website Node Content:\n${websiteContent}`);
+          const websiteContext = `Website Node Content:\n${websiteContent}`;
+          contexts.push(websiteContext);
+          console.log(`🌐 Added website context: ${websiteContext.substring(0, 100)}...`);
           break;
         case 'audio':
           const audioContent = node.recordings.map(r => `Audio Recording:\nTranscript: ${r.transcript || 'Transcript not available'}`).join('\n\n');
-          contexts.push(`Audio Node Content:\n${audioContent}`);
+          const audioContext = `Audio Node Content:\n${audioContent}`;
+          contexts.push(audioContext);
+          console.log(`🎵 Added audio context: ${audioContext.substring(0, 100)}...`);
           break;
         case 'image':
           const imageContent = node.images.map(img => `Image: ${img.fileName}\nAnalysis: ${img.analysis || 'Image analysis not available'}`).join('\n\n');
-          contexts.push(`Image Node Content:\n${imageContent}`);
+          const imageContext = `Image Node Content:\n${imageContent}`;
+          contexts.push(imageContext);
+          console.log(`🖼️ Added image context: ${imageContext.substring(0, 100)}...`);
           break;
+        default:
+          console.log(`⚠️ Unknown node type: ${node.type}`);
       }
     });
 
-    return contexts.join('\n\n---\n\n');
+    const finalContext = contexts.join('\n\n---\n\n');
+    console.log(`✅ Final group context for ${groupId} (${contexts.length} nodes):`, finalContext.substring(0, 200) + '...');
+    return finalContext;
   }, [groupNodes]);
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {

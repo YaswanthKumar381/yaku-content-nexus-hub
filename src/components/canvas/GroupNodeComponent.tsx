@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { Trash2, GripVertical } from "lucide-react";
 import { GroupNode } from "@/types/canvas";
@@ -69,9 +70,7 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
 
   return (
     <div
-      className={`absolute pointer-events-auto group ${
-        isDarkMode ? 'text-white' : 'text-gray-900'
-      }`}
+      className={`absolute pointer-events-auto group`}
       style={{ 
         left: node.x, 
         top: node.y, 
@@ -129,7 +128,7 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
           )}
         </div>
 
-        {/* Connection Handle */}
+        {/* Connection Handle - Completely Outside */}
         <Button
           variant="ghost"
           size="sm"
@@ -137,7 +136,8 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
             e.stopPropagation();
             onStartConnection(node.id);
           }}
-          className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full hover:bg-transparent transition-colors z-10"
+          className="absolute top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full bg-transparent hover:bg-transparent transition-colors z-10"
+          style={{ right: '-32px' }}
           title="Create connection"
         >
           <div className="w-4 h-4 rounded-full border-2 border-violet-500 bg-transparent animate-pulse shadow-lg shadow-violet-500/30" />

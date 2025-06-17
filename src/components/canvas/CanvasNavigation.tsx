@@ -11,36 +11,90 @@ import { SettingsGearIcon } from "../icons/animated/SettingsGearIcon";
 import { MoonIcon } from "../icons/animated/MoonIcon";
 import { SunIcon } from "../icons/animated/SunIcon";
 import { ContextUsageIndicator } from "./ContextUsageIndicator";
+import { useNavigate } from "react-router-dom";
 
 interface CanvasNavigationProps {
   contextUsage: {
     percentage: number;
     totalTokens: number;
     limit: number;
-  }
+  };
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
-export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({ contextUsage }) => {
+export const CanvasNavigation: React.FC<CanvasNavigationProps> = ({ 
+  contextUsage, 
+  onUndo, 
+  onRedo, 
+  canUndo = false, 
+  canRedo = false 
+}) => {
   const { isDarkMode, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   
-  const iconButtonClass = `w-6 h-6 rounded-full ${
+  const iconButtonClass = `w-6 h-6 rounded-full transition-all duration-200 ${
     isDarkMode
       ? "text-zinc-400 hover:text-white hover:bg-white/20"
       : "text-gray-500 hover:text-gray-900 hover:bg-black/20"
   }`;
+
+  const disabledIconButtonClass = `w-6 h-6 rounded-full transition-all duration-200 ${
+    isDarkMode
+      ? "text-zinc-600 cursor-not-allowed"
+      : "text-gray-300 cursor-not-allowed"
+  }`;
+
+  const handleHomeClick = () => {
+    navigate('/dashboard');
+  };
+
+  const handleUndoClick = () => {
+    if (canUndo && onUndo) {
+      onUndo();
+    }
+  };
+
+  const handleRedoClick = () => {
+    if (canRedo && onRedo) {
+      onRedo();
+    }
+  };
 
   return (
     <>
       {/* Floating Top Navigation Bar */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-20">
         <div className={`flex items-center space-x-3 ${isDarkMode ? 'bg-zinc-800/90 border-zinc-700/50' : 'bg-white/90 border-gray-200/50'} backdrop-blur-md border rounded-full px-6 py-3 shadow-lg`}>
-          <Button variant="ghost" size="icon" className={iconButtonClass}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={iconButtonClass}
+            onClick={handleHomeClick}
+            title="Go to Dashboard"
+          >
             <HomeIcon size={16} />
           </Button>
-          <Button variant="ghost" size="icon" className={iconButtonClass}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={canUndo ? iconButtonClass : disabledIconButtonClass}
+            onClick={handleUndoClick}
+            disabled={!canUndo}
+            title="Undo last action"
+          >
             <ArrowLeftIcon size={16} />
           </Button>
-          <Button variant="ghost" size="icon" className={iconButtonClass}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={canRedo ? iconButtonClass : disabledIconButtonClass}
+            onClick={handleRedoClick}
+            disabled={!canRedo}
+            title="Redo last action"
+          >
             <ArrowRightIcon size={16} />
           </Button>
         </div>

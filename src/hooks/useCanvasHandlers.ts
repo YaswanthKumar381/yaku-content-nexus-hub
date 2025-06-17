@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { VideoNode, DocumentNode, TextNode, WebsiteNode, AudioNode, ImageNode } from "@/types/canvas";
 import type { useCanvasNodes } from "@/hooks/useCanvasNodes";
@@ -33,17 +32,32 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     audioNodesResult.forceResetDragState();
     imageNodesResult.forceResetDragState();
     groupNodesResult.forceResetDragState();
-  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult, audioNodesResult, imageNodesResult, groupNodesResult]);
+    
+    // Update group containment after any drag operation
+    groupNodesResult.groupNodes.forEach(group => {
+      groupNodesResult.updateContainedNodes(group.id, allNodesMap);
+    });
+  }, [videoNodesResult, documentNodesResult, chatNodesResult, textNodesResult, websiteNodesResult, audioNodesResult, imageNodesResult, groupNodesResult, allNodesMap]);
 
   const handleDeleteVideoNode = useCallback((nodeId: string) => {
     videoNodesResult.deleteVideoNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
-  }, [videoNodesResult, connectionsResult]);
+    
+    // Update group containment after deletion
+    groupNodesResult.groupNodes.forEach(group => {
+      groupNodesResult.updateContainedNodes(group.id, allNodesMap);
+    });
+  }, [videoNodesResult, connectionsResult, groupNodesResult, allNodesMap]);
 
   const handleDeleteDocumentNode = useCallback((nodeId: string) => {
     documentNodesResult.deleteDocumentNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
-  }, [documentNodesResult, connectionsResult]);
+    
+    // Update group containment after deletion
+    groupNodesResult.groupNodes.forEach(group => {
+      groupNodesResult.updateContainedNodes(group.id, allNodesMap);
+    });
+  }, [documentNodesResult, connectionsResult, groupNodesResult, allNodesMap]);
 
   const handleDeleteDocumentFile = useCallback((nodeId: string, fileId: string) => {
     const node = documentNodesResult.documentNodes.find(n => n.id === nodeId);
@@ -56,22 +70,42 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
   const handleDeleteTextNode = useCallback((nodeId: string) => {
     textNodesResult.deleteTextNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
-  }, [textNodesResult, connectionsResult]);
+    
+    // Update group containment after deletion
+    groupNodesResult.groupNodes.forEach(group => {
+      groupNodesResult.updateContainedNodes(group.id, allNodesMap);
+    });
+  }, [textNodesResult, connectionsResult, groupNodesResult, allNodesMap]);
 
   const handleDeleteWebsiteNode = useCallback((nodeId: string) => {
     websiteNodesResult.deleteWebsiteNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
-  }, [websiteNodesResult, connectionsResult]);
+    
+    // Update group containment after deletion
+    groupNodesResult.groupNodes.forEach(group => {
+      groupNodesResult.updateContainedNodes(group.id, allNodesMap);
+    });
+  }, [websiteNodesResult, connectionsResult, groupNodesResult, allNodesMap]);
 
   const handleDeleteAudioNode = useCallback((nodeId: string) => {
     audioNodesResult.deleteAudioNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
-  }, [audioNodesResult, connectionsResult]);
+    
+    // Update group containment after deletion
+    groupNodesResult.groupNodes.forEach(group => {
+      groupNodesResult.updateContainedNodes(group.id, allNodesMap);
+    });
+  }, [audioNodesResult, connectionsResult, groupNodesResult, allNodesMap]);
 
   const handleDeleteImageNode = useCallback((nodeId: string) => {
     imageNodesResult.deleteImageNode(nodeId);
     connectionsResult.removeConnectionsForNode(nodeId);
-  }, [imageNodesResult, connectionsResult]);
+    
+    // Update group containment after deletion
+    groupNodesResult.groupNodes.forEach(group => {
+      groupNodesResult.updateContainedNodes(group.id, allNodesMap);
+    });
+  }, [imageNodesResult, connectionsResult, groupNodesResult, allNodesMap]);
 
   const handleDeleteImageFile = useCallback((nodeId: string, imageId: string) => {
     const node = imageNodesResult.imageNodes.find(n => n.id === nodeId);
@@ -88,9 +122,11 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
 
   const handleUpdateGroupNode = useCallback((nodeId: string, updates: Partial<Omit<import('@/types/canvas').GroupNode, 'id' | 'type'>>) => {
     groupNodesResult.updateGroupNode(nodeId, updates);
-    // Update contained nodes after resizing
-    if (updates.width || updates.height) {
-      groupNodesResult.updateContainedNodes(nodeId, allNodesMap);
+    // Update contained nodes after resizing or moving
+    if (updates.width || updates.height || updates.x || updates.y) {
+      setTimeout(() => {
+        groupNodesResult.updateContainedNodes(nodeId, allNodesMap);
+      }, 100);
     }
   }, [groupNodesResult, allNodesMap]);
 

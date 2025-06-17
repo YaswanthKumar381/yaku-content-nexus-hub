@@ -1,6 +1,7 @@
 
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasOrchestration } from "@/hooks/useCanvasOrchestration";
+import { useCanvasHistory } from "@/hooks/useCanvasHistory";
 import { sidebarTools } from "@/config/sidebar";
 
 import { CanvasSidebar } from "@/components/canvas/CanvasSidebar";
@@ -11,6 +12,7 @@ import { CanvasModals } from "@/components/canvas/CanvasModals";
 
 const CanvasContent = () => {
   const { isDarkMode } = useTheme();
+  const { addAction, undo, redo, canUndo, canRedo } = useCanvasHistory();
   
   const {
     canvasState,
@@ -47,6 +49,23 @@ const CanvasContent = () => {
     onSendMessage,
     onTranscriptModalClose,
   } = useCanvasOrchestration();
+
+  // Handle undo/redo actions
+  const handleUndo = () => {
+    const action = undo();
+    if (action) {
+      console.log('Undoing action:', action);
+      // TODO: Implement actual undo logic based on action type
+    }
+  };
+
+  const handleRedo = () => {
+    const action = redo();
+    if (action) {
+      console.log('Redoing action:', action);
+      // TODO: Implement actual redo logic based on action type
+    }
+  };
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
@@ -107,7 +126,13 @@ const CanvasContent = () => {
         onGroupDragStart={eventsResult.handleGroupDragStart}
       />
 
-      <CanvasNavigation contextUsage={contextUsage} />
+      <CanvasNavigation 
+        contextUsage={contextUsage} 
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
+      />
 
       <ZoomIndicator scale={transformResult.transform.scale} />
     </div>
