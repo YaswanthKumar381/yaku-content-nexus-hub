@@ -10,7 +10,7 @@ interface AudioNodeProps {
   onPointerDown: (e: React.PointerEvent, nodeId: string) => void;
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
-  onAddRecordingToNode: (nodeId: string, recording: AudioRecording) => void;
+  onAddRecordingToNode: (nodeId: string, audioBlob: Blob, duration: number) => Promise<void>;
   onDeleteRecording: (nodeId: string, recordingId: string) => void;
   isConnected: boolean;
 }
@@ -45,20 +45,14 @@ export const AudioNodeComponent: React.FC<AudioNodeProps> = ({
 
   const handleStopRecording = useCallback(async () => {
     try {
-      const result = await stopRecording();
-      if (result) {
-        const newRecording: AudioRecording = {
-          id: Date.now().toString(),
-          blob: result.blob,
-          duration: result.duration,
-          recordedAt: new Date().toISOString(),
-        };
-        onAddRecordingToNode(node.id, newRecording);
+      const audioBlob = await stopRecording();
+      if (audioBlob) {
+        await onAddRecordingToNode(node.id, audioBlob, recordingDuration);
       }
     } catch (error) {
       console.error('Failed to stop recording:', error);
     }
-  }, [stopRecording, onAddRecordingToNode, node.id]);
+  }, [stopRecording, onAddRecordingToNode, node.id, recordingDuration]);
 
   const handlePlayPause = useCallback((recording: AudioRecording) => {
     const audio = audioElements.get(recording.id);
@@ -253,7 +247,7 @@ export const AudioNodeComponent: React.FC<AudioNodeProps> = ({
           className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 p-0 rounded-full bg-transparent hover:bg-transparent transition-colors z-10"
           title="Create connection"
         >
-          <div className="w-4 h-4 rounded-full border-2 border-violet-500 bg-transparent animate-pulse shadow-lg shadow-violet-500/30" />
+          <div className="w-4 h-4 rounded-full border-2 border-violet-500 bg-transparent opacity-70 hover:opacity-100 animate-pulse shadow-lg shadow-violet-500/30" />
         </Button>
       </div>
     </div>

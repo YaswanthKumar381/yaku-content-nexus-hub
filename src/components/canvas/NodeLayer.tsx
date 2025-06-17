@@ -202,7 +202,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onPointerDown={onAudioNodePointerDown}
             onStartConnection={onStartConnection}
             onDelete={onDeleteAudioNode}
-            onAddRecording={onAddRecordingToNode}
+            onAddRecordingToNode={onAddRecordingToNode}
             onDeleteRecording={onDeleteRecording}
             isConnected={isConnected}
           />
