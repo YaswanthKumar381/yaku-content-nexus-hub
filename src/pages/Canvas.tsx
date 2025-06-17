@@ -116,28 +116,36 @@ const CanvasContent = () => {
             // Re-add the node
             switch (action.data.nodeType) {
               case 'video':
-                videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y);
+                const videoNode = videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y);
+                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
                 break;
               case 'document':
-                documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y);
+                const docNode = documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y);
+                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
                 break;
               case 'text':
-                textNodesResult.addTextNode(action.data.position.x, action.data.position.y);
+                const textNode = textNodesResult.addTextNode(action.data.position.x, action.data.position.y);
+                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
                 break;
               case 'website':
-                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y);
+                const websiteNode = websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y, []);
+                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
                 break;
               case 'audio':
-                audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y);
+                const audioNode = audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y);
+                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
                 break;
               case 'image':
-                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y);
+                const imageNode = imageNodesResult.addImageNode(action.data.position.x, action.data.position.y);
+                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
                 break;
               case 'group':
-                groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y);
+                const groupNode = groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y);
+                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
                 break;
               case 'chat':
-                chatNodesResult.addChatNode(action.data.position.x, action.data.position.y);
+                const chatNode = chatNodesResult.addChatNode(action.data.position.x, action.data.position.y);
+                trackNodeCreation(action.data.nodeType, action.nodeId!, action.data.position);
                 break;
             }
           }
