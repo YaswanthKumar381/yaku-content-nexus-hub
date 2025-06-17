@@ -50,8 +50,9 @@ const CanvasContent = () => {
     onTranscriptModalClose,
   } = useCanvasOrchestration();
 
-  // Enhanced undo/redo handlers with actual implementation
+  // Enhanced undo/redo handlers with proper action tracking
   const handleUndo = () => {
+    console.log('Undo button clicked, canUndo:', canUndo);
     const action = undo();
     if (action) {
       console.log('Undoing action:', action);
@@ -84,32 +85,90 @@ const CanvasContent = () => {
               case 'group':
                 onDeleteGroupNode(action.nodeId);
                 break;
+              case 'chat':
+                // Handle chat node deletion if needed
+                break;
             }
           }
-          break;
-        case 'DELETE_NODE':
-          console.log('Cannot undo delete node - restoration not implemented yet');
           break;
         case 'ADD_CONNECTION':
           if (action.connectionId) {
             connectionsResult.removeConnection(action.connectionId);
           }
           break;
-        case 'DELETE_CONNECTION':
-          console.log('Cannot undo delete connection - restoration not implemented yet');
-          break;
         default:
-          console.log('Unknown action type for undo:', action.type);
+          console.log('Undo not implemented for action type:', action.type);
       }
     }
   };
 
   const handleRedo = () => {
+    console.log('Redo button clicked, canRedo:', canRedo);
     const action = redo();
     if (action) {
       console.log('Redoing action:', action);
-      // TODO: Implement actual redo logic based on action type
+      
+      // Implement redo logic based on action type
+      switch (action.type) {
+        case 'ADD_NODE':
+          if (action.data?.position && action.data?.nodeType) {
+            console.log(`Redoing add ${action.data.nodeType} node at position:`, action.data.position);
+            // Re-add the node
+            switch (action.data.nodeType) {
+              case 'video':
+                videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y);
+                break;
+              case 'document':
+                documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y);
+                break;
+              case 'text':
+                textNodesResult.addTextNode(action.data.position.x, action.data.position.y);
+                break;
+              case 'website':
+                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y);
+                break;
+              case 'audio':
+                audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y);
+                break;
+              case 'image':
+                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y);
+                break;
+              case 'group':
+                groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y);
+                break;
+              case 'chat':
+                chatNodesResult.addChatNode(action.data.position.x, action.data.position.y);
+                break;
+            }
+          }
+          break;
+        case 'ADD_CONNECTION':
+          if (action.data?.sourceId && action.data?.targetId) {
+            connectionsResult.addConnection(action.data.sourceId, action.data.targetId);
+          }
+          break;
+        default:
+          console.log('Redo not implemented for action type:', action.type);
+      }
     }
+  };
+
+  // Track node creation actions
+  const trackNodeCreation = (nodeType: string, nodeId: string, position: { x: number; y: number }) => {
+    addAction({
+      type: 'ADD_NODE',
+      nodeId,
+      data: { nodeType, position }
+    });
+  };
+
+  // Track connection creation actions
+  const trackConnectionCreation = (sourceId: string, targetId: string, connectionId: string) => {
+    addAction({
+      type: 'ADD_CONNECTION',
+      connectionId,
+      data: { sourceId, targetId }
+    });
   };
 
   return (

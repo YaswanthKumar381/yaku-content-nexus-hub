@@ -50,6 +50,7 @@ export const useCanvasInteraction = ({
   const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId || draggingTextNodeId || draggingWebsiteNodeId || draggingAudioNodeId || draggingImageNodeId || draggingGroupNodeId;
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
+    // Handle connection line preview
     if (connectingInfo) {
       const rect = canvasContainerRef.current?.getBoundingClientRect();
       if (rect) {
@@ -58,7 +59,11 @@ export const useCanvasInteraction = ({
           y: (e.clientY - rect.top - transform.y) / transform.scale,
         });
       }
-    } else if (draggingVideoNodeId) {
+      return; // Don't handle node dragging while connecting
+    }
+
+    // Handle node dragging - only move the node that is actually being dragged
+    if (draggingVideoNodeId) {
       moveVideoNode(draggingVideoNodeId, e.clientX, e.clientY, transform);
     } else if (draggingDocumentNodeId) {
       moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
@@ -75,6 +80,7 @@ export const useCanvasInteraction = ({
     } else if (draggingGroupNodeId) {
       moveGroupNode(draggingGroupNodeId, e.clientX, e.clientY, transform);
     } else {
+      // Only handle canvas panning if no node is being dragged and no connection is active
       handlePointerMove(e, draggingNodeId, () => {});
     }
   }, [
@@ -91,6 +97,7 @@ export const useCanvasInteraction = ({
   ]);
 
   const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => {
+    // Handle node pointer up events
     if (draggingVideoNodeId) {
       handleVideoNodePointerUp(e);
     } else if (draggingDocumentNodeId) {
@@ -108,8 +115,11 @@ export const useCanvasInteraction = ({
     } else if (draggingGroupNodeId) {
       handleGroupNodePointerUp(e);
     }
+    
+    // Handle canvas pointer up
     handlePointerUp(e);
 
+    // Handle connection state
     if (connectingInfo) {
       const targetNodeElement = (e.target as HTMLElement).closest('[data-node-id]');
       // If we are connecting but don't land on a node, cancel the connection.

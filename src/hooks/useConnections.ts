@@ -15,7 +15,9 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
 
   const addConnection = useCallback((sourceId: string, targetId: string) => {
     // Prevent connecting a node to itself
-    if (sourceId === targetId) return;
+    if (sourceId === targetId) return null;
+
+    let connectionId: string | null = null;
 
     setConnections((prevConnections) => {
       // Prevent duplicate connections
@@ -28,8 +30,13 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
         sourceId,
         targetId,
       };
+      
+      connectionId = newConnection.id;
+      console.log('Connection added:', newConnection);
       return [...prevConnections, newConnection];
     });
+
+    return connectionId;
   }, []);
   
   const removeConnection = useCallback((connectionId: string) => {
@@ -50,7 +57,7 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
   }, [allNodesMap, connectingInfo]);
 
   const endConnection = useCallback((nodeId: string) => {
-    if (!connectingInfo) return;
+    if (!connectingInfo) return null;
     const startNode = allNodesMap.get(connectingInfo.startNodeId);
     const endNode = allNodesMap.get(nodeId);
     
@@ -61,16 +68,20 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
       endNodeId: nodeId
     });
     
+    let connectionId: string | null = null;
+    
     if (startNode && endNode && 
         (startNode.type === 'video' || startNode.type === 'document' || startNode.type === 'text' || startNode.type === 'website' || startNode.type === 'audio' || startNode.type === 'image' || startNode.type === 'group') && 
         endNode.type === 'chat') {
       console.log('✅ Connection allowed, adding connection');
-      addConnection(connectingInfo.startNodeId, nodeId);
+      connectionId = addConnection(connectingInfo.startNodeId, nodeId);
     } else {
       console.log('❌ Connection not allowed');
     }
+    
     setConnectingInfo(null);
     setLiveEndPoint(null);
+    return connectionId;
   }, [addConnection, allNodesMap, connectingInfo]);
   
   const clearConnectionState = useCallback(() => {
@@ -79,5 +90,16 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
     setLiveEndPoint(null);
   }, []);
 
-  return { connections, connectingInfo, liveEndPoint, setLiveEndPoint, startConnection, endConnection, clearConnectionState, removeConnectionsForNode, removeConnection };
+  return { 
+    connections, 
+    connectingInfo, 
+    liveEndPoint, 
+    setLiveEndPoint, 
+    startConnection, 
+    endConnection, 
+    clearConnectionState, 
+    removeConnectionsForNode, 
+    removeConnection,
+    addConnection 
+  };
 };

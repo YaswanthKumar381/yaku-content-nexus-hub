@@ -16,10 +16,19 @@ interface ChatNodeComponentProps {
   isConnected: boolean;
 }
 
-export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPointerDown, onEndConnection, onSendMessage, isSendingMessage, onResize, isConnected }) => {
+export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ 
+  node, 
+  onPointerDown, 
+  onEndConnection, 
+  onSendMessage, 
+  isSendingMessage, 
+  onResize, 
+  isConnected 
+}) => {
   const { isDarkMode } = useTheme();
   const scrollAreaViewportRef = useRef<HTMLDivElement>(null);
   const resizerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (scrollAreaViewportRef.current) {
@@ -28,11 +37,29 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
   }, [node.messages, isSendingMessage]);
   
   const handlePointerDown = (e: React.PointerEvent) => {
+    // Prevent dragging when interacting with UI elements
     const target = e.target as HTMLElement;
     if (target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area]')) {
       return;
     }
+
+    // Only allow dragging from the main chat container, not from scrollable content
+    if (target.closest('[data-scroll-area]')) {
+      return;
+    }
+
+    e.stopPropagation();
+    setIsDragging(true);
     onPointerDown(e, node.id);
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleConnectionEnd = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    onEndConnection(node.id);
   };
 
   const handleResizePointerDown = (e: React.PointerEvent) => {
@@ -63,7 +90,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
 
   return (
     <div
-      className="absolute cursor-move flex flex-col"
+      className={`absolute flex flex-col ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       style={{
         left: node.x,
         top: node.y,
@@ -71,19 +98,19 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
         width: '600px',
       }}
       onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      data-node-id={node.id}
     >
-      {/* Left handle */}
+      {/* Left handle - positioned to not interfere with dragging */}
       <div 
-        onPointerUp={(e) => {
-          e.stopPropagation();
-          onEndConnection(node.id);
-        }}
-        className={`absolute top-1/2 left-[-16px] transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 ${isDarkMode ? 'border-purple-400' : 'border-purple-600'} z-20 cursor-pointer flex items-center justify-center`}
+        onPointerUp={handleConnectionEnd}
+        className={`absolute top-1/2 left-[-16px] transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 ${isDarkMode ? 'border-purple-400' : 'border-purple-600'} z-20 cursor-pointer flex items-center justify-center hover:scale-110 transition-transform`}
+        title="Drop connection here"
       >
         {isConnected && <div className={`w-1.5 h-1.5 ${isDarkMode ? 'bg-purple-400' : 'bg-purple-600'} rounded-full`} />}
       </div>
       
-      <div className="flex flex-col bg-zinc-800/80 backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-700/50 shadow-2xl shadow-black/30">
+      <div className="flex flex-col bg-zinc-800/80 backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-700/50 shadow-2xl shadow-black/30 pointer-events-auto">
         <ScrollArea 
             onWheel={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
@@ -116,7 +143,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ node, onPo
             </div>
         </ScrollArea>
 
-        <div className="cursor-default border-t border-zinc-700/50">
+        <div className="cursor-default border-t border-zinc-700/50" onPointerDown={(e) => e.stopPropagation()}>
           <PromptInputBox 
                 onSend={(message) => onSendMessage(node.id, message)}
                 isLoading={isSendingMessage}
