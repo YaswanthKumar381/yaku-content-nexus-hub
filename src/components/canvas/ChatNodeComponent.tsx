@@ -37,17 +37,22 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
   }, [node.messages, isSendingMessage]);
   
   const handlePointerDown = (e: React.PointerEvent) => {
-    // Prevent dragging when interacting with UI elements
+    // Prevent dragging when clicking on specific interactive elements
     const target = e.target as HTMLElement;
-    if (target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area]')) {
+    
+    // Check if the click is on an interactive element or inside the chat content area
+    if (target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area], [data-chat-content], [data-prompt-input]')) {
+      console.log('🚫 Preventing drag - clicked on interactive element:', target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area], [data-chat-content], [data-prompt-input]')?.tagName);
       return;
     }
 
-    // Only allow dragging from the main chat container, not from scrollable content
-    if (target.closest('[data-scroll-area]')) {
+    // Only allow dragging from the header/title area of the chat node
+    if (!target.closest('[data-drag-handle]')) {
+      console.log('🚫 Preventing drag - not on drag handle');
       return;
     }
 
+    console.log('✅ Starting drag from drag handle');
     e.stopPropagation();
     setIsDragging(true);
     onPointerDown(e, node.id);
@@ -73,7 +78,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
 
     const handlePointerMove = (moveEvent: PointerEvent) => {
         const newHeight = startHeight + (moveEvent.clientY - startY);
-        onResize(node.id, Math.max(200, Math.min(800, newHeight)));
+        onResize(node.id, Math.max(300, Math.min(800, newHeight)));
     };
 
     const handlePointerUp = (upEvent: PointerEvent) => {
@@ -90,14 +95,14 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
 
   return (
     <div
-      className={`absolute flex flex-col ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      className={`absolute flex flex-col ${isDragging ? 'cursor-grabbing' : 'cursor-default'}`}
       style={{
         left: node.x,
         top: node.y,
         transform: 'translate(-50%, -50%)',
         width: '600px',
+        height: `${node.height + 60}px`, // Add space for input area
       }}
-      onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       data-node-id={node.id}
     >
@@ -110,13 +115,22 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
         {isConnected && <div className={`w-1.5 h-1.5 ${isDarkMode ? 'bg-purple-400' : 'bg-purple-600'} rounded-full`} />}
       </div>
       
-      <div className="flex flex-col bg-zinc-800/80 backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-700/50 shadow-2xl shadow-black/30 pointer-events-auto">
+      <div className="flex flex-col bg-zinc-800/80 backdrop-blur-md rounded-3xl overflow-hidden border border-zinc-700/50 shadow-2xl shadow-black/30 pointer-events-auto h-full">
+        {/* Drag handle header */}
+        <div 
+          data-drag-handle
+          onPointerDown={handlePointerDown}
+          className={`h-8 bg-zinc-700/30 border-b border-zinc-600/30 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} flex items-center justify-center`}
+        >
+          <div className="w-8 h-1 bg-zinc-500 rounded-full"></div>
+        </div>
+
+        {/* Chat messages area */}
         <ScrollArea 
-            onWheel={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            className="flex-grow pr-2 cursor-auto"
-            style={{ height: `${node.height}px` }}
+            className="flex-1 pr-2 cursor-auto"
+            style={{ height: `${node.height - 120}px` }}
             data-scroll-area
+            data-chat-content
         >
             <div className="h-full p-4 flex flex-col gap-4" ref={scrollAreaViewportRef}>
                 {node.messages.filter(m => m.role !== 'system').map(message => (
@@ -143,15 +157,21 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
             </div>
         </ScrollArea>
 
-        <div className="cursor-default border-t border-zinc-700/50" onPointerDown={(e) => e.stopPropagation()}>
+        {/* Input area - now properly positioned and always visible */}
+        <div 
+          className="min-h-[60px] border-t border-zinc-700/50 bg-zinc-800/90" 
+          data-prompt-input
+        >
           <PromptInputBox 
                 onSend={(message) => onSendMessage(node.id, message)}
                 isLoading={isSendingMessage}
                 placeholder="Ask about the connected content..."
-                className="bg-transparent border-none shadow-none rounded-none"
+                className="bg-transparent border-none shadow-none rounded-none h-[60px]"
           />
         </div>
       </div>
+      
+      {/* Resizer */}
       <div 
         ref={resizerRef}
         data-resizer

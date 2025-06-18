@@ -9,9 +9,10 @@ export const useChatNodes = () => {
   const [isSendingMessageNodeId, setIsSendingMessageNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  const addChatNode = useCallback((x: number, y: number) => {
+  const addChatNode = useCallback((x: number, y: number, nodeId?: string) => {
+    const id = nodeId || uuidv4();
     const newNode: ChatNode = {
-      id: uuidv4(),
+      id,
       x,
       y,
       type: "chat",
