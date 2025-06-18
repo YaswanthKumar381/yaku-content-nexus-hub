@@ -33,9 +33,16 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   const handleNodePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
 
-    // Do not start drag if clicking on the connection handle or transcript button.
-    // They have their own onPointerDown handlers.
-    if (target.closest('[data-connection-handle]') || target.closest('[data-transcript-button]')) {
+    // Do not start drag if clicking on interactive elements
+    if (target.closest('button, iframe, [data-connection-handle], [data-transcript-button]')) {
+        console.log("🚫 Preventing drag - clicked on interactive element");
+        return;
+    }
+    
+    // Only allow dragging from specific draggable areas (not the video content itself)
+    if (!target.closest('[data-draggable-area]')) {
+        console.log("🚫 Preventing drag - not on draggable area");
+        e.stopPropagation();
         return;
     }
     
@@ -84,7 +91,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
               <iframe
                 src={embedUrl}
                 title={node.title}
-                className="w-full h-full"
+                className="w-full h-full pointer-events-none"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -95,12 +102,12 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
               <img
                 src={getVideoThumbnail(node.url)}
                 alt={node.title}
-                className="w-full h-48 object-cover"
+                className="w-full h-48 object-cover pointer-events-none"
                 onError={(e) => {
                   e.currentTarget.src = "/placeholder.svg";
                 }}
               />
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/thumbnail:opacity-100 transition-opacity">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover/thumbnail:opacity-100 transition-opacity pointer-events-none">
                 <div className="w-16 h-16 bg-black/70 rounded-full flex items-center justify-center hover:bg-red-500 transition-colors">
                   <Play className="w-6 h-6 text-white ml-1" fill="white" />
                 </div>
@@ -120,7 +127,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
             <Text className="w-4 h-4 text-white" />
           </button>
         </div>
-        <div className="p-4">
+        <div className="p-4" data-draggable-area>
           <h3 className="font-medium text-gray-900 text-sm mb-2 leading-tight">{node.title}</h3>
           {!node.context && (
             <p className="text-xs text-amber-600 flex items-center gap-1">

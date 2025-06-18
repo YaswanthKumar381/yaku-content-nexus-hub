@@ -97,7 +97,7 @@ export const useCanvasInteraction = ({
 
     // Only handle canvas panning if no node is being dragged and no connection is active
     if (!draggingNodeId && !connectingInfo) {
-      handlePointerMove(e, false, () => {});
+      handlePointerMove(e);
     }
   }, [
       connectingInfo, canvasContainerRef, setLiveEndPoint, transform,

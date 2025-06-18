@@ -37,17 +37,9 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
   }, [node.messages, isSendingMessage]);
   
   const handlePointerDown = (e: React.PointerEvent) => {
-    // Prevent dragging when clicking on specific interactive elements
     const target = e.target as HTMLElement;
     
-    // Check if the click is on an interactive element or inside the chat content area
-    if (target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area], [data-chat-content], [data-prompt-input]')) {
-      console.log('🚫 Preventing drag - clicked on interactive element:', target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area], [data-chat-content], [data-prompt-input]')?.tagName);
-      e.stopPropagation();
-      return;
-    }
-
-    // Only allow dragging from the header/title area of the chat node
+    // Only allow dragging from the drag handle
     if (!target.closest('[data-drag-handle]')) {
       console.log('🚫 Preventing drag - not on drag handle');
       e.stopPropagation();
@@ -97,11 +89,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
   };
 
   // Prevent event bubbling for all interactive content
-  const handleContentClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-
-  const handleContentPointerDown = (e: React.PointerEvent) => {
+  const handleContentInteraction = (e: React.SyntheticEvent) => {
     e.stopPropagation();
   };
 
@@ -113,7 +101,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
         top: node.y,
         transform: 'translate(-50%, -50%)',
         width: '600px',
-        height: `${node.height + 60}px`, // Add space for input area
+        height: `${node.height + 60}px`,
       }}
       onPointerUp={handlePointerUp}
       data-node-id={node.id}
@@ -143,8 +131,8 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
             style={{ height: `${node.height - 120}px` }}
             data-scroll-area
             data-chat-content
-            onClick={handleContentClick}
-            onPointerDown={handleContentPointerDown}
+            onClick={handleContentInteraction}
+            onPointerDown={handleContentInteraction}
         >
             <div className="h-full p-4 flex flex-col gap-4" ref={scrollAreaViewportRef}>
                 {node.messages.filter(m => m.role !== 'system').map(message => (
@@ -171,12 +159,12 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
             </div>
         </ScrollArea>
 
-        {/* Input area - now properly positioned and always visible */}
+        {/* Input area */}
         <div 
           className="min-h-[60px] border-t border-zinc-700/50 bg-zinc-800/90" 
           data-prompt-input
-          onClick={handleContentClick}
-          onPointerDown={handleContentPointerDown}
+          onClick={handleContentInteraction}
+          onPointerDown={handleContentInteraction}
         >
           <PromptInputBox 
                 onSend={(message) => onSendMessage(node.id, message)}

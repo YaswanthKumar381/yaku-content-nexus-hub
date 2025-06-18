@@ -116,28 +116,28 @@ const CanvasContent = () => {
             // Re-add the node with the same ID
             switch (action.data.nodeType) {
               case 'video':
-                videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y, action.data.url || '', action.nodeId);
+                videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y, action.data.url || '');
                 break;
               case 'document':
-                documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y, action.nodeId);
+                documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y);
                 break;
               case 'text':
-                textNodesResult.addTextNode(action.data.position.x, action.data.position.y, action.nodeId);
+                textNodesResult.addTextNode(action.data.position.x, action.data.position.y);
                 break;
               case 'website':
-                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y, action.nodeId);
+                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y);
                 break;
               case 'audio':
-                audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y, action.nodeId);
+                audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y);
                 break;
               case 'image':
-                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y, action.nodeId);
+                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y);
                 break;
               case 'group':
-                groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y, action.nodeId);
+                groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y);
                 break;
               case 'chat':
-                chatNodesResult.addChatNode(action.data.position.x, action.data.position.y, action.nodeId);
+                chatNodesResult.addChatNode(action.data.position.x, action.data.position.y);
                 break;
             }
           }
@@ -151,24 +151,6 @@ const CanvasContent = () => {
           console.log('Redo not implemented for action type:', action.type);
       }
     }
-  };
-
-  // Track node creation actions
-  const trackNodeCreation = (nodeType: string, nodeId: string, position: { x: number; y: number }) => {
-    addAction({
-      type: 'ADD_NODE',
-      nodeId,
-      data: { nodeType, position }
-    });
-  };
-
-  // Track connection creation actions
-  const trackConnectionCreation = (sourceId: string, targetId: string, connectionId: string) => {
-    addAction({
-      type: 'ADD_CONNECTION',
-      connectionId,
-      data: { sourceId, targetId }
-    });
   };
 
   return (
