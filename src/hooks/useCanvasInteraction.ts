@@ -50,13 +50,6 @@ export const useCanvasInteraction = ({
   const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId || draggingTextNodeId || draggingWebsiteNodeId || draggingAudioNodeId || draggingImageNodeId || draggingGroupNodeId;
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
-    // Prevent any movement if we're inside a chat node's interactive area
-    const target = e.target as HTMLElement;
-    if (target.closest('[data-chat-content], [data-prompt-input], [data-scroll-area]')) {
-      console.log('🚫 Preventing movement - inside chat content');
-      return;
-    }
-    
     // Handle connection line preview
     if (connectingInfo) {
       const rect = canvasContainerRef.current?.getBoundingClientRect();
