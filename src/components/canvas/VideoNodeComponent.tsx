@@ -40,7 +40,13 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
     }
     
     console.log("✅ Starting node drag for:", node.id);
+    e.stopPropagation();
     onPointerDown(e, node.id);
+  };
+
+  const handleConnectionStart = (e: React.PointerEvent) => {
+    e.stopPropagation();
+    onStartConnection(node.id);
   };
 
   return (
@@ -67,10 +73,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
         </button>
         <div 
           data-connection-handle
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            onStartConnection(node.id);
-          }}
+          onPointerDown={handleConnectionStart}
           className="absolute top-1/2 left-full transform -translate-y-1/2 w-4 h-4 bg-transparent rounded-full border-2 border-red-500 z-20 cursor-pointer flex items-center justify-center"
         >
           {isConnected && <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />}

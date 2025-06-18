@@ -43,12 +43,14 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
     // Check if the click is on an interactive element or inside the chat content area
     if (target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area], [data-chat-content], [data-prompt-input]')) {
       console.log('🚫 Preventing drag - clicked on interactive element:', target.closest('button, input, textarea, a, [data-resizer], [data-scroll-area], [data-chat-content], [data-prompt-input]')?.tagName);
+      e.stopPropagation();
       return;
     }
 
     // Only allow dragging from the header/title area of the chat node
     if (!target.closest('[data-drag-handle]')) {
       console.log('🚫 Preventing drag - not on drag handle');
+      e.stopPropagation();
       return;
     }
 
@@ -58,7 +60,8 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
     onPointerDown(e, node.id);
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
+    e.stopPropagation();
     setIsDragging(false);
   };
 
@@ -91,6 +94,15 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
 
     document.addEventListener('pointermove', handlePointerMove);
     document.addEventListener('pointerup', handlePointerUp);
+  };
+
+  // Prevent event bubbling for all interactive content
+  const handleContentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleContentPointerDown = (e: React.PointerEvent) => {
+    e.stopPropagation();
   };
 
   return (
@@ -131,6 +143,8 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
             style={{ height: `${node.height - 120}px` }}
             data-scroll-area
             data-chat-content
+            onClick={handleContentClick}
+            onPointerDown={handleContentPointerDown}
         >
             <div className="h-full p-4 flex flex-col gap-4" ref={scrollAreaViewportRef}>
                 {node.messages.filter(m => m.role !== 'system').map(message => (
@@ -161,6 +175,8 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
         <div 
           className="min-h-[60px] border-t border-zinc-700/50 bg-zinc-800/90" 
           data-prompt-input
+          onClick={handleContentClick}
+          onPointerDown={handleContentPointerDown}
         >
           <PromptInputBox 
                 onSend={(message) => onSendMessage(node.id, message)}

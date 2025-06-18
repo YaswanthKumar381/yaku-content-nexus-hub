@@ -50,6 +50,12 @@ export const useCanvasInteraction = ({
   const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId || draggingTextNodeId || draggingWebsiteNodeId || draggingAudioNodeId || draggingImageNodeId || draggingGroupNodeId;
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
+    // Prevent any movement if we're inside a chat node's interactive area
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-chat-content], [data-prompt-input], [data-scroll-area]')) {
+      return;
+    }
+    
     // Handle connection line preview
     if (connectingInfo) {
       const rect = canvasContainerRef.current?.getBoundingClientRect();
@@ -62,26 +68,36 @@ export const useCanvasInteraction = ({
       return; // Don't handle node dragging while connecting
     }
 
-    // Handle node dragging - only move the node that is actually being dragged
+    // Handle node dragging - only move the specific node that is being dragged
     if (draggingVideoNodeId) {
       moveVideoNode(draggingVideoNodeId, e.clientX, e.clientY, transform);
+      return; // Exit early to prevent canvas panning
     } else if (draggingDocumentNodeId) {
       moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
+      return;
     } else if (draggingChatNodeId) {
       moveChatNode(draggingChatNodeId, e.clientX, e.clientY, transform);
+      return;
     } else if (draggingTextNodeId) {
       moveTextNode(draggingTextNodeId, e.clientX, e.clientY, transform);
+      return;
     } else if (draggingWebsiteNodeId) {
       moveWebsiteNode(draggingWebsiteNodeId, e.clientX, e.clientY, transform);
+      return;
     } else if (draggingAudioNodeId) {
       moveAudioNode(draggingAudioNodeId, e.clientX, e.clientY, transform);
+      return;
     } else if (draggingImageNodeId) {
       moveImageNode(draggingImageNodeId, e.clientX, e.clientY, transform);
+      return;
     } else if (draggingGroupNodeId) {
       moveGroupNode(draggingGroupNodeId, e.clientX, e.clientY, transform);
-    } else {
-      // Only handle canvas panning if no node is being dragged and no connection is active
-      handlePointerMove(e, draggingNodeId, () => {});
+      return;
+    }
+
+    // Only handle canvas panning if no node is being dragged and no connection is active
+    if (!draggingNodeId && !connectingInfo) {
+      handlePointerMove(e, false, () => {});
     }
   }, [
       connectingInfo, canvasContainerRef, setLiveEndPoint, transform,

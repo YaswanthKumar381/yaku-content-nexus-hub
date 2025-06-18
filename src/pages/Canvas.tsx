@@ -125,13 +125,13 @@ const CanvasContent = () => {
                 textNodesResult.addTextNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'website':
-                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y, [], action.nodeId);
+                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'audio':
                 audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'image':
-                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y, [], action.nodeId);
+                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'group':
                 groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y, action.nodeId);
