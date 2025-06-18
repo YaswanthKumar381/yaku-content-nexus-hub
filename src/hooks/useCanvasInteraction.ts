@@ -53,6 +53,7 @@ export const useCanvasInteraction = ({
     // Prevent any movement if we're inside a chat node's interactive area
     const target = e.target as HTMLElement;
     if (target.closest('[data-chat-content], [data-prompt-input], [data-scroll-area]')) {
+      console.log('🚫 Preventing movement - inside chat content');
       return;
     }
     
@@ -70,27 +71,35 @@ export const useCanvasInteraction = ({
 
     // Handle node dragging - only move the specific node that is being dragged
     if (draggingVideoNodeId) {
+      console.log('🎯 Moving video node:', draggingVideoNodeId);
       moveVideoNode(draggingVideoNodeId, e.clientX, e.clientY, transform);
       return; // Exit early to prevent canvas panning
     } else if (draggingDocumentNodeId) {
+      console.log('🎯 Moving document node:', draggingDocumentNodeId);
       moveDocumentNode(draggingDocumentNodeId, e.clientX, e.clientY, transform);
       return;
     } else if (draggingChatNodeId) {
+      console.log('🎯 Moving chat node:', draggingChatNodeId);
       moveChatNode(draggingChatNodeId, e.clientX, e.clientY, transform);
       return;
     } else if (draggingTextNodeId) {
+      console.log('🎯 Moving text node:', draggingTextNodeId);
       moveTextNode(draggingTextNodeId, e.clientX, e.clientY, transform);
       return;
     } else if (draggingWebsiteNodeId) {
+      console.log('🎯 Moving website node:', draggingWebsiteNodeId);
       moveWebsiteNode(draggingWebsiteNodeId, e.clientX, e.clientY, transform);
       return;
     } else if (draggingAudioNodeId) {
+      console.log('🎯 Moving audio node:', draggingAudioNodeId);
       moveAudioNode(draggingAudioNodeId, e.clientX, e.clientY, transform);
       return;
     } else if (draggingImageNodeId) {
+      console.log('🎯 Moving image node:', draggingImageNodeId);
       moveImageNode(draggingImageNodeId, e.clientX, e.clientY, transform);
       return;
     } else if (draggingGroupNodeId) {
+      console.log('🎯 Moving group node:', draggingGroupNodeId);
       moveGroupNode(draggingGroupNodeId, e.clientX, e.clientY, transform);
       return;
     }
@@ -115,20 +124,28 @@ export const useCanvasInteraction = ({
   const handleCanvasPointerUp = useCallback((e: React.PointerEvent) => {
     // Handle node pointer up events
     if (draggingVideoNodeId) {
+      console.log('🎯 Ending video node drag');
       handleVideoNodePointerUp(e);
     } else if (draggingDocumentNodeId) {
+      console.log('🎯 Ending document node drag');
       handleDocumentNodePointerUp(e);
     } else if (draggingChatNodeId) {
+      console.log('🎯 Ending chat node drag');
       handleChatNodePointerUp(e);
     } else if (draggingTextNodeId) {
+      console.log('🎯 Ending text node drag');
       handleTextNodePointerUp(e);
     } else if (draggingWebsiteNodeId) {
+      console.log('🎯 Ending website node drag');
       handleWebsiteNodePointerUp(e);
     } else if (draggingAudioNodeId) {
+      console.log('🎯 Ending audio node drag');
       handleAudioNodePointerUp(e);
     } else if (draggingImageNodeId) {
+      console.log('🎯 Ending image node drag');
       handleImageNodePointerUp(e);
     } else if (draggingGroupNodeId) {
+      console.log('🎯 Ending group node drag');
       handleGroupNodePointerUp(e);
     }
     

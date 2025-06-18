@@ -153,6 +153,24 @@ const CanvasContent = () => {
     }
   };
 
+  // Track node creation for undo/redo
+  const trackNodeCreation = (nodeType: string, nodeId: string, position: { x: number, y: number }, url?: string) => {
+    addAction({
+      type: 'ADD_NODE',
+      nodeId,
+      data: { nodeType, position, url }
+    });
+  };
+
+  // Track connection creation for undo/redo
+  const trackConnectionCreation = (sourceId: string, targetId: string, connectionId: string) => {
+    addAction({
+      type: 'ADD_CONNECTION',
+      connectionId,
+      data: { sourceId, targetId }
+    });
+  };
+
   return (
     <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-zinc-900' : 'bg-gray-50'}`}>
       <CanvasArea

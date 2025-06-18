@@ -36,10 +36,11 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
     // Do not start drag if clicking on interactive elements
     if (target.closest('button, iframe, [data-connection-handle], [data-transcript-button]')) {
         console.log("🚫 Preventing drag - clicked on interactive element");
+        e.stopPropagation();
         return;
     }
     
-    // Only allow dragging from specific draggable areas (not the video content itself)
+    // Only allow dragging from the text/draggable area at the bottom
     if (!target.closest('[data-draggable-area]')) {
         console.log("🚫 Preventing drag - not on draggable area");
         e.stopPropagation();
@@ -58,7 +59,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
 
   return (
     <div
-      className="absolute cursor-move"
+      className="absolute cursor-default"
       data-node-id={node.id}
       style={{
         left: node.x,
@@ -127,7 +128,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
             <Text className="w-4 h-4 text-white" />
           </button>
         </div>
-        <div className="p-4" data-draggable-area>
+        <div className="p-4 cursor-grab hover:cursor-grab active:cursor-grabbing" data-draggable-area>
           <h3 className="font-medium text-gray-900 text-sm mb-2 leading-tight">{node.title}</h3>
           {!node.context && (
             <p className="text-xs text-amber-600 flex items-center gap-1">

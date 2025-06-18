@@ -28,7 +28,6 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
   const { isDarkMode } = useTheme();
   const scrollAreaViewportRef = useRef<HTMLDivElement>(null);
   const resizerRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     if (scrollAreaViewportRef.current) {
@@ -39,22 +38,16 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
   const handlePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
     
-    // Only allow dragging from the drag handle
-    if (!target.closest('[data-drag-handle]')) {
-      console.log('🚫 Preventing drag - not on drag handle');
+    // Only allow dragging from the drag handle - be very specific
+    if (!target.closest('[data-drag-handle]') || target.closest('[data-chat-content], [data-prompt-input], [data-scroll-area]')) {
+      console.log('🚫 Preventing chat node drag - not on drag handle or on interactive content');
       e.stopPropagation();
       return;
     }
 
-    console.log('✅ Starting drag from drag handle');
+    console.log('✅ Starting chat node drag from drag handle');
     e.stopPropagation();
-    setIsDragging(true);
     onPointerDown(e, node.id);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    e.stopPropagation();
-    setIsDragging(false);
   };
 
   const handleConnectionEnd = (e: React.PointerEvent) => {
@@ -95,7 +88,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
 
   return (
     <div
-      className={`absolute flex flex-col ${isDragging ? 'cursor-grabbing' : 'cursor-default'}`}
+      className="absolute flex flex-col cursor-default"
       style={{
         left: node.x,
         top: node.y,
@@ -103,7 +96,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
         width: '600px',
         height: `${node.height + 60}px`,
       }}
-      onPointerUp={handlePointerUp}
+      onPointerDown={handlePointerDown}
       data-node-id={node.id}
     >
       {/* Left handle - positioned to not interfere with dragging */}
@@ -119,8 +112,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
         {/* Drag handle header */}
         <div 
           data-drag-handle
-          onPointerDown={handlePointerDown}
-          className={`h-8 bg-zinc-700/30 border-b border-zinc-600/30 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} flex items-center justify-center`}
+          className="h-8 bg-zinc-700/30 border-b border-zinc-600/30 cursor-grab hover:cursor-grab active:cursor-grabbing flex items-center justify-center"
         >
           <div className="w-8 h-1 bg-zinc-500 rounded-full"></div>
         </div>
