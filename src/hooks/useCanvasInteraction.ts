@@ -142,9 +142,9 @@ export const useCanvasInteraction = ({
       handleGroupNodePointerUp(e);
     }
     
-    // Handle canvas pointer up - call without additional arguments since nodes handle their own cleanup
+    // Handle canvas pointer up - provide all required arguments
     if (!draggingNodeId && !connectingInfo) {
-      handlePointerUp(e);
+      handlePointerUp(e, e.clientX, e.clientY);
     }
 
     // Handle connection state
