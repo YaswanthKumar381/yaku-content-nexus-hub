@@ -6,7 +6,9 @@ export const generateContent = async (userPrompt: string, context: string, histo
     return "Please provide your Gemini API key in the settings (top-right gear icon).";
   }
 
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+  // Get the selected model from localStorage, default to gemini-1.5-flash-latest
+  const selectedModel = localStorage.getItem('gemini-model') || 'gemini-1.5-flash-latest';
+  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
 
   const systemMessage = history.find(m => m.role === 'system');
   const systemInstructionText = systemMessage?.content || "You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.";
