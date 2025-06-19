@@ -149,8 +149,8 @@ export const useCanvasInteraction = ({
       handleGroupNodePointerUp(e);
     }
     
-    // Handle canvas pointer up
-    handlePointerUp(e);
+    // Handle canvas pointer up - provide the required 3 arguments
+    handlePointerUp(e, e.clientX, e.clientY);
 
     // Handle connection state
     if (connectingInfo) {

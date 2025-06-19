@@ -1,4 +1,3 @@
-
 import { ThemeProvider, useTheme } from "@/contexts/ThemeContext";
 import { useCanvasOrchestration } from "@/hooks/useCanvasOrchestration";
 import { useCanvasHistory } from "@/hooks/useCanvasHistory";
@@ -116,28 +115,28 @@ const CanvasContent = () => {
             // Re-add the node with the same ID
             switch (action.data.nodeType) {
               case 'video':
-                videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y, action.data.url || '');
+                videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y, action.data.url || '', action.nodeId);
                 break;
               case 'document':
-                documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y);
+                documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'text':
-                textNodesResult.addTextNode(action.data.position.x, action.data.position.y);
+                textNodesResult.addTextNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'website':
-                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y);
+                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'audio':
-                audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y);
+                audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'image':
-                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y);
+                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'group':
-                groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y);
+                groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
               case 'chat':
-                chatNodesResult.addChatNode(action.data.position.x, action.data.position.y);
+                chatNodesResult.addChatNode(action.data.position.x, action.data.position.y, action.nodeId);
                 break;
             }
           }
