@@ -144,7 +144,7 @@ export const useCanvasInteraction = ({
     
     // Handle canvas pointer up - call with proper arguments
     if (!draggingNodeId && !connectingInfo) {
-      handlePointerUp(e);
+      handlePointerUp(e.clientX, e.clientY, e);
     }
 
     // Handle connection state
