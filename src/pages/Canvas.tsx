@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/contexts/ThemeContext';
@@ -6,6 +7,7 @@ import { CanvasSidebar } from '@/components/canvas/CanvasSidebar';
 import { CanvasNavigation } from '@/components/canvas/CanvasNavigation';
 import { CanvasModals } from '@/components/canvas/CanvasModals';
 import { useCanvasOrchestration } from '@/hooks/useCanvasOrchestration';
+import { Video, FileText, Type, Globe, Volume2, Image, Users } from 'lucide-react';
 
 const Canvas = () => {
   const {
@@ -76,98 +78,87 @@ const Canvas = () => {
     // TODO: Implement redo functionality
   };
 
+  // Define sidebar tools
+  const sidebarTools = [
+    { id: 'video', icon: Video },
+    { id: 'file-text', icon: FileText },
+    { id: 'text', icon: Type },
+    { id: 'website', icon: Globe },
+    { id: 'audio', icon: Volume2 },
+    { id: 'image', icon: Image },
+    { id: 'group', icon: Users },
+  ];
+
   return (
     <ThemeProvider>
       <div className="h-screen w-screen overflow-hidden bg-zinc-950 relative">
         <CanvasNavigation 
+          contextUsage={contextUsage}
           onUndo={handleUndo}
           onRedo={handleRedo}
-          canUndo={true} // Enable undo button
-          canRedo={true} // Enable redo button
+          canUndo={true}
+          canRedo={true}
         />
         
         <div className="flex h-full pt-16">
-          <CanvasSidebar />
+          <CanvasSidebar 
+            tools={sidebarTools}
+            selectedTool=""
+            onToolSelect={() => {}}
+            onVideoDragStart={eventsResult.handleVideoIconDragStart}
+            onDocumentDragStart={eventsResult.handleDocumentIconDragStart}
+            onChatDragStart={eventsResult.handleChatIconDragStart}
+            onTextDragStart={eventsResult.handleTextIconDragStart}
+            onWebsiteDragStart={eventsResult.handleWebsiteIconDragStart}
+            onImageDragStart={eventsResult.handleImageIconDragStart}
+            onAudioDragStart={eventsResult.handleAudioIconDragStart}
+            onGroupDragStart={eventsResult.handleGroupDragStart}
+          />
           
           <div className="flex-1 relative">
             <CanvasArea
-              ref={canvasRef}
-              transform={transformResult.transform}
-              videoNodes={videoNodesResult.videoNodes}
-              documentNodes={documentNodesResult.documentNodes}
-              chatNodes={chatNodesResult.chatNodes}
-              textNodes={textNodesResult.textNodes}
-              websiteNodes={websiteNodesResult.websiteNodes}
-              audioNodes={audioNodesResult.audioNodes}
-              imageNodes={imageNodesResult.imageNodes}
-              groupNodes={groupNodesResult.groupNodes}
-              connections={connectionsResult.connections}
-              connectingInfo={connectionsResult.connectingInfo}
-              contextUsage={contextUsage}
+              transformResult={transformResult}
+              interactionResult={interactionResult}
+              eventsResult={eventsResult}
+              connectionsResult={connectionsResult}
+              videoNodesResult={videoNodesResult}
+              documentNodesResult={documentNodesResult}
+              chatNodesResult={chatNodesResult}
+              textNodesResult={textNodesResult}
+              websiteNodesResult={websiteNodesResult}
+              audioNodesResult={audioNodesResult}
+              imageNodesResult={imageNodesResult}
+              groupNodesResult={groupNodesResult}
               allNodesMap={allNodesMap}
-              isSendingMessageNodeId={chatNodesResult.isSendingMessageNodeId}
-              onPointerMove={interactionResult.handleCanvasPointerMove}
-              onPointerUp={interactionResult.handleCanvasPointerUp}
-              onPointerDown={eventsResult.handleCanvasPointerDown}
-              onWheel={eventsResult.handleCanvasWheel}
-              onVideoNodePointerDown={videoNodesResult.handleNodePointerDown}
-              onDocumentNodePointerDown={documentNodesResult.handleNodePointerDown}
-              onChatNodePointerDown={chatNodesResult.handleNodePointerDown}
-              onTextNodePointerDown={textNodesResult.handleNodePointerDown}
-              onWebsiteNodePointerDown={websiteNodesResult.handleNodePointerDown}
-              onAudioNodePointerDown={audioNodesResult.handleNodePointerDown}
-              onImageNodePointerDown={imageNodesResult.handleNodePointerDown}
-              onGroupNodePointerDown={groupNodesResult.handleNodePointerDown}
-              onVideoTranscriptClick={eventsResult.handleVideoTranscriptClick}
-              onVideoStartConnection={connectionsResult.startConnection}
-              onChatEndConnection={connectionsResult.endConnection}
               onDeleteVideoNode={onDeleteVideoNode}
               onDeleteDocumentNode={onDeleteDocumentNode}
+              onDeleteDocumentFile={onDeleteDocumentFile}
+              onDocumentNodeUploadClick={onDocumentNodeUploadClick}
               onDeleteTextNode={onDeleteTextNode}
               onDeleteWebsiteNode={onDeleteWebsiteNode}
               onDeleteAudioNode={onDeleteAudioNode}
               onDeleteImageNode={onDeleteImageNode}
-              onDeleteGroupNode={onDeleteGroupNode}
-              onUpdateGroupNode={onUpdateGroupNode}
-              onDocumentNodeUploadClick={onDocumentNodeUploadClick}
+              onDeleteImageFile={onDeleteImageFile}
               onImageNodeUploadClick={onImageNodeUploadClick}
               onAnalyzeImage={onAnalyzeImage}
               onSendMessage={onSendMessage}
-              onChatNodeResize={chatNodesResult.updateChatNodeHeight}
-              onTextNodeUpdate={textNodesResult.updateTextNode}
-              onWebsiteStartConnection={connectionsResult.startConnection}
-              onAudioStartConnection={connectionsResult.startConnection}
-              onImageStartConnection={connectionsResult.startConnection}
-              onGroupStartConnection={connectionsResult.startConnection}
+              onDeleteGroupNode={onDeleteGroupNode}
+              onUpdateGroupNode={onUpdateGroupNode}
             />
           </div>
         </div>
 
         <CanvasModals 
-          showVideoInput={canvasState.showVideoInput}
-          videoUrl={canvasState.videoUrl}
-          isCreatingVideo={canvasState.isCreatingNode}
-          onVideoUrlChange={eventsResult.handleVideoUrlChange}
-          onVideoSubmit={eventsResult.handleVideoSubmit}
-          onVideoModalClose={eventsResult.resetVideoInput}
-          showTranscriptPopup={canvasState.showTranscriptPopup}
-          currentTranscript={canvasState.currentTranscript}
-          transcriptError={canvasState.transcriptError}
-          onTranscriptModalClose={onTranscriptModalClose}
-          showDocumentUpload={canvasState.showDocumentUpload}
-          isUploading={canvasState.isUploading}
-          onDocumentUpload={eventsResult.handleDocumentUpload}
+          canvasState={canvasState}
+          eventsResult={eventsResult}
+          videoNodesResult={videoNodesResult}
+          documentNodesResult={documentNodesResult}
+          websiteNodesResult={websiteNodesResult}
+          imageNodesResult={imageNodesResult}
+          uploadTargetNodeId={uploadTargetNodeId}
           onDocumentModalClose={onDocumentModalClose}
-          onDeleteDocumentFile={onDeleteDocumentFile}
-          showWebsiteInput={canvasState.showWebsiteInput}
-          isScrapingWebsites={canvasState.isScrapingWebsites}
-          onWebsiteUrlsSubmit={eventsResult.handleWebsiteUrlsSubmit}
-          onWebsiteModalClose={eventsResult.resetWebsiteInput}
-          showImageUpload={canvasState.showImageUpload}
-          isUploadingImages={canvasState.isUploadingImages}
-          onImageUpload={eventsResult.handleImageUpload}
+          onTranscriptModalClose={onTranscriptModalClose}
           onImageModalClose={onImageModalClose}
-          onDeleteImageFile={onDeleteImageFile}
         />
         
         <Toaster />
