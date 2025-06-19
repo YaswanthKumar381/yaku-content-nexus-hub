@@ -142,7 +142,7 @@ export const useCanvasInteraction = ({
       handleGroupNodePointerUp(e);
     }
     
-    // Handle canvas pointer up
+    // Handle canvas pointer up - this function should be called with just the event
     handlePointerUp(e);
 
     // Handle connection state
