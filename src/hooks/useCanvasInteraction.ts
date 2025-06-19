@@ -50,13 +50,6 @@ export const useCanvasInteraction = ({
   const draggingNodeId = draggingVideoNodeId || draggingDocumentNodeId || draggingChatNodeId || draggingTextNodeId || draggingWebsiteNodeId || draggingAudioNodeId || draggingImageNodeId || draggingGroupNodeId;
 
   const handleCanvasPointerMove = useCallback((e: React.PointerEvent) => {
-    // Prevent any movement if we're inside a chat node's interactive area
-    const target = e.target as HTMLElement;
-    if (target.closest('[data-chat-content], [data-prompt-input], [data-scroll-area]')) {
-      console.log('🚫 Preventing movement - inside chat content');
-      return;
-    }
-    
     // Handle connection line preview
     if (connectingInfo) {
       const rect = canvasContainerRef.current?.getBoundingClientRect();
@@ -149,8 +142,10 @@ export const useCanvasInteraction = ({
       handleGroupNodePointerUp(e);
     }
     
-    // Handle canvas pointer up - provide the required 3 arguments
-    handlePointerUp(e, e.clientX, e.clientY);
+    // Handle canvas pointer up - call with proper arguments
+    if (!draggingNodeId && !connectingInfo) {
+      handlePointerUp(e, e.clientX, e.clientY);
+    }
 
     // Handle connection state
     if (connectingInfo) {
@@ -170,7 +165,7 @@ export const useCanvasInteraction = ({
       draggingAudioNodeId, handleAudioNodePointerUp,
       draggingImageNodeId, handleImageNodePointerUp,
       draggingGroupNodeId, handleGroupNodePointerUp,
-      handlePointerUp, connectingInfo, clearConnectionState
+      handlePointerUp, connectingInfo, clearConnectionState, draggingNodeId
   ]);
 
   return { handleCanvasPointerMove, handleCanvasPointerUp, draggingNodeId };

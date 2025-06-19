@@ -2,41 +2,39 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, Plus, LayoutGrid, User, LogOut, Archive, Bell, MoreHorizontal } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, Plus, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("Popular");
   const navigate = useNavigate();
 
-  const tabs = ["Popular", "Concepting", "Design", "Marketing", "Moving Image", "Experimental"];
-
+  // Sample projects data - in a real app this would come from a backend
   const projects = [
     {
-      title: "Abstract Motion Design",
-      author: "Michelle Ma",
+      id: 1,
+      title: "New Project",
       image: "/placeholder.svg",
-      category: "Motion"
+      timeAgo: "8 minutes ago"
     },
     {
-      title: "Worldbuilding/Game UI",
-      author: "Michelle Ma", 
+      id: 2,
+      title: "New Project", 
       image: "/placeholder.svg",
-      category: "UI/UX"
+      timeAgo: "3 days ago"
     },
     {
-      title: "3D Abstract Illustration",
-      author: "Daniil Filatov",
-      image: "/placeholder.svg",
-      category: "3D"
+      id: 3,
+      title: "New Project",
+      image: "/placeholder.svg", 
+      timeAgo: "3 days ago"
     },
     {
-      title: "Product Hunt Landing",
-      author: "Yining Shi",
+      id: 4,
+      title: "New Project",
       image: "/placeholder.svg",
-      category: "Web"
+      timeAgo: "3 days ago"
     }
   ];
 
@@ -44,172 +42,111 @@ const Dashboard = () => {
     navigate('/canvas');
   };
 
+  const handleProjectClick = (projectId: number) => {
+    // For now, all projects navigate to canvas
+    navigate('/canvas');
+  };
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 h-full w-64 bg-zinc-900 border-r border-zinc-800 flex flex-col">
-        {/* User Profile */}
-        <div className="p-6 border-b border-zinc-800">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-zinc-700 rounded-full flex items-center justify-center">
-              <User className="w-5 h-5 text-zinc-300" />
-            </div>
-            <div>
-              <p className="font-medium text-white">Yaswanth K</p>
-              <p className="text-sm text-zinc-400">Starter Plan</p>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          {/* Logo */}
+          <div className="flex items-center">
+            <div className="text-2xl font-bold text-black">Yaku</div>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <div className="flex-1 px-4 py-6">
-          <nav className="space-y-2">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-left bg-zinc-800 text-white hover:bg-zinc-700"
-              onClick={handleNewProject}
-            >
-              <Plus className="w-4 h-4 mr-3" />
-              New Project
-            </Button>
-            
-            <Button variant="ghost" className="w-full justify-start text-left text-zinc-300 hover:text-white hover:bg-zinc-800">
-              <LayoutGrid className="w-4 h-4 mr-3" />
+          {/* Navigation */}
+          <div className="flex items-center space-x-8">
+            <button className="text-black font-medium border-b-2 border-black pb-1">
               Projects
-            </Button>
-            
-            <Button variant="ghost" className="w-full justify-start text-left text-zinc-300 hover:text-white hover:bg-zinc-800">
-              <User className="w-4 h-4 mr-3" />
-              Community
-            </Button>
-          </nav>
-        </div>
+            </button>
+          </div>
 
-        {/* Bottom Navigation */}
-        <div className="p-4 border-t border-zinc-800">
-          <nav className="space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-left text-zinc-300 hover:text-white hover:bg-zinc-800">
-              <Archive className="w-4 h-4 mr-3" />
-              Trash
-            </Button>
-            
-            <Button variant="ghost" className="w-full justify-start text-left text-zinc-300 hover:text-white hover:bg-zinc-800">
-              <Bell className="w-4 h-4 mr-3" />
-              Help
-            </Button>
-          </nav>
-          
-          <div className="mt-4 pt-4 border-t border-zinc-800">
-            <div className="text-xs text-zinc-500">Starter</div>
-            <div className="text-xs text-zinc-400 mt-1">🔒 200</div>
+          {/* User Profile */}
+          <div className="flex items-center space-x-4">
+            <div className="text-sm">
+              <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                Free Plan
+              </span>
+            </div>
+            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-gray-600" />
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="ml-64 min-h-screen">
-        {/* Header */}
-        <header className="bg-zinc-900 border-b border-zinc-800 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <h1 className="text-xl font-semibold text-white">Projects</h1>
-              
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                <Input
-                  type="text"
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-80 bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-400 focus:ring-zinc-600"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="text-zinc-300 hover:text-white hover:bg-zinc-800">
-                <LayoutGrid className="w-5 h-5" />
-              </Button>
-              
-              <Button 
-                className="bg-white text-black hover:bg-zinc-200"
-                onClick={handleNewProject}
-              >
-                Create new project
-              </Button>
-            </div>
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search projects..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-white border-gray-200 focus:ring-gray-900 focus:border-gray-900"
+            />
           </div>
-        </header>
+        </div>
 
-        {/* Content */}
-        <main className="p-6">
-          {/* Templates Section */}
-          <div className="mb-8">
-            <div className="flex items-center space-x-2 mb-4">
-              <LayoutGrid className="w-5 h-5 text-zinc-400" />
-              <span className="text-zinc-400 font-medium">Templates</span>
-            </div>
-
-            <h2 className="text-3xl font-semibold text-white mb-2">Get Started</h2>
-            <p className="text-zinc-400 mb-6">Discover new techniques and ideas with project templates</p>
-
-            {/* Tabs */}
-            <div className="flex space-x-6 mb-6 border-b border-zinc-800">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-3 text-sm font-medium transition-colors ${
-                    activeTab === tab
-                      ? "text-white border-b-2 border-white"
-                      : "text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {/* Project Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {projects.map((project, index) => (
-                <Card key={index} className="bg-zinc-900 border-zinc-800 hover:bg-zinc-800 transition-colors cursor-pointer group">
-                  <CardContent className="p-0">
-                    <div className="aspect-video bg-gradient-to-br from-zinc-700 to-zinc-800 rounded-t-lg mb-4 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-blue-500/20" />
-                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 bg-black/50 hover:bg-black/70">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
+        {/* Projects Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {projects.map((project) => (
+            <Card 
+              key={project.id}
+              className="bg-white border border-gray-200 hover:shadow-lg transition-all duration-200 cursor-pointer group overflow-hidden"
+              onClick={() => handleProjectClick(project.id)}
+            >
+              <CardContent className="p-0">
+                {/* Project Image */}
+                <div className="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 relative overflow-hidden">
+                  <img 
+                    src={project.image} 
+                    alt={project.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  {/* Overlay with menu dots */}
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 bg-white/80 hover:bg-white rounded-full"
+                    >
+                      <div className="flex flex-col space-y-0.5">
+                        <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+                        <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
                       </div>
-                    </div>
-                    <div className="px-4 pb-4">
-                      <h3 className="font-medium text-white mb-1 text-sm">{project.title}</h3>
-                      <p className="text-zinc-400 text-xs">by {project.author}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Project Info */}
+                <div className="p-4">
+                  <h3 className="font-medium text-gray-900 mb-1">{project.title}</h3>
+                  <p className="text-sm text-gray-500">{project.timeAgo}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-          {/* Empty Project Slots */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            {[1, 2].map((item) => (
-              <Card 
-                key={item} 
-                className="bg-zinc-900 border-zinc-800 border-dashed hover:bg-zinc-800 transition-colors cursor-pointer"
-                onClick={handleNewProject}
-              >
-                <CardContent className="p-8 text-center">
-                  <Plus className="w-12 h-12 text-zinc-600 mx-auto mb-4" />
-                  <p className="text-zinc-400">Create new project</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </main>
-      </div>
+        {/* New Project Button */}
+        <div className="flex justify-center">
+          <Button
+            onClick={handleNewProject}
+            className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium px-8 py-3 rounded-lg text-base transition-colors duration-200 flex items-center space-x-2"
+          >
+            <Plus className="w-5 h-5" />
+            <span>New Project</span>
+          </Button>
+        </div>
+      </main>
     </div>
   );
 };
