@@ -142,8 +142,10 @@ export const useCanvasInteraction = ({
       handleGroupNodePointerUp(e);
     }
     
-    // Handle canvas pointer up - this function should be called with just the event
-    handlePointerUp(e);
+    // Handle canvas pointer up - call without additional arguments since nodes handle their own cleanup
+    if (!draggingNodeId && !connectingInfo) {
+      handlePointerUp(e);
+    }
 
     // Handle connection state
     if (connectingInfo) {
@@ -163,7 +165,7 @@ export const useCanvasInteraction = ({
       draggingAudioNodeId, handleAudioNodePointerUp,
       draggingImageNodeId, handleImageNodePointerUp,
       draggingGroupNodeId, handleGroupNodePointerUp,
-      handlePointerUp, connectingInfo, clearConnectionState
+      handlePointerUp, connectingInfo, clearConnectionState, draggingNodeId
   ]);
 
   return { handleCanvasPointerMove, handleCanvasPointerUp, draggingNodeId };
