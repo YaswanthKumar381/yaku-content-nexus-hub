@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ChatNode, ChatMessage } from "@/types/canvas";
@@ -17,7 +16,7 @@ export const useChatNodes = () => {
       x,
       y,
       type: "chat",
-      height: 500, // Increased default height for new design
+      height: 400, // Default height
       messages: [
         { id: uuidv4(), role: 'system', content: 'You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.' },
         { id: uuidv4(), role: 'model', content: 'Hello! How can I help you today? Connect some video or document nodes to me and ask a question.' }
@@ -39,9 +38,6 @@ export const useChatNodes = () => {
   const sendMessage = useCallback(async (nodeId: string, userMessage: string, context: string) => {
     const chatNode = chatNodes.find(n => n.id === nodeId);
     if (!chatNode) return;
-
-    console.log('📨 Sending message with context:', context ? 'Context available' : 'No context');
-    console.log('🔗 Context length:', context?.length || 0);
 
     setIsSendingMessageNodeId(nodeId);
     updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'user', content: userMessage });
