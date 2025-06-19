@@ -15,12 +15,14 @@ export const ContextPopoverContent: React.FC<ContextPopoverContentProps> = ({
   limit,
   bgColorClass
 }) => {
+  const provider = localStorage.getItem('model-provider') || 'gemini';
   const formattedTotal = totalTokens.toLocaleString();
   const formattedLimit = (limit / 1000).toLocaleString() + 'k';
+  const providerName = provider === 'groq' ? 'Groq' : 'Gemini';
 
   return (
     <div className="w-64 text-sm">
-      <div className="font-bold mb-2">Context Usage</div>
+      <div className="font-bold mb-2">Context Usage ({providerName})</div>
       <p className="text-xs text-gray-600 dark:text-gray-300">
         The AI's context window is at {Math.round(percentage)}% capacity.
       </p>
@@ -30,7 +32,7 @@ export const ContextPopoverContent: React.FC<ContextPopoverContentProps> = ({
       <p className="text-xs text-gray-500 dark:text-gray-400 text-right">
         {formattedTotal} / {formattedLimit} tokens
       </p>
-      {percentage > 80 && (
+      {percentage > (provider === 'groq' ? 70 : 80) && (
         <div className="flex items-start gap-2 text-xs text-red-500 mt-2 p-2 bg-red-500/10 rounded-md">
           <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <span>Warning: High context usage may affect response quality or cause errors.</span>

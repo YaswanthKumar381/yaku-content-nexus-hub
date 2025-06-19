@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ChatNode, ChatMessage } from "@/types/canvas";
 import { generateContent } from "@/services/geminiService";
+import { generateContentWithGroq } from "@/services/groqChatService";
 
 export const useChatNodes = () => {
   const [chatNodes, setChatNodes] = useState<ChatNode[]>([]);
@@ -42,23 +43,44 @@ export const useChatNodes = () => {
     setIsSendingMessageNodeId(nodeId);
     updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'user', content: userMessage });
 
-    const apiKey = localStorage.getItem('gemini-api-key');
+    const provider = localStorage.getItem('model-provider') || 'gemini';
+    const selectedModel = localStorage.getItem('selected-model') || (provider === 'groq' ? 'llama-3.3-70b-versatile' : 'gemini-1.5-flash-latest');
+    
+    let apiKey = '';
+    let modelResponse = '';
 
-    if (!apiKey) {
+    if (provider === 'groq') {
+      apiKey = localStorage.getItem('groq-api-key') || '';
+      if (!apiKey) {
+        updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: "Please provide your Groq API key in the settings (top-right gear icon)." });
+        setIsSendingMessageNodeId(null);
+        return;
+      }
+      
+      try {
+        modelResponse = await generateContentWithGroq(userMessage, context, chatNode.messages, apiKey, selectedModel);
+      } catch (error) {
+        console.error("Failed to get response from Groq:", error);
+        modelResponse = "Sorry, something went wrong with the Groq API.";
+      }
+    } else {
+      apiKey = localStorage.getItem('gemini-api-key') || '';
+      if (!apiKey) {
         updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: "Please provide your Gemini API key in the settings (top-right gear icon)." });
         setIsSendingMessageNodeId(null);
         return;
+      }
+      
+      try {
+        modelResponse = await generateContent(userMessage, context, chatNode.messages, apiKey);
+      } catch (error) {
+        console.error("Failed to get response from Gemini:", error);
+        modelResponse = "Sorry, something went wrong with the Gemini API.";
+      }
     }
 
-    try {
-      const modelResponse = await generateContent(userMessage, context, chatNode.messages, apiKey);
-      updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: modelResponse });
-    } catch (error) {
-      console.error("Failed to get response from Gemini:", error);
-      updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: "Sorry, something went wrong." });
-    } finally {
-      setIsSendingMessageNodeId(null);
-    }
+    updateChatNodeMessages(nodeId, { id: uuidv4(), role: 'model', content: modelResponse });
+    setIsSendingMessageNodeId(null);
   }, [chatNodes, updateChatNodeMessages]);
 
   const moveChatNode = useCallback(

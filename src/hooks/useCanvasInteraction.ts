@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import type { useConnections } from '@/hooks/useConnections';
 import type { useVideoNodes } from '@/hooks/useVideoNodes';
@@ -149,8 +148,8 @@ export const useCanvasInteraction = ({
       handleGroupNodePointerUp(e);
     }
     
-    // Handle canvas pointer up - provide the required 3 arguments
-    handlePointerUp(e, e.clientX, e.clientY);
+    // Handle canvas pointer up - correct number of arguments
+    handlePointerUp(e);
 
     // Handle connection state
     if (connectingInfo) {

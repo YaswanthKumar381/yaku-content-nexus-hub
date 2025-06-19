@@ -6,15 +6,22 @@ interface EmojiIconProps {
 }
 
 export const EmojiIcon: React.FC<EmojiIconProps> = ({ percentage }) => {
+  const provider = localStorage.getItem('model-provider') || 'gemini';
+  
+  // Adjust thresholds based on provider - Groq has smaller context so we're more conservative
+  const thresholds = provider === 'groq' 
+    ? { critical: 85, high: 70, medium: 50, low: 30 }
+    : { critical: 90, high: 80, medium: 60, low: 40 };
+
   let emoji = '😤'; // annoyed - default for 0%
   
-  if (percentage > 90) {
+  if (percentage > thresholds.critical) {
     emoji = '☹️'; // frown - red
-  } else if (percentage > 80) {
+  } else if (percentage > thresholds.high) {
     emoji = '😑'; // meh - orange
-  } else if (percentage > 60) {
+  } else if (percentage > thresholds.medium) {
     emoji = '😊'; // smile - yellow
-  } else if (percentage > 40) {
+  } else if (percentage > thresholds.low) {
     emoji = '😂'; // laugh - light green
   } else if (percentage > 0) {
     emoji = '😄'; // smile-plus - dark green

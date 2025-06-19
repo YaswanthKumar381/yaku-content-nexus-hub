@@ -1,7 +1,6 @@
-
 import { useMemo } from 'react';
 import { CanvasNode, ChatNode, Connection, DocumentNode, TextNode, VideoNode } from '@/types/canvas';
-import { estimateTokenCount, GEMINI_1_5_FLASH_CONTEXT_LIMIT } from '@/utils/tokenUtils';
+import { estimateTokenCount, getContextLimit } from '@/utils/tokenUtils';
 
 const SYSTEM_PROMPT_TEXT = 'You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.';
 const CONTEXT_WRAPPER_TEXT = "Here is some context from connected nodes:\n\n---\n\n---\n\nMy question is: ";
@@ -44,8 +43,10 @@ export const useContextUsage = (
     chatNodes: ChatNode[]
 ) => {
     const maxUsage = useMemo(() => {
+        const contextLimit = getContextLimit();
+        
         if (chatNodes.length === 0) {
-            return { percentage: 0, totalTokens: 0, limit: GEMINI_1_5_FLASH_CONTEXT_LIMIT };
+            return { percentage: 0, totalTokens: 0, limit: contextLimit };
         }
 
         let maxTokens = 0;
@@ -77,12 +78,12 @@ export const useContextUsage = (
             }
         }
         
-        const percentage = (maxTokens / GEMINI_1_5_FLASH_CONTEXT_LIMIT) * 100;
+        const percentage = (maxTokens / contextLimit) * 100;
 
         return {
             percentage: Math.min(percentage, 100),
             totalTokens: maxTokens,
-            limit: GEMINI_1_5_FLASH_CONTEXT_LIMIT
+            limit: contextLimit
         };
     }, [allNodesMap, connections, chatNodes]);
 
