@@ -5,21 +5,12 @@ import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { useCanvasNodes } from "@/hooks/useCanvasNodes";
 import { useCanvasHandlers } from "@/hooks/useCanvasHandlers";
-import { useCanvasHistory } from "@/hooks/useCanvasHistory";
 
-interface UseCanvasOrchestrationProps {
-  canvasContainerRef: React.RefObject<HTMLDivElement>;
-}
-
-export const useCanvasOrchestration = ({ canvasContainerRef }: UseCanvasOrchestrationProps) => {
+export const useCanvasOrchestration = () => {
   const canvasState = useCanvasState();
   const transformResult = useCanvasTransform();
   const nodesResult = useCanvasNodes();
   const handlersResult = useCanvasHandlers({ nodesResult, canvasState });
-  const canvasHistory = useCanvasHistory();
-
-  // Update transform result with the passed canvasContainerRef
-  transformResult.canvasContainerRef = canvasContainerRef;
 
   const {
     videoNodesResult,
@@ -57,7 +48,7 @@ export const useCanvasOrchestration = ({ canvasContainerRef }: UseCanvasOrchestr
     handleTranscriptModalClose,
   } = handlersResult;
 
-  const canvasInteraction = useCanvasInteraction({
+  const interactionResult = useCanvasInteraction({
     connectionsResult,
     videoNodesResult,
     documentNodesResult,
@@ -70,7 +61,7 @@ export const useCanvasOrchestration = ({ canvasContainerRef }: UseCanvasOrchestr
     transformResult,
   });
   
-  const canvasEvents = useCanvasEvents({
+  const eventsResult = useCanvasEvents({
     isDraggingVideo: canvasState.isDraggingVideo,
     setIsDraggingVideo: canvasState.setIsDraggingVideo,
     setPendingVideoNode: canvasState.setPendingVideoNode,
@@ -128,49 +119,39 @@ export const useCanvasOrchestration = ({ canvasContainerRef }: UseCanvasOrchestr
     forceResetDragState: forceResetAllDragState,
   });
 
-  // Canvas handlers for drag and drop events
-  const canvasHandlers = {
-    onDrop: canvasEvents.handleCanvasDrop,
-    onDragOver: canvasEvents.handleCanvasDragOver,
-  };
-
   return {
-    // Node creation functions
-    addChatNode: chatNodesResult.addChatNode,
-    addTextNode: textNodesResult.addTextNode,
-    addVideoNode: videoNodesResult.addVideoNode,
-    addImageNode: imageNodesResult.addImageNode,
-    addAudioNode: audioNodesResult.addAudioNode,
-    addDocumentNode: documentNodesResult.addDocumentNode,
-    addWebsiteNode: websiteNodesResult.addWebsiteNode,
-    addGroupNode: groupNodesResult.addGroupNode,
-    
-    // Node management
-    deleteNode: handleDeleteVideoNode, // Generic delete function
-    duplicateNode: () => {}, // TODO: Implement if needed
-    
-    // Connection functions
-    startConnection: connectionsResult.startConnection,
-    endConnection: connectionsResult.endConnection,
-    deleteConnection: connectionsResult.removeConnection,
-    
-    // Canvas functions
-    moveNodesToFront: () => {}, // TODO: Implement if needed
-    
-    // Core objects
-    canvasHandlers,
-    canvasInteraction,
     canvasState,
-    canvasTransform: transformResult,
-    chatNodes: chatNodesResult,
-    textNodes: textNodesResult,
-    videoNodes: videoNodesResult,
-    audioNodes: audioNodesResult,
-    imageNodes: imageNodesResult,
-    documentNodes: documentNodesResult,
-    websiteNodes: websiteNodesResult,
-    groupNodes: groupNodesResult,
-    connections: connectionsResult,
-    canvasHistory,
+    transformResult,
+    videoNodesResult,
+    documentNodesResult,
+    chatNodesResult,
+    textNodesResult,
+    websiteNodesResult,
+    audioNodesResult,
+    imageNodesResult,
+    groupNodesResult,
+    connectionsResult,
+    contextUsage,
+    interactionResult,
+    eventsResult,
+    allNodesMap,
+    uploadTargetNodeId,
+    onDeleteVideoNode: handleDeleteVideoNode,
+    onDeleteDocumentNode: handleDeleteDocumentNode,
+    onDeleteDocumentFile: handleDeleteDocumentFile,
+    onDeleteTextNode: handleDeleteTextNode,
+    onDeleteWebsiteNode: handleDeleteWebsiteNode,
+    onDeleteAudioNode: handleDeleteAudioNode,
+    onDeleteImageNode: handleDeleteImageNode,
+    onDeleteImageFile: handleDeleteImageFile,
+    onDeleteGroupNode: handleDeleteGroupNode,
+    onUpdateGroupNode: handleUpdateGroupNode,
+    onDocumentNodeUploadClick: handleDocumentNodeUploadClick,
+    onDocumentModalClose: handleDocumentModalClose,
+    onImageNodeUploadClick: handleImageNodeUploadClick,
+    onImageModalClose: handleImageModalClose,
+    onAnalyzeImage: handleAnalyzeImage,
+    onSendMessage: handleSendMessage,
+    onTranscriptModalClose: handleTranscriptModalClose,
   };
 };
