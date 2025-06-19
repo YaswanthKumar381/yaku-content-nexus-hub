@@ -80,13 +80,13 @@ const Canvas = () => {
 
   // Define sidebar tools
   const sidebarTools = [
-    { id: 'video', icon: Video },
-    { id: 'file-text', icon: FileText },
-    { id: 'text', icon: Type },
-    { id: 'website', icon: Globe },
-    { id: 'audio', icon: Volume2 },
-    { id: 'image', icon: Image },
-    { id: 'group', icon: Users },
+    { id: 'video', icon: Video, label: 'Video' },
+    { id: 'file-text', icon: FileText, label: 'Document' },
+    { id: 'text', icon: Type, label: 'Text' },
+    { id: 'website', icon: Globe, label: 'Website' },
+    { id: 'audio', icon: Volume2, label: 'Audio' },
+    { id: 'image', icon: Image, label: 'Image' },
+    { id: 'group', icon: Users, label: 'Group' },
   ];
 
   return (
@@ -109,9 +109,9 @@ const Canvas = () => {
             onDocumentDragStart={eventsResult.handleDocumentIconDragStart}
             onChatDragStart={eventsResult.handleChatIconDragStart}
             onTextDragStart={eventsResult.handleTextIconDragStart}
-            onWebsiteDragStart={eventsResult.handleWebsiteIconDragStart}
-            onImageDragStart={eventsResult.handleImageIconDragStart}
-            onAudioDragStart={eventsResult.handleAudioIconDragStart}
+            onWebsiteDragStart={eventsResult.handleWebsiteDragStart}
+            onImageDragStart={eventsResult.handleImageDragStart}
+            onAudioDragStart={eventsResult.handleAudioDragStart}
             onGroupDragStart={eventsResult.handleGroupDragStart}
           />
           
