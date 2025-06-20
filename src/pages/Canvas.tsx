@@ -4,6 +4,9 @@ import { Sidebar } from "@/components/ui/sidebar";
 import { sidebarTools } from "@/config/sidebar";
 
 const Canvas = () => {
+  console.log('Canvas component rendering...');
+  console.log('Sidebar tools:', sidebarTools);
+
   const handleSidebarAction = (toolId: string, data?: any) => {
     console.log('Sidebar action:', toolId, data);
   };

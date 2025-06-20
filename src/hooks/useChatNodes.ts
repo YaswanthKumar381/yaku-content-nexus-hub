@@ -63,7 +63,8 @@ export const useChatNodes = () => {
       }
       
       try {
-        modelResponse = await generateContentWithGroq(userMessage, context, chatNode.messages, apiKey, selectedModel);
+        // Fixed: Use correct number of arguments for generateContentWithGroq
+        modelResponse = await generateContentWithGroq(userMessage, context, apiKey);
       } catch (error) {
         console.error("Failed to get response from Groq:", error);
         modelResponse = "Sorry, something went wrong with the Groq API.";
