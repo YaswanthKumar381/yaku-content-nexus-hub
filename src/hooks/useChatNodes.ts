@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { ChatNode, ChatMessage } from "@/types/canvas";
@@ -26,10 +25,6 @@ export const useChatNodes = () => {
     };
     setChatNodes((prevNodes) => [...prevNodes, newNode]);
     return newNode;
-  }, []);
-
-  const deleteChatNode = useCallback((nodeId: string) => {
-    setChatNodes(prev => prev.filter(node => node.id !== nodeId));
   }, []);
 
   const updateChatNodeMessages = useCallback((nodeId: string, newMessage: ChatMessage) => {
@@ -63,8 +58,7 @@ export const useChatNodes = () => {
       }
       
       try {
-        // Fixed: Use correct number of arguments for generateContentWithGroq
-        modelResponse = await generateContentWithGroq(userMessage, context, apiKey);
+        modelResponse = await generateContentWithGroq(userMessage, context, chatNode.messages, apiKey, selectedModel);
       } catch (error) {
         console.error("Failed to get response from Groq:", error);
         modelResponse = "Sorry, something went wrong with the Groq API.";
@@ -90,11 +84,11 @@ export const useChatNodes = () => {
   }, [chatNodes, updateChatNodeMessages]);
 
   const moveChatNode = useCallback(
-    (nodeId: string, clientX: number, clientY: number) => {
+    (nodeId: string, clientX: number, clientY: number, transform: { x: number; y: number; scale: number }) => {
       if (!draggingNodeId || draggingNodeId !== nodeId) return;
 
-      const newX = clientX - dragOffset.x;
-      const newY = clientY - dragOffset.y;
+      const newX = (clientX - transform.x - dragOffset.x) / transform.scale;
+      const newY = (clientY - transform.y - dragOffset.y) / transform.scale;
       
       setChatNodes((prevNodes) =>
         prevNodes.map((node) =>
@@ -156,7 +150,6 @@ export const useChatNodes = () => {
     draggingNodeId,
     isSendingMessageNodeId,
     addChatNode,
-    deleteChatNode,
     moveChatNode,
     sendMessage,
     updateChatNodeHeight,
