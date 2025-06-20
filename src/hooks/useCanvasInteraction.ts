@@ -1,14 +1,19 @@
 
 import { useCallback } from "react";
-import { CanvasTransform } from "@/types/canvas";
+
+interface Transform {
+  x: number;
+  y: number;
+  scale: number;
+}
 
 interface UseCanvasInteractionProps {
   canvasRef: React.RefObject<HTMLDivElement>;
-  transform: CanvasTransform;
-  setTransform: (transform: CanvasTransform) => void;
+  transform: Transform;
+  setTransform: (transform: Transform) => void;
   selectedNodeIds: string[];
   setSelectedNodeIds: (ids: string[]) => void;
-  onNodeMove: (nodeId: string, clientX: number, clientY: number, transform: CanvasTransform) => void;
+  onNodeMove: (nodeId: string, clientX: number, clientY: number, transform: Transform) => void;
 }
 
 export const useCanvasInteraction = ({
@@ -20,12 +25,10 @@ export const useCanvasInteraction = ({
   onNodeMove,
 }: UseCanvasInteractionProps) => {
   const handlePointerUp = useCallback((event: PointerEvent, nodeId?: string, isDragging?: boolean) => {
-    // Handle pointer up logic here
     console.log('Pointer up:', { event, nodeId, isDragging });
   }, []);
 
   const handleCanvasClick = useCallback((event: React.MouseEvent) => {
-    // Handle canvas click logic
     console.log('Canvas clicked:', event);
   }, []);
 
@@ -33,9 +36,20 @@ export const useCanvasInteraction = ({
     setSelectedNodeIds([nodeId]);
   }, [setSelectedNodeIds]);
 
+  const handleCanvasPointerMove = useCallback((event: React.PointerEvent) => {
+    console.log('Canvas pointer move:', event);
+  }, []);
+
+  const handleCanvasPointerUp = useCallback((event: React.PointerEvent) => {
+    console.log('Canvas pointer up:', event);
+  }, []);
+
   return {
     handlePointerUp,
     handleCanvasClick,
     handleNodeSelect,
+    handleCanvasPointerMove,
+    handleCanvasPointerUp,
+    draggingNodeId: null,
   };
 };

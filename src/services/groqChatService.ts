@@ -54,7 +54,6 @@ export const sendGroqChatMessage = async (
 
     const data = await response.json();
     
-    // Check if the response has the expected structure
     if (data.choices && data.choices.length > 0 && data.choices[0].message) {
       return data.choices[0].message.content;
     }
@@ -65,3 +64,6 @@ export const sendGroqChatMessage = async (
     throw error;
   }
 };
+
+// Export alias for backward compatibility
+export const generateContentWithGroq = sendGroqChatMessage;
