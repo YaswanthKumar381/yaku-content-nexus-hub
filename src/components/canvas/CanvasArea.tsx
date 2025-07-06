@@ -33,6 +33,7 @@ interface CanvasAreaProps {
   audioNodesResult: ReturnType<typeof useAudioNodes>;
   imageNodesResult: ReturnType<typeof useImageNodes>;
   groupNodesResult: ReturnType<typeof useGroupNodes>;
+  nodeGlowResult: ReturnType<typeof import('@/hooks/useNodeGlow').useNodeGlow>;
   allNodesMap: Map<string, CanvasNode>;
   onDeleteVideoNode: (nodeId: string) => void;
   onDeleteDocumentNode: (nodeId: string) => void;
@@ -63,6 +64,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   audioNodesResult,
   imageNodesResult,
   groupNodesResult,
+  nodeGlowResult,
   allNodesMap,
   onDeleteVideoNode,
   onDeleteDocumentNode,

@@ -26,7 +26,7 @@ export const generateContentWithGroq = async (
   const systemInstructionText = systemMessage?.content || "You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.";
 
   const formattedHistory = history
-    .filter(m => m.role === 'user' || m.role === 'assistant')
+    .filter(m => m.role === 'user' || m.role === 'model')
     .map(message => ({
       role: message.role === 'model' ? 'assistant' : message.role,
       content: message.content,

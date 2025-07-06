@@ -5,11 +5,13 @@ import { useCanvasEvents } from "@/hooks/useCanvasEvents";
 import { useCanvasInteraction } from "@/hooks/useCanvasInteraction";
 import { useCanvasNodes } from "@/hooks/useCanvasNodes";
 import { useCanvasHandlers } from "@/hooks/useCanvasHandlers";
+import { useNodeGlow } from "@/hooks/useNodeGlow";
 
 export const useCanvasOrchestration = () => {
   const canvasState = useCanvasState();
   const transformResult = useCanvasTransform();
   const nodesResult = useCanvasNodes();
+  const nodeGlowResult = useNodeGlow();
   const handlersResult = useCanvasHandlers({ nodesResult, canvasState });
 
   const {
@@ -134,6 +136,7 @@ export const useCanvasOrchestration = () => {
     contextUsage,
     interactionResult,
     eventsResult,
+    nodeGlowResult,
     allNodesMap,
     uploadTargetNodeId,
     onDeleteVideoNode: handleDeleteVideoNode,

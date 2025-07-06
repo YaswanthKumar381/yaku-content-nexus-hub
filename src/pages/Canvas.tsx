@@ -28,6 +28,7 @@ const CanvasContent = () => {
     contextUsage,
     interactionResult,
     eventsResult,
+    nodeGlowResult,
     allNodesMap,
     uploadTargetNodeId,
     onDeleteVideoNode,
@@ -118,22 +119,22 @@ const CanvasContent = () => {
                 videoNodesResult.addVideoNode(action.data.position.x, action.data.position.y, action.data.url || '', action.nodeId);
                 break;
               case 'document':
-                documentNodesResult.addDocumentNode(action.data.position.x, action.data.position.y, action.nodeId);
+                // Skip re-adding document nodes as they require files
                 break;
               case 'text':
-                textNodesResult.addTextNode(action.data.position.x, action.data.position.y, action.nodeId);
+                textNodesResult.addTextNode(action.data.position.x, action.data.position.y);
                 break;
               case 'website':
-                websiteNodesResult.addWebsiteNode(action.data.position.x, action.data.position.y, action.nodeId);
+                // Skip re-adding website nodes as they require URLs
                 break;
               case 'audio':
-                audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y, action.nodeId);
+                audioNodesResult.addAudioNode(action.data.position.x, action.data.position.y);
                 break;
               case 'image':
-                imageNodesResult.addImageNode(action.data.position.x, action.data.position.y, action.nodeId);
+                // Skip re-adding image nodes as they require files
                 break;
               case 'group':
-                groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y, action.nodeId);
+                groupNodesResult.addGroupNode(action.data.position.x, action.data.position.y);
                 break;
               case 'chat':
                 chatNodesResult.addChatNode(action.data.position.x, action.data.position.y, action.nodeId);
@@ -185,6 +186,7 @@ const CanvasContent = () => {
         audioNodesResult={audioNodesResult}
         imageNodesResult={imageNodesResult}
         groupNodesResult={groupNodesResult}
+        nodeGlowResult={nodeGlowResult}
         allNodesMap={allNodesMap}
         onDeleteVideoNode={onDeleteVideoNode}
         onDeleteDocumentNode={onDeleteDocumentNode}

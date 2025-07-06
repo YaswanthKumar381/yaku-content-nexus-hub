@@ -68,7 +68,12 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
       }}
       onPointerDown={handleNodePointerDown}
     >
-      <div className="group relative bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-lg w-80 border border-red-200 hover:shadow-xl transition-shadow">
+      <div 
+        className={`group relative bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-lg w-80 border border-red-200 hover:shadow-xl transition-shadow ${isConnected ? 'node-glow-red' : ''}`}
+        onMouseEnter={() => {/* Add glow logic here */}}
+        onMouseLeave={() => {/* Remove glow logic here */}}
+        onClick={() => {/* Add selection logic here */}}
+      >
         <button
           onClick={(e) => {
             e.stopPropagation();
