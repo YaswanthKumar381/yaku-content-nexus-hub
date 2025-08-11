@@ -12,6 +12,7 @@ interface GroupNodeProps {
   onDelete: (nodeId: string) => void;
   onUpdate: (nodeId: string, updates: Partial<Omit<GroupNode, 'id' | 'type'>>) => void;
   isConnected: boolean;
+  isGlowing?: boolean;
 }
 
 export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
@@ -21,6 +22,7 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
   onDelete,
   onUpdate,
   isConnected,
+  isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
   const [isEditing, setIsEditing] = useState(false);
@@ -77,6 +79,7 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
         transform: 'translate(-50%, -50%)',
         width: node.width,
         height: node.height,
+        boxShadow: isGlowing ? '0 0 20px 5px rgba(156, 163, 175, 0.7)' : 'none',
       }}
       onPointerDown={handlePointerDown}
       data-node-id={node.id}

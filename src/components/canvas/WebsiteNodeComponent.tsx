@@ -12,6 +12,7 @@ interface WebsiteNodeComponentProps {
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   isConnected: boolean;
+  isGlowing?: boolean;
 }
 
 export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
@@ -20,6 +21,7 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
   onStartConnection,
   onDelete,
   isConnected,
+  isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
   const [showTranscriptModal, setShowTranscriptModal] = useState(false);
@@ -38,7 +40,8 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
         style={{ 
           left: node.x, 
           top: node.y, 
-          transform: 'translate(-50%, -50%)' 
+          transform: 'translate(-50%, -50%)',
+          boxShadow: isGlowing ? '0 0 20px 5px rgba(16, 185, 129, 0.7)' : 'none',
         }}
         onPointerDown={(e) => onPointerDown(e, node.id)}
         data-node-id={node.id}

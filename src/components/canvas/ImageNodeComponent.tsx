@@ -30,6 +30,7 @@ interface ImageNodeComponentProps {
   onUploadClick: (nodeId: string) => void;
   onAnalyzeImage: (nodeId: string, imageId: string, prompt?: string) => Promise<void>;
   isConnected: boolean;
+  isGlowing?: boolean;
 }
 
 export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
@@ -41,6 +42,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
   onUploadClick,
   onAnalyzeImage,
   isConnected,
+  isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
   const [analyzingImageId, setAnalyzingImageId] = useState<string | null>(null);
@@ -92,7 +94,8 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
       style={{ 
         left: `${node.x}px`, 
         top: `${node.y}px`,
-        transform: 'translate(-50%, -50%)'
+        transform: 'translate(-50%, -50%)',
+        boxShadow: isGlowing ? '0 0 20px 5px rgba(99, 102, 241, 0.7)' : 'none',
       }}
       data-node-id={node.id}
     >

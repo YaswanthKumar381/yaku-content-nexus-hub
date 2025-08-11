@@ -15,6 +15,7 @@ interface TextNodeComponentProps {
   onDelete: (nodeId: string) => void;
   onStartConnection: (nodeId: string) => void;
   isConnected: boolean;
+  isGlowing?: boolean;
 }
 
 export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
@@ -24,6 +25,7 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
   onDelete,
   onStartConnection,
   isConnected,
+  isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -60,6 +62,7 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
             transform: `translate(${node.x}px, ${node.y}px)`,
             width: node.width,
             height: node.height,
+            boxShadow: isGlowing ? '0 0 20px 5px rgba(251, 146, 60, 0.7)' : 'none',
           }}
           onPointerDown={(e) => onPointerDown(e, node.id)}
         >

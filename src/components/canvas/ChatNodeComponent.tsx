@@ -14,6 +14,7 @@ interface ChatNodeComponentProps {
   isSendingMessage: boolean;
   onResize: (nodeId: string, height: number) => void;
   isConnected: boolean;
+  isGlowing?: boolean;
 }
 
 export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({ 
@@ -23,7 +24,8 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
   onSendMessage, 
   isSendingMessage, 
   onResize, 
-  isConnected 
+  isConnected,
+  isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
   const scrollAreaViewportRef = useRef<HTMLDivElement>(null);
@@ -95,6 +97,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
         transform: 'translate(-50%, -50%)',
         width: '600px',
         height: `${node.height + 60}px`,
+        boxShadow: isGlowing ? '0 0 20px 5px rgba(168, 85, 247, 0.7)' : 'none',
       }}
       onPointerDown={handlePointerDown}
       data-node-id={node.id}

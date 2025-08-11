@@ -11,6 +11,7 @@ interface VideoNodeProps {
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   isConnected: boolean;
+  isGlowing?: boolean;
 }
 
 export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
@@ -20,6 +21,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   onStartConnection,
   onDelete,
   isConnected,
+  isGlowing,
 }) => {
   const embedUrl = getYouTubeEmbedUrl(node.url);
 
@@ -64,7 +66,8 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
       style={{
         left: node.x,
         top: node.y,
-        transform: 'translate(-50%, -50%)'
+        transform: 'translate(-50%, -50%)',
+        boxShadow: isGlowing ? '0 0 20px 5px rgba(239, 68, 68, 0.7)' : 'none',
       }}
       onPointerDown={handleNodePointerDown}
     >
