@@ -13,6 +13,7 @@ interface AudioNodeProps {
   onAddRecordingToNode: (nodeId: string, audioBlob: Blob, duration: number) => Promise<void>;
   onDeleteRecording: (nodeId: string, recordingId: string) => void;
   isConnected: boolean;
+  isGlowing?: boolean;
 }
 
 export const AudioNodeComponent: React.FC<AudioNodeProps> = ({
@@ -23,6 +24,7 @@ export const AudioNodeComponent: React.FC<AudioNodeProps> = ({
   onAddRecordingToNode,
   onDeleteRecording,
   isConnected,
+  isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
@@ -102,7 +104,12 @@ export const AudioNodeComponent: React.FC<AudioNodeProps> = ({
       className={`absolute pointer-events-auto group ${
         isDarkMode ? 'text-white' : 'text-gray-900'
       }`}
-      style={{ left: node.x, top: node.y, transform: 'translate(-50%, -50%)' }}
+      style={{
+        left: node.x,
+        top: node.y,
+        transform: 'translate(-50%, -50%)',
+        boxShadow: isGlowing ? `0 0 20px 5px rgba(161, 161, 170, 0.7)` : 'none',
+      }}
       onPointerDown={handlePointerDown}
       data-node-id={node.id}
     >
