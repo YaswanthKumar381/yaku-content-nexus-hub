@@ -11,10 +11,13 @@ import { useContextUsage } from "@/hooks/useContextUsage";
 import { useImageNodes } from "@/hooks/useImageNodes";
 import { useGroupNodes } from "@/hooks/useGroupNodes";
 
+import { Connection } from "@/types/canvas";
+
 interface useCanvasNodesProps {
   onNodeClick: (nodeId: string) => void;
   selectedNodeId: string | null;
   addConnection: (sourceId: string, targetId: string) => void;
+  connections: Connection[];
 }
 
 export const useCanvasNodes = ({ onNodeClick, selectedNodeId, addConnection, connections }: useCanvasNodesProps) => {

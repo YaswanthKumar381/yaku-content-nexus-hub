@@ -8,6 +8,7 @@ import { useCanvasNodes } from "@/hooks/useCanvasNodes";
 import { useConnections } from "@/hooks/useConnections";
 import { useCanvasHandlers } from "@/hooks/useCanvasHandlers";
 import { useNodeGlow } from "@/hooks/useNodeGlow";
+import { getHandlePosition } from "@/utils/canvasUtils";
 
 export const useCanvasOrchestration = () => {
   const canvasState = useCanvasState();
@@ -64,7 +65,7 @@ export const useCanvasOrchestration = () => {
     return connectionId;
   }, [allNodesMap, connectingInfo, connectionsResult.addConnection]);
 
-  const handlersResult = useCanvasHandlers({ nodesResult, canvasState });
+  const handlersResult = useCanvasHandlers({ nodesResult, canvasState, connectionsResult });
 
   const {
     forceResetAllDragState,

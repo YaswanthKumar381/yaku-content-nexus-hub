@@ -6,9 +6,10 @@ import type { useCanvasState } from "@/hooks/useCanvasState";
 interface UseCanvasHandlersProps {
   nodesResult: ReturnType<typeof useCanvasNodes>;
   canvasState: ReturnType<typeof useCanvasState>;
+  connectionsResult: ReturnType<typeof import('./useConnections').useConnections>;
 }
 
-export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandlersProps) => {
+export const useCanvasHandlers = ({ nodesResult, canvasState, connectionsResult }: UseCanvasHandlersProps) => {
   const {
     videoNodesResult,
     documentNodesResult,
@@ -18,10 +19,11 @@ export const useCanvasHandlers = ({ nodesResult, canvasState }: UseCanvasHandler
     audioNodesResult,
     imageNodesResult,
     groupNodesResult,
-    connectionsResult,
-    allNodesMap,
+    allNodes,
     setUploadTargetNodeId,
   } = nodesResult;
+
+  const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
   const forceResetAllDragState = useCallback(() => {
     videoNodesResult.forceResetDragState();
