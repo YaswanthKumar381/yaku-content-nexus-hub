@@ -1,4 +1,5 @@
 
+import { useState, useCallback } from "react";
 import { useCanvasState } from "@/hooks/useCanvasState";
 import { useCanvasTransform } from "@/hooks/useCanvasTransform";
 import { useCanvasEvents } from "@/hooks/useCanvasEvents";
