@@ -43,7 +43,7 @@ const Footer = () => {
             Ready to Transform Your Content Strategy?
           </h2>
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Join thousands of content creators and marketers who've already revolutionized their workflow with Yashu.do
+            Join thousands of content creators and marketers who've already revolutionized their workflow with Yake.do
           </p>
           <Button size="lg" className="bg-white text-purple-900 hover:bg-gray-100 px-8 py-4 text-lg font-semibold rounded-full shadow-2xl hover:shadow-white/25 transition-all duration-300 transform hover:scale-105">
             Start Your Free Trial Today
@@ -58,7 +58,7 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-2">
             <h3 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent mb-4">
-              Yashu.do
+              Yake.do
             </h3>
             <p className="text-gray-400 mb-6 leading-relaxed">
               The AI-powered platform that unifies all your content and transforms how you interact with your digital assets.
@@ -99,7 +99,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 mb-4 md:mb-0">
-            © 2024 Yashu.do. All rights reserved.
+            © 2024 Yake.do. All rights reserved.
           </p>
           <div className="flex space-x-6 text-sm text-gray-400">
             <a href="#" className="hover:text-white transition-colors">Privacy</a>

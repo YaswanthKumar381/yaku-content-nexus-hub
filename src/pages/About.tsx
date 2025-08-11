@@ -15,7 +15,7 @@ const About = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              About <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Yashu.do</span>
+              About <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Yake.do</span>
             </h1>
             <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
               We're revolutionizing how content creators and marketers interact with their digital assets. 
@@ -38,7 +38,7 @@ const About = () => {
                   together as a unified, intelligent knowledge base.
                 </p>
                 <p className="text-lg text-gray-600 mb-8">
-                  With Yashu.do, you can upload any content format and instantly start conversations with your
+                  With Yake.do, you can upload any content format and instantly start conversations with your
                   entire content library, unlocking insights and connections you never knew existed.
                 </p>
                 <Link to="/signup">

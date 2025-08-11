@@ -34,7 +34,7 @@ const SignIn = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <h1 className="text-4xl font-bold text-white">
-              Yashu.do
+              Yake.do
             </h1>
           </Link>
           <p className="text-zinc-400 mt-2">Welcome back to your content hub</p>

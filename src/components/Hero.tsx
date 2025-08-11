@@ -19,7 +19,7 @@ const Hero = () => {
           {/* Logo/Brand */}
           <div className="mb-8">
             <h1 className="text-6xl md:text-8xl font-bold text-white mb-4">
-              Yashu.do
+              Yake.do
             </h1>
             <div className="w-32 h-1 bg-white mx-auto rounded-full"></div>
           </div>

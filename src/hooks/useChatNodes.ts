@@ -25,7 +25,7 @@ export const useChatNodes = ({ onNodeClick, selectedNodeId, addConnection }: use
       type: "chat",
       height: 400, // Default height
       messages: [
-        { id: uuidv4(), role: 'system', content: 'You are Yashu, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.' },
+        { id: uuidv4(), role: 'system', content: 'You are Yake, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.' },
         { id: uuidv4(), role: 'model', content: 'Hello! How can I help you today? Connect some video or document nodes to me and ask a question.' }
       ],
     };
