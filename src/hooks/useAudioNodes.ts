@@ -4,7 +4,11 @@ import { AudioNode, AudioRecording } from '@/types/canvas';
 import { transcribeAudio } from '@/services/groqService';
 import { v4 as uuidv4 } from 'uuid';
 
-export const useAudioNodes = () => {
+interface useAudioNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useAudioNodes = ({ onNodeClick }: useAudioNodesProps) => {
   const [audioNodes, setAudioNodes] = useState<AudioNode[]>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -78,6 +82,7 @@ export const useAudioNodes = () => {
     }
 
     e.stopPropagation();
+    onNodeClick(nodeId);
     const rect = e.currentTarget.getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left,
@@ -85,7 +90,7 @@ export const useAudioNodes = () => {
     });
     setDraggingNodeId(nodeId);
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, []);
+  }, [onNodeClick]);
 
   const handleNodePointerUp = useCallback((e: React.PointerEvent) => {
     setDraggingNodeId(null);

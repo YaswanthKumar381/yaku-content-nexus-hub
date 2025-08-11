@@ -4,7 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import { ImageNode, ImageData } from "@/types/canvas";
 import { convertImageToBase64, analyzeImageWithGroq } from "@/services/groqVisionService";
 
-export const useImageNodes = () => {
+interface useImageNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useImageNodes = ({ onNodeClick }: useImageNodesProps) => {
   const [imageNodes, setImageNodes] = useState<ImageNode[]>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -124,6 +128,8 @@ export const useImageNodes = () => {
     console.log("🖱️ Image node pointer down:", nodeId);
     e.stopPropagation();
     
+    onNodeClick(nodeId);
+
     const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
     if (node) {
       const rect = node.getBoundingClientRect();

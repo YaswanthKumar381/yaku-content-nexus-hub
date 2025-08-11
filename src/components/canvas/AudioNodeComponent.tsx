@@ -13,6 +13,7 @@ interface AudioNodeProps {
   onAddRecordingToNode: (nodeId: string, audioBlob: Blob, duration: number) => Promise<void>;
   onDeleteRecording: (nodeId: string, recordingId: string) => void;
   isConnected: boolean;
+  onNodeHover: (nodeId: string | null) => void;
   isGlowing?: boolean;
 }
 
@@ -24,6 +25,7 @@ export const AudioNodeComponent: React.FC<AudioNodeProps> = ({
   onAddRecordingToNode,
   onDeleteRecording,
   isConnected,
+  onNodeHover,
   isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
@@ -108,10 +110,12 @@ export const AudioNodeComponent: React.FC<AudioNodeProps> = ({
         left: node.x,
         top: node.y,
         transform: 'translate(-50%, -50%)',
-        boxShadow: isGlowing ? `0 0 20px 5px rgba(161, 161, 170, 0.7)` : 'none',
+        boxShadow: isGlowing ? '0 0 20px 5px rgba(161, 161, 170, 0.7)' : 'none',
       }}
       onPointerDown={handlePointerDown}
       data-node-id={node.id}
+      onMouseEnter={() => onNodeHover(node.id)}
+      onMouseLeave={() => onNodeHover(null)}
     >
       <div className={`w-80 ${
         isDarkMode 

@@ -9,9 +9,9 @@ import { useNodeGlow } from "@/hooks/useNodeGlow";
 
 export const useCanvasOrchestration = () => {
   const canvasState = useCanvasState();
-  const transformResult = useCanvasTransform();
-  const nodesResult = useCanvasNodes();
   const nodeGlowResult = useNodeGlow();
+  const transformResult = useCanvasTransform({ onCanvasClick: nodeGlowResult.handleCanvasClick });
+  const nodesResult = useCanvasNodes({ onNodeClick: nodeGlowResult.handleNodeClick });
   const handlersResult = useCanvasHandlers({ nodesResult, canvasState });
 
   const {

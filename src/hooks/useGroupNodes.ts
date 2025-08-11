@@ -3,7 +3,11 @@ import { useState, useCallback } from "react";
 import { GroupNode, CanvasNode, Transform } from "@/types/canvas";
 import { v4 as uuidv4 } from 'uuid';
 
-export const useGroupNodes = () => {
+interface useGroupNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useGroupNodes = ({ onNodeClick }: useGroupNodesProps) => {
   const [groupNodes, setGroupNodes] = useState<GroupNode[]>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -133,6 +137,7 @@ export const useGroupNodes = () => {
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     console.log("📦 Group node pointer down:", nodeId);
     e.stopPropagation();
+    onNodeClick(nodeId);
     const node = groupNodes.find(n => n.id === nodeId);
     if (!node) return;
 

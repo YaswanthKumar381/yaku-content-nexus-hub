@@ -3,7 +3,11 @@ import { useState, useCallback } from "react";
 import { WebsiteNode, WebsiteData, Transform } from "@/types/canvas";
 import { v4 as uuidv4 } from 'uuid';
 
-export const useWebsiteNodes = () => {
+interface useWebsiteNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useWebsiteNodes = ({ onNodeClick }: useWebsiteNodesProps) => {
   const [websiteNodes, setWebsiteNodes] = useState<WebsiteNode[]>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -121,6 +125,8 @@ export const useWebsiteNodes = () => {
     console.log("🌐 Website node pointer down:", nodeId);
     e.stopPropagation();
     
+    onNodeClick(nodeId);
+
     const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
     if (node) {
       const rect = node.getBoundingClientRect();
