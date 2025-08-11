@@ -12,26 +12,7 @@ export const useCanvasOrchestration = () => {
   const canvasState = useCanvasState();
   const nodeGlowResult = useNodeGlow();
   const transformResult = useCanvasTransform({ onCanvasClick: nodeGlowResult.handleCanvasClick });
-
-  // This is a bit of a hack to break the circular dependency.
-  // We need connectionsResult to create nodesResult, but connectionsResult needs allNodesMap from nodesResult.
-  // By passing a getter function for allNodesMap, we can defer its creation.
-  const getNodesResult = () => nodesResult;
-
-  const connectionsResult = useConnections(() => {
-    const nodesResult = getNodesResult();
-    const allNodes = [
-      ...nodesResult.videoNodesResult.videoNodes,
-      ...nodesResult.documentNodesResult.documentNodes,
-      ...nodesResult.chatNodesResult.chatNodes,
-      ...nodesResult.textNodesResult.textNodes,
-      ...nodesResult.websiteNodesResult.websiteNodes,
-      ...nodesResult.audioNodesResult.audioNodes,
-      ...nodesResult.imageNodesResult.imageNodes,
-      ...nodesResult.groupNodesResult.groupNodes
-    ];
-    return new Map(allNodes.map(node => [node.id, node]));
-  });
+  const connectionsResult = useConnections();
 
   const nodesResult = useCanvasNodes({
     onNodeClick: nodeGlowResult.handleNodeClick,
@@ -39,7 +20,6 @@ export const useCanvasOrchestration = () => {
     addConnection: connectionsResult.addConnection,
     connections: connectionsResult.connections,
   });
-  const handlersResult = useCanvasHandlers({ nodesResult, canvasState });
 
   const {
     videoNodesResult,
@@ -56,6 +36,34 @@ export const useCanvasOrchestration = () => {
   } = nodesResult;
 
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
+
+  const [connectingInfo, setConnectingInfo] = useState<{ startNodeId: string; startX: number; startY: number; } | null>(null);
+  const [liveEndPoint, setLiveEndPoint] = useState<{ x: number, y: number } | null>(null);
+
+  const startConnection = useCallback((nodeId: string) => {
+    if (connectingInfo) return;
+    const node = allNodesMap.get(nodeId);
+    if (!node) return;
+    const startPos = getHandlePosition(node);
+    setConnectingInfo({ startNodeId: nodeId, startX: startPos.x, startY: startPos.y });
+  }, [allNodesMap, connectingInfo]);
+
+  const endConnection = useCallback((nodeId: string) => {
+    if (!connectingInfo) return null;
+    const startNode = allNodesMap.get(connectingInfo.startNodeId);
+    const endNode = allNodesMap.get(nodeId);
+
+    let connectionId: string | null = null;
+    if (startNode && endNode && (startNode.type !== 'chat' && endNode.type === 'chat')) {
+      connectionId = connectionsResult.addConnection(connectingInfo.startNodeId, nodeId);
+    }
+
+    setConnectingInfo(null);
+    setLiveEndPoint(null);
+    return connectionId;
+  }, [allNodesMap, connectingInfo, connectionsResult.addConnection]);
+
+  const handlersResult = useCanvasHandlers({ nodesResult, canvasState });
 
   const {
     forceResetAllDragState,
@@ -79,7 +87,7 @@ export const useCanvasOrchestration = () => {
   } = handlersResult;
 
   const interactionResult = useCanvasInteraction({
-    connectionsResult,
+    connectionsResult: { ...connectionsResult, startConnection, endConnection, connectingInfo, setLiveEndPoint },
     videoNodesResult,
     documentNodesResult,
     chatNodesResult,
