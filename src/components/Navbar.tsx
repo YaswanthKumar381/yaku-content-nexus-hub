@@ -22,7 +22,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/">
               <h1 className="text-2xl font-bold text-white">
-                Yaku.do
+                Yashu.do
               </h1>
             </Link>
           </div>

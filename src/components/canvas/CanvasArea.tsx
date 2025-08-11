@@ -155,6 +155,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         onAddRecordingToNode={audioNodesResult.addRecordingToNode}
         onDeleteRecording={audioNodesResult.deleteRecording}
         onNodeHover={nodeGlowResult.handleNodeHover}
+        nodeGlowResult={nodeGlowResult}
       />
     </div>
   );

@@ -8,7 +8,7 @@ const Testimonials = () => {
       name: "Sarah Chen",
       role: "Content Creator & YouTuber",
       image: "https://images.unsplash.com/photo-1494790108755-2616b612b8b9?w=150&h=150&fit=crop&crop=face",
-      content: "Yaku.do has revolutionized how I manage my content across platforms. I can finally chat with all my videos and find exactly what I need in seconds.",
+      content: "Yashu.do has revolutionized how I manage my content across platforms. I can finally chat with all my videos and find exactly what I need in seconds.",
       rating: 5
     },
     {
@@ -22,7 +22,7 @@ const Testimonials = () => {
       name: "Emily Thompson",
       role: "Social Media Strategist",
       image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-      content: "I love how Yaku.do connects the dots between my Instagram, TikTok, and YouTube content. It's like having an AI assistant that knows everything.",
+      content: "I love how Yashu.do connects the dots between my Instagram, TikTok, and YouTube content. It's like having an AI assistant that knows everything.",
       rating: 5
     },
     {
@@ -43,7 +43,7 @@ const Testimonials = () => {
             Loved by <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Creators & Marketers</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Join thousands of content professionals who've transformed their workflow with Yaku.do
+            Join thousands of content professionals who've transformed their workflow with Yashu.do
           </p>
         </div>
 

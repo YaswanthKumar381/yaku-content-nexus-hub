@@ -48,7 +48,7 @@ const Features = () => {
             One Platform, <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Infinite Possibilities</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Yaku.do breaks down content silos and creates a unified intelligence layer across all your digital assets.
+            Yashu.do breaks down content silos and creates a unified intelligence layer across all your digital assets.
           </p>
         </div>
 
