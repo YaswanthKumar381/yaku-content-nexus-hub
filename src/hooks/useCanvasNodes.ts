@@ -13,12 +13,14 @@ import { useGroupNodes } from "@/hooks/useGroupNodes";
 
 interface useCanvasNodesProps {
   onNodeClick: (nodeId: string) => void;
+  selectedNodeId: string | null;
+  addConnection: (sourceId: string, targetId: string) => void;
 }
 
-export const useCanvasNodes = ({ onNodeClick }: useCanvasNodesProps) => {
+export const useCanvasNodes = ({ onNodeClick, selectedNodeId, addConnection, connections }: useCanvasNodesProps) => {
   const videoNodesResult = useVideoNodes({ onNodeClick });
   const documentNodesResult = useDocumentNodes({ onNodeClick });
-  const chatNodesResult = useChatNodes({ onNodeClick });
+  const chatNodesResult = useChatNodes({ onNodeClick, selectedNodeId, addConnection });
   const textNodesResult = useTextNodes({ onNodeClick });
   const websiteNodesResult = useWebsiteNodes({ onNodeClick });
   const audioNodesResult = useAudioNodes({ onNodeClick });
@@ -40,8 +42,7 @@ export const useCanvasNodes = ({ onNodeClick }: useCanvasNodesProps) => {
   
   const allNodesMap = new Map(allNodes.map(node => [node.id, node]));
 
-  const connectionsResult = useConnections(allNodesMap);
-  const contextUsage = useContextUsage(allNodesMap, connectionsResult.connections, chatNodesResult.chatNodes);
+  const contextUsage = useContextUsage(allNodesMap, connections, chatNodesResult.chatNodes);
 
   return {
     videoNodesResult,
@@ -52,9 +53,8 @@ export const useCanvasNodes = ({ onNodeClick }: useCanvasNodesProps) => {
     audioNodesResult,
     imageNodesResult,
     groupNodesResult,
-    connectionsResult,
     contextUsage,
-    allNodesMap,
+    allNodes,
     uploadTargetNodeId,
     setUploadTargetNodeId,
   };

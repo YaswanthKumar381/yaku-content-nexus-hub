@@ -6,9 +6,11 @@ import { generateContentWithGroq } from "@/services/groqChatService";
 
 interface useChatNodesProps {
   onNodeClick: (nodeId: string) => void;
+  selectedNodeId: string | null;
+  addConnection: (sourceId: string, targetId: string) => void;
 }
 
-export const useChatNodes = ({ onNodeClick }: useChatNodesProps) => {
+export const useChatNodes = ({ onNodeClick, selectedNodeId, addConnection }: useChatNodesProps) => {
   const [chatNodes, setChatNodes] = useState<ChatNode[]>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [isSendingMessageNodeId, setIsSendingMessageNodeId] = useState<string | null>(null);
@@ -113,6 +115,10 @@ export const useChatNodes = ({ onNodeClick }: useChatNodesProps) => {
 
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     e.stopPropagation();
+
+    if (selectedNodeId && selectedNodeId !== nodeId) {
+      addConnection(selectedNodeId, nodeId);
+    }
     
     onNodeClick(nodeId);
 
