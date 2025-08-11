@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Connection, CanvasNode } from "@/types/canvas";
 import { getHandlePosition } from "@/utils/canvasUtils";
 
-export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
+export const useConnections = (getAllNodesMap: () => Map<string, CanvasNode>) => {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [connectingInfo, setConnectingInfo] = useState<{
     startNodeId: string;
@@ -49,15 +49,17 @@ export const useConnections = (allNodesMap: Map<string, CanvasNode>) => {
   
   const startConnection = useCallback((nodeId: string) => {
     if (connectingInfo) return;
+    const allNodesMap = getAllNodesMap();
     const node = allNodesMap.get(nodeId);
     if (!node) return;
     const startPos = getHandlePosition(node);
     setConnectingInfo({ startNodeId: nodeId, startX: startPos.x, startY: startPos.y });
     console.log('🔗 Starting connection from node:', nodeId, 'type:', node.type);
-  }, [allNodesMap, connectingInfo]);
+  }, [getAllNodesMap, connectingInfo]);
 
   const endConnection = useCallback((nodeId: string) => {
     if (!connectingInfo) return null;
+    const allNodesMap = getAllNodesMap();
     const startNode = allNodesMap.get(connectingInfo.startNodeId);
     const endNode = allNodesMap.get(nodeId);
     
