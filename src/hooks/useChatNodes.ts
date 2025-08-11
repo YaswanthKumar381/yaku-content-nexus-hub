@@ -118,6 +118,8 @@ export const useChatNodes = ({ onNodeClick, selectedNodeId, addConnection }: use
 
     if (selectedNodeId && selectedNodeId !== nodeId) {
       addConnection(selectedNodeId, nodeId);
+      onNodeClick(nodeId);
+      return;
     }
     
     onNodeClick(nodeId);
