@@ -23,7 +23,7 @@ export const generateContentWithGroq = async (
   const API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
   const systemMessage = history.find(m => m.role === 'system');
-  const systemInstructionText = systemMessage?.content || "You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.";
+  const systemInstructionText = systemMessage?.content || "You are Yashu, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.";
 
   const formattedHistory = history
     .filter(m => m.role === 'user' || m.role === 'model')

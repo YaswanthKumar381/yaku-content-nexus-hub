@@ -50,7 +50,7 @@ const SignUp = () => {
         <div className="text-center mb-8">
           <Link to="/" className="inline-block">
             <h1 className="text-4xl font-bold text-white">
-              Yaku.do
+              Yashu.do
             </h1>
           </Link>
           <p className="text-zinc-400 mt-2">Join thousands of content creators</p>

@@ -33,7 +33,7 @@ const HowItWorks = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold text-gray-900 mb-6">
-            How <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Yaku.do</span> Works
+            How <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">Yashu.do</span> Works
           </h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Three simple steps to transform your content chaos into organized intelligence.

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { CanvasNode, ChatNode, Connection, DocumentNode, TextNode, VideoNode } from '@/types/canvas';
 import { estimateTokenCount, getContextLimit } from '@/utils/tokenUtils';
 
-const SYSTEM_PROMPT_TEXT = 'You are Yaku, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.';
+const SYSTEM_PROMPT_TEXT = 'You are Yashu, a helpful AI assistant. Use the provided context from connected nodes to answer user questions.';
 const CONTEXT_WRAPPER_TEXT = "Here is some context from connected nodes:\n\n---\n\n---\n\nMy question is: ";
 
 const getNodeContent = (node: CanvasNode, allNodesMap: Map<string, CanvasNode>): string => {
