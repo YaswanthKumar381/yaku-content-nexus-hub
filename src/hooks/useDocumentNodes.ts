@@ -2,7 +2,11 @@ import { useState, useCallback } from "react";
 import { DocumentNode, DocumentFile } from "@/types/canvas";
 import { extractTextFromFile } from "@/utils/documentUtils";
 
-export const useDocumentNodes = () => {
+interface useDocumentNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useDocumentNodes = ({ onNodeClick }: useDocumentNodesProps) => {
   const [documentNodes, setDocumentNodes] = useState<Array<DocumentNode>>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -131,6 +135,8 @@ export const useDocumentNodes = () => {
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     e.stopPropagation();
     
+    onNodeClick(nodeId);
+
     const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
     if (node) {
       const rect = node.getBoundingClientRect();

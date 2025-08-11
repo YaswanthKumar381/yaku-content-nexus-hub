@@ -14,6 +14,7 @@ interface ChatNodeComponentProps {
   isSendingMessage: boolean;
   onResize: (nodeId: string, height: number) => void;
   isConnected: boolean;
+  onNodeHover: (nodeId: string | null) => void;
   isGlowing?: boolean;
 }
 
@@ -25,6 +26,7 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
   isSendingMessage, 
   onResize, 
   isConnected,
+  onNodeHover,
   isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
@@ -101,6 +103,8 @@ export const ChatNodeComponent: React.FC<ChatNodeComponentProps> = ({
       }}
       onPointerDown={handlePointerDown}
       data-node-id={node.id}
+      onMouseEnter={() => onNodeHover(node.id)}
+      onMouseLeave={() => onNodeHover(null)}
     >
       {/* Left handle - positioned to not interfere with dragging */}
       <div 

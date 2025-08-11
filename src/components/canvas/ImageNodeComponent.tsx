@@ -30,6 +30,7 @@ interface ImageNodeComponentProps {
   onUploadClick: (nodeId: string) => void;
   onAnalyzeImage: (nodeId: string, imageId: string, prompt?: string) => Promise<void>;
   isConnected: boolean;
+  onNodeHover: (nodeId: string | null) => void;
   isGlowing?: boolean;
 }
 
@@ -42,6 +43,7 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
   onUploadClick,
   onAnalyzeImage,
   isConnected,
+  onNodeHover,
   isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
@@ -98,6 +100,8 @@ export const ImageNodeComponent: React.FC<ImageNodeComponentProps> = ({
         boxShadow: isGlowing ? '0 0 20px 5px rgba(99, 102, 241, 0.7)' : 'none',
       }}
       data-node-id={node.id}
+      onMouseEnter={() => onNodeHover(node.id)}
+      onMouseLeave={() => onNodeHover(null)}
     >
       <Card className={`w-80 ${isDarkMode ? 'bg-gray-800/90 border-gray-600' : 'bg-white/90 border-gray-300'} backdrop-blur-sm shadow-lg relative`}>
         <CardHeader className="pb-3">

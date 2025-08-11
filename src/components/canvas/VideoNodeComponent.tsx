@@ -11,6 +11,7 @@ interface VideoNodeProps {
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   isConnected: boolean;
+  onNodeHover: (nodeId: string | null) => void;
   isGlowing?: boolean;
 }
 
@@ -21,6 +22,7 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
   onStartConnection,
   onDelete,
   isConnected,
+  onNodeHover,
   isGlowing,
 }) => {
   const embedUrl = getYouTubeEmbedUrl(node.url);
@@ -70,6 +72,8 @@ export const VideoNodeComponent: React.FC<VideoNodeProps> = ({
         boxShadow: isGlowing ? '0 0 20px 5px rgba(239, 68, 68, 0.7)' : 'none',
       }}
       onPointerDown={handleNodePointerDown}
+      onMouseEnter={() => onNodeHover(node.id)}
+      onMouseLeave={() => onNodeHover(null)}
     >
       <div 
         className={`group relative bg-gradient-to-br from-red-50 to-red-100 rounded-lg shadow-lg w-80 border border-red-200 hover:shadow-xl transition-shadow ${isConnected ? 'node-glow-red' : ''}`}

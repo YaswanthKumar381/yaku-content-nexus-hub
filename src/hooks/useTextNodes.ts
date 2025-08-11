@@ -3,7 +3,11 @@ import { useState, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { TextNode } from "@/types/canvas";
 
-export const useTextNodes = () => {
+interface useTextNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useTextNodes = ({ onNodeClick }: useTextNodesProps) => {
   const [textNodes, setTextNodes] = useState<TextNode[]>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -54,6 +58,8 @@ export const useTextNodes = () => {
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     e.stopPropagation();
     
+    onNodeClick(nodeId);
+
     const nodeEl = (e.target as HTMLElement).closest(`[data-node-id="${nodeId}"]`) as HTMLElement;
     if (nodeEl) {
         const rect = nodeEl.getBoundingClientRect();

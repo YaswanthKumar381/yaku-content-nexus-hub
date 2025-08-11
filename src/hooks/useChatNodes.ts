@@ -4,7 +4,11 @@ import { ChatNode, ChatMessage } from "@/types/canvas";
 import { generateContent } from "@/services/geminiService";
 import { generateContentWithGroq } from "@/services/groqChatService";
 
-export const useChatNodes = () => {
+interface useChatNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useChatNodes = ({ onNodeClick }: useChatNodesProps) => {
   const [chatNodes, setChatNodes] = useState<ChatNode[]>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [isSendingMessageNodeId, setIsSendingMessageNodeId] = useState<string | null>(null);
@@ -110,6 +114,8 @@ export const useChatNodes = () => {
   const handleNodePointerDown = useCallback((e: React.PointerEvent, nodeId: string) => {
     e.stopPropagation();
     
+    onNodeClick(nodeId);
+
     const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
     if (node) {
       const rect = node.getBoundingClientRect();

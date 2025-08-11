@@ -12,6 +12,7 @@ interface WebsiteNodeComponentProps {
   onStartConnection: (nodeId: string) => void;
   onDelete: (nodeId: string) => void;
   isConnected: boolean;
+  onNodeHover: (nodeId: string | null) => void;
   isGlowing?: boolean;
 }
 
@@ -21,6 +22,7 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
   onStartConnection,
   onDelete,
   isConnected,
+  onNodeHover,
   isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
@@ -45,6 +47,8 @@ export const WebsiteNodeComponent: React.FC<WebsiteNodeComponentProps> = ({
         }}
         onPointerDown={(e) => onPointerDown(e, node.id)}
         data-node-id={node.id}
+        onMouseEnter={() => onNodeHover(node.id)}
+        onMouseLeave={() => onNodeHover(null)}
       >
         <WebsiteCard
           node={node}

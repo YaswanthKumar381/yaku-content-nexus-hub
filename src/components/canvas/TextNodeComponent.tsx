@@ -15,6 +15,7 @@ interface TextNodeComponentProps {
   onDelete: (nodeId: string) => void;
   onStartConnection: (nodeId: string) => void;
   isConnected: boolean;
+  onNodeHover: (nodeId: string | null) => void;
   isGlowing?: boolean;
 }
 
@@ -25,6 +26,7 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
   onDelete,
   onStartConnection,
   isConnected,
+  onNodeHover,
   isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
@@ -65,6 +67,8 @@ export const TextNodeComponent: React.FC<TextNodeComponentProps> = ({
             boxShadow: isGlowing ? '0 0 20px 5px rgba(251, 146, 60, 0.7)' : 'none',
           }}
           onPointerDown={(e) => onPointerDown(e, node.id)}
+          onMouseEnter={() => onNodeHover(node.id)}
+          onMouseLeave={() => onNodeHover(null)}
         >
           <div className="flex items-center gap-2 px-3 py-1 bg-orange-100/90 rounded-t-md border-b-2 border-orange-200/90">
             <TextIcon size={14} className="text-orange-600" />

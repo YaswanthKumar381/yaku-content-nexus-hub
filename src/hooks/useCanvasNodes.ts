@@ -11,15 +11,19 @@ import { useContextUsage } from "@/hooks/useContextUsage";
 import { useImageNodes } from "@/hooks/useImageNodes";
 import { useGroupNodes } from "@/hooks/useGroupNodes";
 
-export const useCanvasNodes = () => {
-  const videoNodesResult = useVideoNodes();
-  const documentNodesResult = useDocumentNodes();
-  const chatNodesResult = useChatNodes();
-  const textNodesResult = useTextNodes();
-  const websiteNodesResult = useWebsiteNodes();
-  const audioNodesResult = useAudioNodes();
-  const imageNodesResult = useImageNodes();
-  const groupNodesResult = useGroupNodes();
+interface useCanvasNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useCanvasNodes = ({ onNodeClick }: useCanvasNodesProps) => {
+  const videoNodesResult = useVideoNodes({ onNodeClick });
+  const documentNodesResult = useDocumentNodes({ onNodeClick });
+  const chatNodesResult = useChatNodes({ onNodeClick });
+  const textNodesResult = useTextNodes({ onNodeClick });
+  const websiteNodesResult = useWebsiteNodes({ onNodeClick });
+  const audioNodesResult = useAudioNodes({ onNodeClick });
+  const imageNodesResult = useImageNodes({ onNodeClick });
+  const groupNodesResult = useGroupNodes({ onNodeClick });
 
   const [uploadTargetNodeId, setUploadTargetNodeId] = useState<string | null>(null);
 

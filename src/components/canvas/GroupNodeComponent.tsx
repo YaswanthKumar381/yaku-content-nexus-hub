@@ -12,6 +12,7 @@ interface GroupNodeProps {
   onDelete: (nodeId: string) => void;
   onUpdate: (nodeId: string, updates: Partial<Omit<GroupNode, 'id' | 'type'>>) => void;
   isConnected: boolean;
+  onNodeHover: (nodeId: string | null) => void;
   isGlowing?: boolean;
 }
 
@@ -22,6 +23,7 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
   onDelete,
   onUpdate,
   isConnected,
+  onNodeHover,
   isGlowing,
 }) => {
   const { isDarkMode } = useTheme();
@@ -83,6 +85,8 @@ export const GroupNodeComponent: React.FC<GroupNodeProps> = ({
       }}
       onPointerDown={handlePointerDown}
       data-node-id={node.id}
+      onMouseEnter={() => onNodeHover(node.id)}
+      onMouseLeave={() => onNodeHover(null)}
     >
       <div className={`w-full h-full border-2 border-dashed rounded-lg transition-all duration-300 hover:shadow-lg ${
         isDarkMode 

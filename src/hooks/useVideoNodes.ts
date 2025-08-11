@@ -3,7 +3,11 @@ import { useState, useCallback } from "react";
 import { VideoNode } from "@/types/canvas";
 import { getVideoTitle } from "@/utils/videoUtils";
 
-export const useVideoNodes = () => {
+interface useVideoNodesProps {
+  onNodeClick: (nodeId: string) => void;
+}
+
+export const useVideoNodes = ({ onNodeClick }: useVideoNodesProps) => {
   const [videoNodes, setVideoNodes] = useState<Array<VideoNode>>([]);
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -66,6 +70,8 @@ export const useVideoNodes = () => {
     console.log("🎯 Node pointer down:", nodeId);
     e.stopPropagation();
     
+    onNodeClick(nodeId);
+
     const node = document.querySelector(`[data-node-id="${nodeId}"]`) as HTMLElement;
     if (node) {
       const rect = node.getBoundingClientRect();

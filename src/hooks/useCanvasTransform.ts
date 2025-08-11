@@ -2,7 +2,11 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Transform } from "@/types/canvas";
 
-export const useCanvasTransform = () => {
+interface useCanvasTransformProps {
+  onCanvasClick: () => void;
+}
+
+export const useCanvasTransform = ({ onCanvasClick }: useCanvasTransformProps) => {
   const [transform, setTransform] = useState<Transform>({ x: 0, y: 0, scale: 1 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastPointer, setLastPointer] = useState({ x: 0, y: 0 });
@@ -47,10 +51,11 @@ export const useCanvasTransform = () => {
   const handlePointerDown = useCallback((e: React.PointerEvent, draggingNodeId: string | null) => {
     if (draggingNodeId) return;
     
+    onCanvasClick();
     setIsDragging(true);
     setLastPointer({ x: e.clientX, y: e.clientY });
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, []);
+  }, [onCanvasClick]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent, draggingNodeId: string | null, onNodeMove: (deltaX: number, deltaY: number) => void) => {
     if (draggingNodeId) {

@@ -50,6 +50,7 @@ interface NodeLayerProps {
   connections: Connection[];
   onAddRecordingToNode: (nodeId: string, audioBlob: Blob, duration: number) => Promise<void>;
   onDeleteRecording: (nodeId: string, recordingId: string) => void;
+  onNodeHover: (nodeId: string | null) => void;
   nodeGlowResult: ReturnType<typeof import('@/hooks/useNodeGlow').useNodeGlow>;
 }
 
@@ -93,6 +94,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
   connections,
   onAddRecordingToNode,
   onDeleteRecording,
+  onNodeHover,
   nodeGlowResult,
 }) => {
   return (
@@ -109,6 +111,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onDelete={onDeleteGroupNode}
             onUpdate={onUpdateGroupNode}
             isConnected={isConnected}
+            onNodeHover={onNodeHover}
             isGlowing={nodeGlowResult.shouldShowGlow(node.id, 'group')}
           />
         );
@@ -126,6 +129,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onStartConnection={onStartConnection}
             onDelete={onDeleteVideoNode}
             isConnected={isConnected}
+            onNodeHover={onNodeHover}
             isGlowing={nodeGlowResult.shouldShowGlow(node.id, 'video')}
           />
         );
@@ -144,6 +148,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onDeleteFile={onDeleteDocumentFile}
             onUploadClick={onDocumentNodeUploadClick}
             isConnected={isConnected}
+            onNodeHover={onNodeHover}
             isGlowing={nodeGlowResult.shouldShowGlow(node.id, 'document')}
           />
         );
@@ -162,6 +167,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             isSendingMessage={isSendingMessageNodeId === node.id}
             onResize={onChatNodeResize}
             isConnected={isConnected}
+            onNodeHover={onNodeHover}
             isGlowing={nodeGlowResult.shouldShowGlow(node.id, 'chat')}
           />
         );
@@ -179,6 +185,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onDelete={onDeleteTextNode}
             onUpdate={onUpdateTextNode}
             isConnected={isConnected}
+            onNodeHover={onNodeHover}
             isGlowing={nodeGlowResult.shouldShowGlow(node.id, 'text')}
           />
         );
@@ -195,6 +202,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onStartConnection={onStartConnection}
             onDelete={onDeleteWebsiteNode}
             isConnected={isConnected}
+            onNodeHover={onNodeHover}
             isGlowing={nodeGlowResult.shouldShowGlow(node.id, 'website')}
           />
         );
@@ -213,6 +221,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onAddRecordingToNode={onAddRecordingToNode}
             onDeleteRecording={onDeleteRecording}
             isConnected={isConnected}
+            onNodeHover={onNodeHover}
             isGlowing={nodeGlowResult.shouldShowGlow(node.id, 'audio')}
           />
         );
@@ -232,6 +241,7 @@ export const NodeLayer: React.FC<NodeLayerProps> = ({
             onUploadClick={onImageNodeUploadClick}
             onAnalyzeImage={onAnalyzeImage}
             isConnected={isConnected}
+            onNodeHover={onNodeHover}
             isGlowing={nodeGlowResult.shouldShowGlow(node.id, 'image')}
           />
         );

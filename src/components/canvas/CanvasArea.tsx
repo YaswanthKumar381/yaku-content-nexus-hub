@@ -154,7 +154,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         connections={connectionsResult.connections}
         onAddRecordingToNode={audioNodesResult.addRecordingToNode}
         onDeleteRecording={audioNodesResult.deleteRecording}
-        nodeGlowResult={nodeGlowResult}
+        onNodeHover={nodeGlowResult.handleNodeHover}
       />
     </div>
   );

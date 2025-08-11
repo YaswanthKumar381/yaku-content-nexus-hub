@@ -12,10 +12,11 @@ interface DocumentNodeProps {
   onDeleteFile: (nodeId: string, fileId: string) => void;
   onUploadClick: (nodeId: string) => void;
   isConnected: boolean;
+  onNodeHover: (nodeId: string | null) => void;
   isGlowing?: boolean;
 }
 
-export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete, onDeleteFile, onUploadClick, isConnected, isGlowing }) => {
+export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPointerDown, onStartConnection, onDelete, onDeleteFile, onUploadClick, isConnected, onNodeHover, isGlowing }) => {
   
   const handleNodePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
@@ -39,6 +40,8 @@ export const DocumentNodeComponent: React.FC<DocumentNodeProps> = ({ node, onPoi
         boxShadow: isGlowing ? '0 0 20px 5px rgba(59, 130, 246, 0.7)' : 'none',
       }}
       onPointerDown={handleNodePointerDown}
+      onMouseEnter={() => onNodeHover(node.id)}
+      onMouseLeave={() => onNodeHover(null)}
     >
       <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow-lg w-72 border border-blue-200 hover:shadow-xl transition-shadow">
         <button
